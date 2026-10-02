@@ -70,7 +70,7 @@ AS
                    WHERE name LIKE 'LOOP_%' AND state = 'FAILED'), 'success', 'error'),
            SYSTEM$TASK_RUNTIME_INFO('CURRENT_TASK_GRAPH_RUN_GROUP_ID');
 
--- Weekly cost: warehouses, the compute pool and AI functions attributed to this environment.
+-- Weekly cost: warehouses, the compute pool and Cortex function credits for this environment.
 CREATE OR REPLACE TASK {{DB}}.OPS.WEEKLY_COST_REPORT
     WAREHOUSE = {{WH}}
     SCHEDULE = 'USING CRON 0 6 * * MON UTC'

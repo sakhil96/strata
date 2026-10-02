@@ -1,38 +1,32 @@
-"""Cube.py — local DuckDB + Cube fallback for development and CI.
+"""Serve the local fallback: Cube over the same DuckDB build the API reads.
 
-Loads generated Parquet into DuckDB and starts a Cube dev server
-that exposes the same metrics as the Snowflake semantic views.
+The cube and view files in cube/model come from compile.py; this writes the Cube config that
+points them at dbt/target/scm.duckdb and starts Cube in development mode.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
-import duckdb
-
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "out"
-DB_PATH = Path(__file__).resolve().parent / "scm.duckdb"
+ROOT = Path(__file__).resolve().parent.parent
+WAREHOUSE = ROOT / "dbt" / "target" / "scm.duckdb"
 
 
-def create_duckdb():
-    conn = duckdb.connect(str(DB_PATH))
-    parquet_files = list(DATA_DIR.rglob("*.parquet"))
-    for pf in parquet_files:
-        table_name = pf.stem
-        conn.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet('{pf}')")
-        count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
-        print(f"  loaded {table_name}: {count} rows")
-    conn.close()
-    print(f"DuckDB database: {DB_PATH}")
-
-
-def main():
-    print("Creating DuckDB from generated data...")
-    create_duckdb()
-    print("DuckDB ready. Start Cube with: npx cubejs-server")
+def main() -> int:
+    if not WAREHOUSE.exists():
+        print("The DuckDB build is missing; run `make data dbt-local` first.", file=sys.stderr)
+        return 1
+    if not shutil.which("npx"):
+        print("Cube needs Node 22 and npx on the PATH.", file=sys.stderr)
+        return 1
+    env = {**os.environ, "CUBEJS_DB_TYPE": "duckdb", "CUBEJS_DB_DUCKDB_DATABASE_PATH": str(WAREHOUSE),
+           "CUBEJS_DEV_MODE": "true", "CUBEJS_SCHEMA_PATH": "model", "CUBEJS_TELEMETRY": "false"}
+    return subprocess.call(["npx", "--yes", "cubejs-server@1"], cwd=ROOT / "cube", env=env)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

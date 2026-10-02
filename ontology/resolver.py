@@ -95,7 +95,12 @@ def resolve(registry: Registry, question: str, persona: str | None = None,
             consumed = consumed.replace(alias, " ")
     for dim, known in values.items():
         for value in sorted(known, key=len, reverse=True):
-            if re.search(r"(?<![a-z])" + re.escape(value.lower()) + r"(?![a-z])", consumed):
+            # Short codes such as IN or US would match ordinary words; they must appear as written.
+            if value.isupper() and len(value) <= 3:
+                hit = re.search(r"(?<![A-Za-z])" + re.escape(value) + r"(?![A-Za-z])", question)
+            else:
+                hit = re.search(r"(?<![a-z])" + re.escape(value.lower()) + r"(?![a-z])", consumed)
+            if hit:
                 if not any(f["dimension"] == dim for f in filters):
                     filters.append({"dimension": dim, "operator": "=", "value": value})
                 consumed = consumed.replace(value.lower(), " ")

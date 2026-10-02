@@ -24,7 +24,13 @@ DATABRICKS_DIR = ROOT / "ontology" / "generated" / "databricks"
 QUESTIONS = ROOT / "eval" / "questions.yaml"
 
 HEADER = "Generated from ontology/*.yaml by compile.py; edit the registry, not this file."
-TARGETS = ("snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks")
+TARGETS = ("snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks", "linkml", "er")
+LINKML = (("gen-pydantic", "scm_ontology_pydantic.py"), ("gen-json-schema", "scm_ontology.schema.json"),
+          ("gen-owl", "scm_ontology.owl.ttl"), ("gen-erdiagram", "er_diagram.md"))
+ER_ROWS = (("Supplier", "SupplierPartAgreement", "Part", "TariffCode"),
+           ("PurchaseOrderLine", "GoodsReceipt", "Plant", "StorageLocation", "InventorySnapshot"),
+           ("Customer", "SalesOrderLine", "ShipmentLine", "Shipment", "Carrier"),
+           ("Lane", "DeliveryEvent", "FxRate"))
 VIEWS = {
     "SCM_GOVERNED": None,
     "PLANNING_SV": "PLANNING_ROLE",
@@ -407,6 +413,40 @@ def databricks_views(registry: semantic.Registry, env: str) -> dict[str, str]:
     return files
 
 
+def er_svg(ontology: dict[str, Any]) -> str:
+    box_w, box_h, gap_x, gap_y, pad = 200, 36, 64, 72, 24
+    place = {}
+    for r, row in enumerate(ER_ROWS):
+        for c, cls in enumerate(row):
+            place[cls] = (pad + c * (box_w + gap_x), pad + 24 + r * (box_h + gap_y))
+    width = pad * 2 + max(len(r) for r in ER_ROWS) * (box_w + gap_x) - gap_x
+    height = pad * 2 + 24 + len(ER_ROWS) * (box_h + gap_y) - gap_y
+    edges = sorted({(cls, meta["range"]) for cls, spec in ontology["classes"].items()
+                    for meta in (spec.get("attributes") or {}).values()
+                    if meta.get("range") in ontology["classes"] and meta["range"] != cls})
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
+           'role="img" aria-labelledby="er-title" font-family="JetBrains Mono, monospace">',
+           f'<title id="er-title">Entities of the supply chain ontology and the references between them. {HEADER}</title>',
+           f'<rect width="{width}" height="{height}" fill="#0B0D10"/>',
+           f'<text x="{pad}" y="{pad + 4}" fill="#9AA0A6" font-size="11" letter-spacing="1.5">SUPPLY CHAIN ONTOLOGY · '
+           f'{len(ontology["classes"])} ENTITIES · {len(edges)} REFERENCES</text>']
+    for src, dst in edges:
+        (x1, y1), (x2, y2) = place[src], place[dst]
+        a = (x1 + box_w / 2, y1 + box_h / 2)
+        b = (x2 + box_w / 2, y2 + box_h / 2)
+        mid = (a[1] + b[1]) / 2
+        out.append(f'<path d="M{a[0]:.0f} {a[1]:.0f} C{a[0]:.0f} {mid:.0f}, {b[0]:.0f} {mid:.0f}, {b[0]:.0f} {b[1]:.0f}" '
+                   'fill="none" stroke="#232830" stroke-width="1"/>')
+    for cls, (x, y) in place.items():
+        keys = sum(1 for m in (ontology["classes"][cls].get("attributes") or {}).values()
+                   if m.get("range") in ontology["classes"])
+        out.append(f'<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" fill="#121519" stroke="#232830"/>')
+        out.append(f'<text x="{x + 12}" y="{y + 22}" fill="#E9E4DA" font-size="13">{cls}</text>')
+        out.append(f'<text x="{x + box_w - 12}" y="{y + 22}" fill="#9AA0A6" font-size="11" text-anchor="end">{keys}→</text>')
+    out.append("</svg>")
+    return "\n".join(out) + "\n"
+
+
 @click.command()
 @click.option("--target", "targets", multiple=True, type=click.Choice([*TARGETS, "all"]), default=["all"])
 @click.option("--env", default="dev", type=click.Choice(["dev", "test", "prod"]))
@@ -445,6 +485,22 @@ def main(targets: tuple[str, ...], env: str, version: int) -> None:
             f.unlink()
         for fname, text in cube_models(registry).items():
             write(CUBE_DIR / fname, text)
+    if "linkml" in chosen:
+        import shutil
+        import subprocess
+
+        target = GENERATED / "linkml"
+        target.mkdir(parents=True, exist_ok=True)
+        for tool, name in LINKML:
+            done = subprocess.run([tool, str(ONTOLOGY_PATH)], capture_output=True, text=True, check=True)
+            write(target / name, done.stdout)
+        shutil.rmtree(target / "docs", ignore_errors=True)
+        subprocess.run(["gen-doc", "-d", str(target / "docs"), str(ONTOLOGY_PATH)], capture_output=True, check=True)
+        click.echo(f"  wrote {(target / 'docs').relative_to(ROOT)}/")
+    if "er" in chosen:
+        svg = er_svg(ontology)
+        write(ROOT / "docs" / "er_diagram.svg", svg)
+        write(ROOT / "web" / "public" / "er_diagram.svg", svg)
     if "databricks" in chosen:
         for fname, text in databricks_views(registry, env).items():
             write(DATABRICKS_DIR / fname, text)

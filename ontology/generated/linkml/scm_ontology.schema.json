@@ -1,0 +1,1011 @@
+{
+    "$defs": {
+        "Carrier": {
+            "additionalProperties": false,
+            "description": "A freight carrier or logistics service provider.",
+            "properties": {
+                "carrier_id": {
+                    "type": "string"
+                },
+                "carrier_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "carrier_type": {
+                    "description": "OCEAN, AIR, ROAD, RAIL, PARCEL.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "scac_code": {
+                    "description": "Standard Carrier Alpha Code.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "carrier_id"
+            ],
+            "title": "Carrier",
+            "type": "object"
+        },
+        "Customer": {
+            "additionalProperties": false,
+            "description": "An organisation that purchases finished goods.",
+            "properties": {
+                "account_id": {
+                    "description": "Account in the hierarchy.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contact_email": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contact_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "country_code": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "customer_id": {
+                    "description": "Golden key for the customer.",
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "segment": {
+                    "description": "Market segment (Industrial, Retail, Government, Healthcare).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ship_to_id": {
+                    "description": "Ship-to location in the Customer hierarchy.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sold_to_id": {
+                    "description": "Sold-to party.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "customer_id"
+            ],
+            "title": "Customer",
+            "type": "object"
+        },
+        "DeliveryEvent": {
+            "additionalProperties": false,
+            "description": "A timestamped event in the lifecycle of a shipment.",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "event_time_utc": {
+                    "description": "Event timestamp in UTC.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "event_type": {
+                    "description": "picked_up, departed, arrived, delivered, exception.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "location_id": {
+                    "description": "Identifier of the event location.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "shipment_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_tz": {
+                    "description": "IANA timezone of the event location.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "event_id"
+            ],
+            "title": "DeliveryEvent",
+            "type": "object"
+        },
+        "FxRate": {
+            "additionalProperties": false,
+            "description": "A daily foreign exchange rate to USD; keyed by date and source currency.",
+            "properties": {
+                "from_currency": {
+                    "description": "ISO 4217 source currency.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fx_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "rate": {
+                    "description": "Units of to_currency per unit of from_currency.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "to_currency": {
+                    "description": "Always USD.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "FxRate",
+            "type": "object"
+        },
+        "GoodsReceipt": {
+            "additionalProperties": false,
+            "description": "A record of parts received against a purchase order line.",
+            "properties": {
+                "po_line_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "quality_status": {
+                    "description": "ACCEPTED, REJECTED, QUARANTINE.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "receipt_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "receipt_id": {
+                    "type": "string"
+                },
+                "received_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "receipt_id"
+            ],
+            "title": "GoodsReceipt",
+            "type": "object"
+        },
+        "InventorySnapshot": {
+            "additionalProperties": false,
+            "description": "A daily snapshot of inventory at a storage location for a part.",
+            "properties": {
+                "allocated_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "in_transit_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "on_hand_qty": {
+                    "description": "Quantity on hand in base UOM.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "on_hand_value_std": {
+                    "description": "On-hand value in standard cost (USD).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "snapshot_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "storage_location_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "InventorySnapshot",
+            "type": "object"
+        },
+        "Lane": {
+            "additionalProperties": false,
+            "description": "A defined transportation route between an origin and destination.",
+            "properties": {
+                "destination_region": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lane_id": {
+                    "type": "string"
+                },
+                "mode": {
+                    "description": "Primary transport mode.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "origin_region": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "transit_days_typical": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "lane_id"
+            ],
+            "title": "Lane",
+            "type": "object"
+        },
+        "Part": {
+            "additionalProperties": false,
+            "description": "A stock-keeping unit that can be purchased, stored, and sold.",
+            "properties": {
+                "base_uom": {
+                    "description": "Base unit of measure (each, kg, litre).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "category": {
+                    "description": "Top-level category.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pack_factor": {
+                    "description": "Units per case.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "pallet_factor": {
+                    "description": "Cases per pallet.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "part_family": {
+                    "description": "Product family in the Part > ProductFamily > Category hierarchy.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "description": "Golden key for the part.",
+                    "type": "string"
+                },
+                "part_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_systems": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "weight_kg": {
+                    "description": "Unit weight in kilograms.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "part_id"
+            ],
+            "title": "Part",
+            "type": "object"
+        },
+        "Plant": {
+            "additionalProperties": false,
+            "description": "A manufacturing or distribution facility.",
+            "properties": {
+                "country_code": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "plant_id": {
+                    "type": "string"
+                },
+                "plant_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "plant_type": {
+                    "description": "MANUFACTURING or DISTRIBUTION.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "region": {
+                    "description": "Geographic region (US, EMEA, APAC).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "timezone": {
+                    "description": "IANA timezone identifier (e.g. America/Chicago).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "plant_id"
+            ],
+            "title": "Plant",
+            "type": "object"
+        },
+        "PurchaseOrderLine": {
+            "additionalProperties": false,
+            "description": "A line on a purchase order placed with a supplier.",
+            "properties": {
+                "confirmed_date": {
+                    "description": "Supplier-confirmed delivery date (may differ from promised).",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "currency": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "deliver_to_plant_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "line_number": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "order_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ordered_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "po_line_id": {
+                    "type": "string"
+                },
+                "po_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "promised_date": {
+                    "description": "Supplier-promised delivery date.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "description": "OPEN, RECEIVED, PARTIAL, CANCELLED.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "supplier_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "unit_cost": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "po_line_id"
+            ],
+            "title": "PurchaseOrderLine",
+            "type": "object"
+        },
+        "SalesOrderLine": {
+            "additionalProperties": false,
+            "description": "A line on a customer sales order.",
+            "properties": {
+                "actual_delivery_date": {
+                    "description": "Date confirmed delivered to the customer.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "actual_ship_date": {
+                    "description": "Date the shipment left the warehouse.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "committed_date": {
+                    "description": "Date committed to the customer.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "currency": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "customer_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fulfilled_from_location_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "line_number": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "ordered_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "requested_date": {
+                    "description": "Customer-requested delivery date.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "so_line_id": {
+                    "type": "string"
+                },
+                "so_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "description": "OPEN, SHIPPED, DELIVERED, CANCELLED.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "unit_price": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "so_line_id"
+            ],
+            "title": "SalesOrderLine",
+            "type": "object"
+        },
+        "Shipment": {
+            "additionalProperties": false,
+            "description": "A transport movement from origin to destination.",
+            "properties": {
+                "actual_delivery": {
+                    "description": "Actual delivery date from carrier confirmation.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "carrier_eta": {
+                    "description": "Carrier-estimated arrival date.",
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "carrier_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "chargeable_weight_kg": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "destination_id": {
+                    "description": "Customer ship-to or inter-plant destination.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "freight_charge": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "freight_currency": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lane_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "origin_plant_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ship_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "shipment_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "IN_TRANSIT, DELIVERED, EXCEPTION.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "shipment_id"
+            ],
+            "title": "Shipment",
+            "type": "object"
+        },
+        "ShipmentLine": {
+            "additionalProperties": false,
+            "description": "Links a sales order line to a shipment with the shipped quantity.",
+            "properties": {
+                "is_first_shipment": {
+                    "description": "True if this is the first shipment against the sales order line.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "shipment_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "shipment_line_id": {
+                    "type": "string"
+                },
+                "shipped_qty": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "so_line_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "shipment_line_id"
+            ],
+            "title": "ShipmentLine",
+            "type": "object"
+        },
+        "StorageLocation": {
+            "additionalProperties": false,
+            "description": "A named location within a plant where inventory is held.",
+            "properties": {
+                "location_type": {
+                    "description": "RACK, BULK, COLD, YARD.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "plant_id": {
+                    "description": "The containing plant.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "storage_location_id": {
+                    "type": "string"
+                },
+                "storage_location_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "storage_location_id"
+            ],
+            "title": "StorageLocation",
+            "type": "object"
+        },
+        "Supplier": {
+            "additionalProperties": false,
+            "description": "An organisation that supplies parts under contractual agreements.",
+            "properties": {
+                "bank_account": {
+                    "description": "Bank account number for payments.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contact_email": {
+                    "description": "Primary contact email.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contact_name": {
+                    "description": "Primary contact name.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "country_code": {
+                    "description": "ISO 3166-1 alpha-2 country code of the supplier site.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parent_supplier_id": {
+                    "description": "Parent supplier in the supplier hierarchy (site > parent).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_systems": {
+                    "description": "Systems of record (erp, portal).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "supplier_id": {
+                    "description": "Golden key for the supplier, resolved from crosswalk.",
+                    "type": "string"
+                },
+                "supplier_name": {
+                    "description": "Legal name of the supplier entity.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "supplier_site": {
+                    "description": "Physical site identifier within the supplier organisation.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "synonyms": {
+                    "description": "Alternative names (vendor, seller).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "supplier_id"
+            ],
+            "title": "Supplier",
+            "type": "object"
+        },
+        "SupplierPartAgreement": {
+            "additionalProperties": false,
+            "description": "A contractual agreement for a supplier to supply a specific part.",
+            "properties": {
+                "agreement_id": {
+                    "type": "string"
+                },
+                "currency": {
+                    "description": "ISO 4217 currency code.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "effective_from": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "effective_to": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "incoterm": {
+                    "description": "Incoterms 2020 rule (EXW, FOB, CIF, DDP).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "description": "The supplied part.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "quoted_lead_days": {
+                    "description": "Supplier-quoted lead time in calendar days.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "supplier_id": {
+                    "description": "The supplying party.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "unit_cost": {
+                    "description": "Agreed unit cost in the transaction currency.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "agreement_id"
+            ],
+            "title": "SupplierPartAgreement",
+            "type": "object"
+        },
+        "TariffCode": {
+            "additionalProperties": false,
+            "description": "An HTS tariff classification with duty rates and effective dates.",
+            "properties": {
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "duty_rate": {
+                    "description": "Ad valorem duty rate as a decimal (0.05 = 5%).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "effective_from": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "effective_to": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "hts_code": {
+                    "description": "Harmonized Tariff Schedule code (6 or 10 digit).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "part_id": {
+                    "description": "The part classified under this tariff code.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tariff_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tariff_id"
+            ],
+            "title": "TariffCode",
+            "type": "object"
+        }
+    },
+    "$id": "https://scm-ontology.example.com/schema",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": true,
+    "metamodel_version": "1.11.0",
+    "title": "scm_ontology",
+    "type": "object",
+    "version": null
+}
+

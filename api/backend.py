@@ -31,6 +31,7 @@ PERSONA_VIEW = {
 PERSONAS = tuple(PERSONA_VIEW)
 VERSION = int(os.getenv("SCM_VERSION", "1"))
 ROW_CAP = 10_000
+STALE_AFTER_S = 6 * 3600
 
 
 @dataclass
@@ -229,7 +230,8 @@ class LocalBackend:
             if files:
                 newest = max(f.stat().st_mtime for f in files)
                 freshness.append({"source": system, "loaded_at": datetime.fromtimestamp(newest, timezone.utc)
-                                  .isoformat(timespec="minutes"), "files": len(files)})
+                                  .isoformat(timespec="minutes"), "files": len(files),
+                                  "stale": time.time() - newest > STALE_AFTER_S})
         results = run.get("results", [])
         return {
             "mode": self.mode, "as_of": card.get("as_of"), "freshness": freshness,
@@ -328,8 +330,10 @@ class SnowflakeBackend:
 
     def status(self) -> dict[str, Any]:
         with self._connect() as conn, conn.cursor() as cur:
-            cur.execute(f"SELECT source_system, MAX(last_loaded_at), SUM(row_count) FROM {self.db}.OPS.FRESHNESS GROUP BY 1")
-            freshness = [{"source": r[0], "loaded_at": str(r[1]), "rows": r[2]} for r in cur.fetchall()]
+            cur.execute(f"SELECT source_system, MAX(last_loaded_at), SUM(row_count), "
+                        f"MAX(TIMESTAMPDIFF(HOUR, last_loaded_at, CURRENT_TIMESTAMP())) > 6 "
+                        f"FROM {self.db}.OPS.FRESHNESS GROUP BY 1")
+            freshness = [{"source": r[0], "loaded_at": str(r[1]), "rows": r[2], "stale": r[3]} for r in cur.fetchall()]
             cur.execute(f"SELECT MAX(run_started_at), COUNT_IF(status = 'success'), COUNT_IF(status <> 'success') "
                         f"FROM {self.db}.OPS.DBT_RUNS WHERE run_started_at > DATEADD(day, -1, CURRENT_TIMESTAMP())")
             dbt = cur.fetchone()
