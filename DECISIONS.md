@@ -59,3 +59,25 @@ so commits carry the local default; we re-author before pushing.
 
 docs/GAPS.md records each specification item as present, partial or absent with the command that
 proved it. We close gaps in priority order, one commit per gap.
+
+## Lock the image for Linux, not for the laptop
+
+The runtime and dev locks are resolved for `x86_64-manylinux_2_28`, the image platform. An earlier
+`cryptography<46` pin existed only because cryptography 50 has no Intel macOS wheel; it shipped
+eight advisories (fixed in 46.0.5 to 50.0.0) and pyOpenSSL 25 two more. Lifting it required
+snowflake-connector-python 4.x, which in turn required dbt-snowflake 1.10+, so the build extra moved
+to dbt-core 1.11 and dbt-duckdb 1.10. The local DuckDB build passes 78 of 78 on the new dbt. The
+Snowflake paths on connector 4 have not been run against an account yet.
+
+## The service holds no secret
+
+The SPCS container authenticates with the session token Snowflake mounts at
+`/snowflake/session/token`. A `secrets:` block would add a credential to rotate and nothing else, so
+the service spec has none. Key-pair JWT is used only by CI and by laptops.
+
+## Cortex Analyst is an exploration tool, not an answering tool
+
+The spec lists Cortex Analyst among the agent's tools and also says numbers come only from
+GOVERNED_QUERY. Both hold: the agent may call Analyst to explore phrasing, but `api/agent.py` parses
+numbers only from GOVERNED_QUERY results, and the governance suite fails if any other tool's output
+reaches an answer.
