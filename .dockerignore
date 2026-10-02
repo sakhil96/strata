@@ -1,0 +1,14 @@
+.git
+.venv
+.strata
+**/node_modules
+web/.next
+web/out
+web/test-results
+web/tests/screenshots
+dbt/target
+dbt/logs
+data/out
+eval/.results
+*.duckdb
+.env

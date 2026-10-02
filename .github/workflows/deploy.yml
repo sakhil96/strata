@@ -1,51 +1,66 @@
-name: Deploy
+name: deploy
 
+# TEST on every merge to main; PROD only by hand, only from a commit whose CI and TEST
+# evaluation passed, and only after the AI Observability batch evaluation meets the floor.
 on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        type: choice
-        options:
-          - test
-          - prod
-      version:
-        description: "Semantic view version"
-        required: true
-        default: "1"
+      version: {description: "Semantic view version to promote", required: true}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency: deploy-${{ github.event_name }}
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'prod'
+  test:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    environment: scm-test
     steps:
       - uses: actions/checkout@v4
+        with: {ref: "${{ github.event.workflow_run.head_sha }}"}
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install pytest pyyaml
-      - run: pytest eval/ -v --tb=short
-      - name: Fail if eval did not pass
-        if: failure()
+        with: {python-version: "3.11"}
+      - name: Snowflake CLI
+        run: pip install --require-hashes --no-deps -r requirements.lock && pip install snowflake-cli==3.*
+      - name: Key-pair connection for SCM_DEPLOY
+        env:
+          SNOWFLAKE_PRIVATE_KEY_RAW: ${{ secrets.SCM_DEPLOY_PRIVATE_KEY }}
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: scripts/ci_connection.sh scm_test SCM_DEPLOY
+      - name: Deploy and evaluate on SCM_TEST
         run: |
-          echo "Evaluation suite did not pass. Refusing PROD deployment."
-          exit 1
+          make deploy ENV=test VERSION=${{ vars.SCM_VERSION }}
+          make eval-account ENV=test
+      - uses: actions/upload-artifact@v4
+        with: {name: test-evaluation, path: eval/report.json}
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [gate]
-    if: always() && (needs.gate.result == 'success' || github.event.inputs.environment == 'test')
+  prod:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    environment: scm-prod
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install pyyaml click
-      - run: python ontology/compile.py --env ${{ github.event.inputs.environment }} --version ${{ github.event.inputs.version }}
-      - name: Deploy semantic views
-        run: |
-          echo "Deploying to SCM_${{ github.event.inputs.environment }} v${{ github.event.inputs.version }}"
-          echo "In production, this would run:"
-          echo "  snow sql -f snowflake/semantic/deploy.sql"
-          echo "  snow sql -f snowflake/semantic/versioning.sql"
+        with: {python-version: "3.11"}
+      - name: Snowflake CLI
+        run: pip install --require-hashes --no-deps -r requirements.lock && pip install snowflake-cli==3.*
+      - name: Key-pair connection for SCM_DEPLOY
+        env:
+          SNOWFLAKE_PRIVATE_KEY_RAW: ${{ secrets.SCM_DEPLOY_PRIVATE_KEY }}
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: scripts/ci_connection.sh scm_prod SCM_DEPLOY
+      - name: Refuse unless every suite passed on SCM_TEST for this commit
+        run: python scripts/release_gate.py --env test --sha ${{ github.sha }} --floor 0.90
+      - name: Compile for PROD; refuses any metric that is not approved
+        run: python ontology/compile.py --env prod --version ${{ inputs.version }}
+      - name: Deploy beside the current version, then swap grants
+        run: make release ENV=prod VERSION=${{ inputs.version }}
+      - name: Smoke test, roll back on failure
+        run: make smoke ENV=prod || make rollback ENV=prod VERSION=$(( ${{ inputs.version }} - 1 ))

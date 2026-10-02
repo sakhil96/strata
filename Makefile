@@ -1,51 +1,105 @@
-.PHONY: compile data load deploy eval local-demo setup spcs-deploy spcs-rollback spcs-logs clean
-
+# Every target runs from the repository root. ENV is dev, test or prod; VERSION is the semantic-view suffix.
 ENV ?= dev
 VERSION ?= 1
+PY ?= python
+CONN ?= scm_$(ENV)
+export SCM_ENV := $(ENV)
+export SCM_VERSION := $(VERSION)
 
-compile:
-	python ontology/compile.py --env $(ENV) --version $(VERSION)
+.PHONY: help setup data compile reproducible dbt-local web lint test eval governance-snapshot e2e screenshots \
+	lighthouse load deploy release promote rollback smoke eval-account agent loop local-demo demo-mirror \
+	spcs-build spcs-deploy spcs-rollback spcs-logs clean
+
+help:
+	@grep -E '^[a-z-]+:' Makefile | cut -d: -f1 | sort | tr '\n' ' '; echo
+
+setup:            ## account objects for one environment: roles, schemas, policies, monitors, alerts, ops
+	$(PY) scripts/render_sql.py setup --env $(ENV) --connection $(CONN)
 
 data:
-	python data/generate.py
+	$(PY) data/generate.py
+	-$(PY) data/reference/fetch_gscpi.py
 
-load:
-	python data/load.py --env $(ENV)
+compile:
+	$(PY) ontology/compile.py --env $(ENV) --version $(VERSION)
 
-setup:
-	@echo "Run snowflake/setup/00_account.sql through 09_secrets.sql against the account"
-	@echo "Substitute {{DB}} with SCM_$(shell echo $(ENV) | tr a-z A-Z) and {{ENV}} with $(shell echo $(ENV) | tr a-z A-Z)"
+reproducible:
+	scripts/reproducible.sh
 
-deploy: compile
-	@echo "Deploying semantic views to SCM_$(shell echo $(ENV) | tr a-z A-Z)"
-	snow sql -f snowflake/semantic/deploy.sql
-	snow sql -f snowflake/semantic/versioning.sql
+dbt-local:
+	cd dbt && dbt build --profiles-dir . --target local --quiet
+
+web:
+	cd web && npm run build
+
+lint:
+	ruff check .
+	$(PY) scripts/authorship_lint.py
+	cd web && npx prettier --check . && npx tsc --noEmit
+
+test:
+	$(PY) -m pytest ontology/tests api/tests --cov --cov-report=term-missing:skip-covered -q
+
+governance-snapshot:
+	$(PY) eval/snapshot_governance.py
 
 eval:
-	pytest eval/ -v --tb=short -q 2>&1 | tee eval/report.md
-	python eval/report.py
+	$(PY) eval/report.py
 
-local-demo:
-	@echo "Starting local demo with DuckDB + dbt-core + Cube"
-	python data/generate.py
-	cd dbt && dbt run --target duckdb
-	cd cube && python cube.py
-	@echo "Local demo ready"
+e2e:
+	cd web && npx playwright test pages.spec.ts answers.spec.ts
+
+screenshots:
+	cd web && npx playwright test screenshots.spec.ts
+
+lighthouse:
+	cd web && npm run lighthouse
+
+load:
+	$(PY) data/load.py --env $(ENV) --connection $(CONN)
+
+deploy: compile  ## objects and views beside the current version; does not move grants
+	snow git fetch SCM_$(shell echo $(ENV) | tr a-z A-Z).OPS.SCM_REPO -c $(CONN)
+	$(PY) scripts/render_sql.py objects --env $(ENV) --connection $(CONN)
+	$(PY) scripts/render_sql.py views --env $(ENV) --connection $(CONN)
+	$(PY) scripts/render_sql.py agent --env $(ENV) --connection $(CONN)
+
+promote:
+	$(PY) scripts/render_sql.py promote --env $(ENV) --connection $(CONN)
+
+release: deploy promote
+
+rollback:         ## grants back to VERSION; the newer views stay for diagnosis
+	$(PY) ontology/compile.py --env $(ENV) --version $(VERSION) --target snowflake-semantic
+	$(PY) scripts/render_sql.py promote --env $(ENV) --connection $(CONN)
+
+smoke:
+	$(PY) scripts/smoke.py --env $(ENV) --connection $(CONN)
+
+eval-account:
+	SCM_BACKEND=snowflake SCM_AGENT=on SNOWFLAKE_CONNECTION_NAME=$(CONN) $(PY) eval/report.py
+
+loop:
+	$(PY) scripts/render_sql.py loop --env $(ENV) --connection $(CONN)
+
+local-demo: data dbt-local compile web  ## the whole product on a laptop, no Snowflake
+	SCM_BACKEND=local $(PY) -m uvicorn api.main:app --port 8000
+
+demo-mirror: dbt-local compile  ## the public mirror: recorded answers, no backend
+	$(PY) scripts/record_mirror.py
+	cd web && npm run build:demo
+
+spcs-build:
+	docker build --platform linux/amd64 -t strata:$(shell git rev-parse --short HEAD) .
 
 spcs-deploy:
-	snow spcs compute-pool create SCM_POOL_$(shell echo $(ENV) | tr a-z A-Z) \
-		--family CPU_X64_XS --min-nodes 1 --max-nodes 1 --auto-suspend-secs 300 || true
-	snow spcs service create STRATA_SERVICE \
-		--compute-pool SCM_POOL_$(shell echo $(ENV) | tr a-z A-Z) \
-		--spec-path snowflake/spcs/service_spec.yaml
+	$(PY) scripts/spcs.py deploy --env $(ENV) --connection $(CONN) --tag $(shell git rev-parse --short HEAD)
 
 spcs-rollback:
-	@echo "Rolling back to previous image tag"
-	snow spcs service set STRATA_SERVICE --spec-path snowflake/spcs/service_spec.yaml.prev
+	$(PY) scripts/spcs.py rollback --env $(ENV) --connection $(CONN)
 
 spcs-logs:
-	snow spcs service logs STRATA_SERVICE --container strata
+	snow spcs service logs SCM_$(shell echo $(ENV) | tr a-z A-Z).AGENT.STRATA_SERVICE --container-name strata --instance-id 0 -c $(CONN)
 
 clean:
-	rm -rf ontology/generated/* snowflake/semantic/*.yaml snowflake/semantic/*.sql
-	rm -rf cube/model/* data/out/*
+	rm -rf data/out dbt/target web/out web/.next .strata eval/.results

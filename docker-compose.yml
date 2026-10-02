@@ -1,13 +1,14 @@
+# Local run of the same image against the DuckDB build: `make data dbt-local web` first.
 services:
   strata:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    build: .
+    ports: ["8000:8000"]
     environment:
-      - SCM_ENV=dev
-      - SNOWFLAKE_CONNECTION_NAME=default
+      SCM_BACKEND: local
+      SCM_DUCKDB: /data/scm.duckdb
+      SCM_STATE_DIR: /tmp/strata
     volumes:
-      - ./ontology:/app/ontology:ro
-      - ./eval:/app/eval:ro
+      - ./dbt/target/scm.duckdb:/data/scm.duckdb:ro
+      - ./data/out:/app/data/out:ro
+    read_only: true
+    tmpfs: [/tmp]
