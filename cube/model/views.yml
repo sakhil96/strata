@@ -1,0 +1,62 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+views:
+- name: planning_sv
+  description: Persona view for PLANNING_ROLE.
+  cubes:
+  - join_path: delivered_lines
+    includes: '*'
+  - join_path: requested_lines
+    includes: '*'
+  - join_path: shipments
+    includes: '*'
+  - join_path: shipment_lines
+    includes: '*'
+  - join_path: po_lines
+    includes: '*'
+  - join_path: inventory
+    includes: '*'
+- name: procurement_sv
+  description: Persona view for PROCUREMENT_ROLE.
+  cubes:
+  - join_path: delivered_lines
+    includes: '*'
+  - join_path: requested_lines
+    includes: '*'
+  - join_path: shipments
+    includes: '*'
+  - join_path: shipment_lines
+    includes: '*'
+  - join_path: po_lines
+    includes: '*'
+  - join_path: inventory
+    includes: '*'
+- name: logistics_sv
+  description: Persona view for LOGISTICS_ROLE.
+  cubes:
+  - join_path: delivered_lines
+    includes: '*'
+  - join_path: requested_lines
+    includes: '*'
+  - join_path: shipments
+    includes: '*'
+  - join_path: shipment_lines
+    includes: '*'
+  - join_path: po_lines
+    includes: '*'
+  - join_path: inventory
+    includes: '*'
+- name: executive_sv
+  description: Persona view for EXECUTIVE_ROLE.
+  cubes:
+  - join_path: delivered_lines
+    includes: '*'
+  - join_path: requested_lines
+    includes: '*'
+  - join_path: shipments
+    includes: '*'
+  - join_path: shipment_lines
+    includes: '*'
+  - join_path: po_lines
+    includes: '*'
+  - join_path: inventory
+    includes: '*'

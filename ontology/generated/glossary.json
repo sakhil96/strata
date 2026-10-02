@@ -1,0 +1,998 @@
+[
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery",
+    "definition": "Share of delivered shipments that arrived on or before the carrier's own estimate.",
+    "denominator": "Delivered shipments with actual_delivery in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(shipments.is_on_eta) / NULLIF(SUM(shipments.is_delivered), 0)",
+    "formula_text": "SUM(is_on_eta) / SUM(is_delivered), shipments dated by actual_delivery.",
+    "grain": "shipment",
+    "lineage": {
+      "conformed_model": "fct_shipment",
+      "facts": [
+        "is_delivered",
+        "is_on_eta"
+      ],
+      "semantic_table": "shipments"
+    },
+    "metric_name": "carrier_on_time",
+    "numerator": "Delivered shipments with actual_delivery <= carrier_eta.",
+    "owner": "VP Logistics",
+    "parent": "on_time_delivery",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "on-time delivery",
+        "OTD"
+      ],
+      "LOGISTICS_ROLE": [
+        "delivery reliability"
+      ],
+      "PLANNING_ROLE": [
+        "delivery rate",
+        "OTD"
+      ],
+      "PROCUREMENT_ROLE": [
+        "customer delivery performance"
+      ]
+    },
+    "scor_attribute": "DR.2.x Carrier schedule adherence",
+    "status": "approved",
+    "steward": "Logistics Analytics Lead",
+    "synonyms": [
+      "carrier on-time",
+      "carrier OTD",
+      "on time to ETA"
+    ],
+    "title": "Carrier on-time",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "snapshot_date",
+    "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+    "denominator": "Trailing 90-day cost of goods shipped, divided by 90.",
+    "deprecated_by": null,
+    "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+    "formula_text": "SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.",
+    "grain": "storage_location_part",
+    "lineage": {
+      "conformed_model": "fct_inventory_month",
+      "facts": [
+        "cogs_daily_90d",
+        "on_hand_value_end"
+      ],
+      "semantic_table": "inventory"
+    },
+    "metric_name": "days_of_inventory",
+    "numerator": "On-hand value at standard cost on the last snapshot of the period.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "inventory days",
+        "DOI"
+      ],
+      "LOGISTICS_ROLE": [
+        "warehouse days cover"
+      ],
+      "PLANNING_ROLE": [
+        "DOI",
+        "days of supply"
+      ],
+      "PROCUREMENT_ROLE": [
+        "stock days"
+      ]
+    },
+    "scor_attribute": "AM.2.2 Inventory days of supply",
+    "status": "approved",
+    "steward": "Inventory Manager",
+    "synonyms": [
+      "DOI",
+      "days on hand",
+      "days of supply"
+    ],
+    "title": "Days of inventory",
+    "type": "ratio",
+    "unit": "days",
+    "variants": [
+      "dio_financial",
+      "doi_units"
+    ],
+    "version": 1,
+    "window": "point_in_time"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "snapshot_date",
+    "definition": "Days inventory outstanding on the finance basis, average inventory over cost of sales times days in the period.",
+    "denominator": "Cost of goods shipped in the month.",
+    "deprecated_by": null,
+    "expression": "SUM(inventory.avg_value_x_days) / NULLIF(SUM(inventory.cogs_month), 0)",
+    "formula_text": "SUM(avg_inventory_value * days_in_period) / SUM(cost_of_sales).",
+    "grain": "storage_location_part",
+    "lineage": {
+      "conformed_model": "fct_inventory_month",
+      "facts": [
+        "avg_value_x_days",
+        "cogs_month"
+      ],
+      "semantic_table": "inventory"
+    },
+    "metric_name": "dio_financial",
+    "numerator": "Average daily on-hand value over the month, times days in the month.",
+    "owner": "Finance",
+    "parent": "days_of_inventory",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "inventory days",
+        "DOI"
+      ],
+      "LOGISTICS_ROLE": [
+        "warehouse days cover"
+      ],
+      "PLANNING_ROLE": [
+        "DOI",
+        "days of supply"
+      ],
+      "PROCUREMENT_ROLE": [
+        "stock days"
+      ]
+    },
+    "scor_attribute": "AM.2.2 Inventory days of supply",
+    "status": "approved",
+    "steward": "Financial Planning Lead",
+    "synonyms": [
+      "DIO",
+      "days inventory outstanding"
+    ],
+    "title": "Days inventory outstanding (finance)",
+    "type": "ratio",
+    "unit": "days",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "snapshot_date",
+    "definition": "Days of inventory measured in units rather than value.",
+    "denominator": "Trailing 90-day units shipped, divided by 90.",
+    "deprecated_by": null,
+    "expression": "SUM(inventory.on_hand_qty_end) / NULLIF(SUM(inventory.units_daily_90d), 0)",
+    "formula_text": "SUM(on_hand_qty_end) / (SUM(units_90d) / 90).",
+    "grain": "storage_location_part",
+    "lineage": {
+      "conformed_model": "fct_inventory_month",
+      "facts": [
+        "on_hand_qty_end",
+        "units_daily_90d"
+      ],
+      "semantic_table": "inventory"
+    },
+    "metric_name": "doi_units",
+    "numerator": "On-hand units on the last snapshot of the period.",
+    "owner": "VP Supply Chain",
+    "parent": "days_of_inventory",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "inventory days",
+        "DOI"
+      ],
+      "LOGISTICS_ROLE": [
+        "warehouse days cover"
+      ],
+      "PLANNING_ROLE": [
+        "DOI",
+        "days of supply"
+      ],
+      "PROCUREMENT_ROLE": [
+        "stock days"
+      ]
+    },
+    "scor_attribute": "AM.2.2 Inventory days of supply",
+    "status": "approved",
+    "steward": "Inventory Manager",
+    "synonyms": [
+      "DOI in units",
+      "unit days of supply"
+    ],
+    "title": "Days of inventory in units",
+    "type": "ratio",
+    "unit": "days",
+    "variants": [],
+    "version": 1,
+    "window": "point_in_time"
+  },
+  {
+    "approved_by": "VP Logistics",
+    "approved_on": "2026-10-01",
+    "date_basis": "ship_date",
+    "definition": "Outbound freight cost in USD for each unit shipped, weighted by units.",
+    "denominator": "Units shipped.",
+    "deprecated_by": null,
+    "expression": "SUM(shipment_lines.freight_alloc_usd) / NULLIF(SUM(shipment_lines.shipped_qty), 0)",
+    "formula_text": "SUM(freight_alloc_usd) / SUM(shipped_qty), dated by ship_date.",
+    "grain": "shipment_line",
+    "lineage": {
+      "conformed_model": "fct_shipment_line",
+      "facts": [
+        "freight_alloc_usd",
+        "shipped_qty"
+      ],
+      "semantic_table": "shipment_lines"
+    },
+    "metric_name": "freight_cost_per_unit",
+    "numerator": "Outbound freight in USD allocated to each shipment line by chargeable-weight share.",
+    "owner": "VP Logistics",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "freight cost"
+      ],
+      "LOGISTICS_ROLE": [
+        "shipping cost per unit"
+      ],
+      "PLANNING_ROLE": [
+        "freight cost"
+      ],
+      "PROCUREMENT_ROLE": [
+        "transport cost"
+      ]
+    },
+    "scor_attribute": "CO.2.x Transportation cost",
+    "status": "approved",
+    "steward": "Logistics Analytics Lead",
+    "synonyms": [
+      "freight cost",
+      "shipping cost per unit",
+      "transport cost per unit"
+    ],
+    "title": "Freight cost per unit",
+    "type": "weighted_average",
+    "unit": "usd_per_unit",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "snapshot_date",
+    "definition": "How many times a year the month-end stock turns over at the trailing 90-day shipment rate.",
+    "denominator": "On-hand value at standard cost on the last snapshot of the period.",
+    "deprecated_by": null,
+    "expression": "SUM(inventory.cogs_annual_90d) / NULLIF(SUM(inventory.on_hand_value_end), 0)",
+    "formula_text": "(SUM(cogs_90d) / 90 * 365) / SUM(on_hand_value_end); inventory_turns x days_of_inventory = 365.",
+    "grain": "storage_location_part",
+    "lineage": {
+      "conformed_model": "fct_inventory_month",
+      "facts": [
+        "cogs_annual_90d",
+        "on_hand_value_end"
+      ],
+      "semantic_table": "inventory"
+    },
+    "metric_name": "inventory_turns",
+    "numerator": "Trailing 90-day cost of goods shipped, annualised (divided by 90, times 365).",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "inventory turns",
+        "turnover"
+      ],
+      "LOGISTICS_ROLE": [
+        "warehouse turns"
+      ],
+      "PLANNING_ROLE": [
+        "turns",
+        "stock velocity"
+      ],
+      "PROCUREMENT_ROLE": [
+        "inventory turns"
+      ]
+    },
+    "scor_attribute": "AM.2.1 Inventory turns",
+    "status": "approved",
+    "steward": "Inventory Manager",
+    "synonyms": [
+      "turns",
+      "stock turns",
+      "inventory turnover"
+    ],
+    "title": "Inventory turns",
+    "type": "ratio",
+    "unit": "turns_per_year",
+    "variants": [],
+    "version": 1,
+    "window": "trailing_90_days"
+  },
+  {
+    "approved_by": "VP Procurement",
+    "approved_on": "2026-10-01",
+    "date_basis": "receipt_date",
+    "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+    "denominator": "Units received in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
+    "formula_text": "SUM(material + freight + duty + insurance + handling) / SUM(received_qty), dated by receipt_date.",
+    "grain": "purchase_order_line",
+    "lineage": {
+      "conformed_model": "fct_po_line",
+      "facts": [
+        "landed_usd",
+        "received_qty"
+      ],
+      "semantic_table": "po_lines"
+    },
+    "metric_name": "landed_cost_per_unit",
+    "numerator": "Material (unit cost x received qty x FX at PO date) + inbound freight by chargeable-weight share + duty at the rate in force on the ship date x customs value + insurance + handling.",
+    "owner": "VP Procurement",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "unit cost",
+        "landed cost"
+      ],
+      "LOGISTICS_ROLE": [
+        "delivered cost"
+      ],
+      "PLANNING_ROLE": [
+        "cost per unit"
+      ],
+      "PROCUREMENT_ROLE": [
+        "landed cost",
+        "all-in cost"
+      ]
+    },
+    "scor_attribute": "CO.2.x Landed cost of material",
+    "status": "approved",
+    "steward": "Procurement Analytics Lead",
+    "synonyms": [
+      "landed cost",
+      "total acquisition cost",
+      "all-in cost"
+    ],
+    "title": "Landed cost per unit",
+    "type": "weighted_average",
+    "unit": "usd_per_unit",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Procurement",
+    "approved_on": "2026-10-01",
+    "date_basis": "receipt_date",
+    "definition": "Sample standard deviation of supplier lead time in days; how far a planner can trust the median.",
+    "denominator": "not applicable (sample standard deviation)",
+    "deprecated_by": null,
+    "expression": "STDDEV_SAMP(po_lines.lead_days)",
+    "formula_text": "STDDEV_SAMP(receipt_date - order_date) over received lines, dated by receipt_date.",
+    "grain": "purchase_order_line",
+    "lineage": {
+      "conformed_model": "fct_po_line",
+      "facts": [
+        "lead_days"
+      ],
+      "semantic_table": "po_lines"
+    },
+    "metric_name": "lead_time_variability",
+    "numerator": "Calendar days from PO date to goods receipt, received lines only.",
+    "owner": "VP Procurement",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "lead time variability"
+      ],
+      "LOGISTICS_ROLE": [
+        "inbound variability"
+      ],
+      "PLANNING_ROLE": [
+        "lead time spread"
+      ],
+      "PROCUREMENT_ROLE": [
+        "lead time variability"
+      ]
+    },
+    "scor_attribute": "RS.2.x Source cycle time variability",
+    "status": "approved",
+    "steward": "Procurement Analytics Lead",
+    "synonyms": [
+      "lead time variability",
+      "lead time spread",
+      "lead time standard deviation"
+    ],
+    "title": "Lead time variability",
+    "type": "percentile",
+    "unit": "days",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "requested_date",
+    "definition": "Share of order lines filled completely on the first shipment.",
+    "denominator": "Non-cancelled lines requested in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(requested_lines.is_line_filled) / NULLIF(SUM(requested_lines.is_live), 0)",
+    "formula_text": "SUM(is_line_filled) / SUM(is_live), dated by requested_date.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "is_line_filled",
+        "is_live"
+      ],
+      "semantic_table": "requested_lines"
+    },
+    "metric_name": "line_fill_rate",
+    "numerator": "Non-cancelled lines whose first shipment covered the ordered quantity.",
+    "owner": "VP Supply Chain",
+    "parent": "unit_fill_rate",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "fill rate"
+      ],
+      "LOGISTICS_ROLE": [
+        "shipment completeness"
+      ],
+      "PLANNING_ROLE": [
+        "fill rate",
+        "availability"
+      ],
+      "PROCUREMENT_ROLE": [
+        "unit fill"
+      ]
+    },
+    "scor_attribute": "RL.2.2 Delivered in full",
+    "status": "approved",
+    "steward": "Demand Planning Manager",
+    "synonyms": [
+      "line fill",
+      "line fill rate"
+    ],
+    "title": "Line fill rate",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery_date",
+    "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
+    "denominator": "Delivered, non-cancelled lines with actual_delivery_date in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
+    "formula_text": "SUM(is_on_time) / SUM(is_delivered), lines dated by actual_delivery_date, cancelled lines excluded from both.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "is_delivered",
+        "is_on_time"
+      ],
+      "semantic_table": "delivered_lines"
+    },
+    "metric_name": "on_time_delivery",
+    "numerator": "Delivered, non-cancelled lines with actual_delivery_date <= committed_date.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "on-time delivery",
+        "OTD"
+      ],
+      "LOGISTICS_ROLE": [
+        "delivery reliability"
+      ],
+      "PLANNING_ROLE": [
+        "delivery rate",
+        "OTD"
+      ],
+      "PROCUREMENT_ROLE": [
+        "customer delivery performance"
+      ]
+    },
+    "scor_attribute": "RL.2.1 Delivered on time to commit date",
+    "status": "approved",
+    "steward": "Supply Chain Analytics Lead",
+    "synonyms": [
+      "OTD",
+      "on-time delivery rate",
+      "delivery performance"
+    ],
+    "title": "On-time delivery",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [
+      "carrier_on_time",
+      "on_time_to_request",
+      "supplier_on_time_receipt"
+    ],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery_date",
+    "definition": "Share of delivered sales order lines that arrived on or before the date the customer asked for.",
+    "denominator": "Delivered, non-cancelled lines with actual_delivery_date in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(delivered_lines.is_on_time_to_request) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
+    "formula_text": "SUM(is_on_time_to_request) / SUM(is_delivered), dated by actual_delivery_date.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "is_delivered",
+        "is_on_time",
+        "is_on_time_to_request"
+      ],
+      "semantic_table": "delivered_lines"
+    },
+    "metric_name": "on_time_to_request",
+    "numerator": "Delivered, non-cancelled lines with actual_delivery_date <= requested_date.",
+    "owner": "VP Supply Chain",
+    "parent": "on_time_delivery",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "on-time delivery",
+        "OTD"
+      ],
+      "LOGISTICS_ROLE": [
+        "delivery reliability"
+      ],
+      "PLANNING_ROLE": [
+        "delivery rate",
+        "OTD"
+      ],
+      "PROCUREMENT_ROLE": [
+        "customer delivery performance"
+      ]
+    },
+    "scor_attribute": "RL.2.1 Delivered on time to commit date",
+    "status": "approved",
+    "steward": "Supply Chain Analytics Lead",
+    "synonyms": [
+      "on-time to request",
+      "OTR",
+      "on time to customer request"
+    ],
+    "title": "On-time to request",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "requested_date",
+    "definition": "Share of orders where every line was filled completely on the first shipment.",
+    "denominator": "Orders with at least one non-cancelled line requested in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(requested_lines.is_order_filled) / NULLIF(SUM(requested_lines.is_order_head), 0)",
+    "formula_text": "SUM(is_order_filled) / SUM(is_order_head), counted once per order on its first live line.",
+    "grain": "sales_order",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "is_order_filled",
+        "is_order_head"
+      ],
+      "semantic_table": "requested_lines"
+    },
+    "metric_name": "order_fill_rate",
+    "numerator": "Orders where every non-cancelled line was filled on the first shipment.",
+    "owner": "VP Supply Chain",
+    "parent": "unit_fill_rate",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "fill rate"
+      ],
+      "LOGISTICS_ROLE": [
+        "shipment completeness"
+      ],
+      "PLANNING_ROLE": [
+        "fill rate",
+        "availability"
+      ],
+      "PROCUREMENT_ROLE": [
+        "unit fill"
+      ]
+    },
+    "scor_attribute": "RL.2.2 Delivered in full",
+    "status": "approved",
+    "steward": "Demand Planning Manager",
+    "synonyms": [
+      "order fill",
+      "complete orders"
+    ],
+    "title": "Order fill rate",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery_date",
+    "definition": "Median calendar days from a customer placing an order line to receiving it.",
+    "denominator": "not applicable (median)",
+    "deprecated_by": null,
+    "expression": "MEDIAN(delivered_lines.cycle_days)",
+    "formula_text": "MEDIAN(actual_delivery_date - order_date), dated by actual_delivery_date.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "cycle_days"
+      ],
+      "semantic_table": "delivered_lines"
+    },
+    "metric_name": "order_fulfilment_cycle_days",
+    "numerator": "Calendar days from order date to actual delivery, delivered lines only.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "cycle time"
+      ],
+      "LOGISTICS_ROLE": [
+        "order cycle"
+      ],
+      "PLANNING_ROLE": [
+        "cycle time"
+      ],
+      "PROCUREMENT_ROLE": [
+        "fulfilment cycle"
+      ]
+    },
+    "scor_attribute": "RS.1.1 Order fulfilment cycle time",
+    "status": "approved",
+    "steward": "Supply Chain Analytics Lead",
+    "synonyms": [
+      "cycle time",
+      "order-to-delivery",
+      "order cycle time"
+    ],
+    "title": "Order fulfilment cycle time",
+    "type": "percentile",
+    "unit": "days",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery_date",
+    "definition": "Share of delivered sales order lines that were on time to commit and complete on the first shipment.",
+    "denominator": "Delivered, non-cancelled lines with actual_delivery_date in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(delivered_lines.is_otif) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
+    "formula_text": "SUM(is_otif) / SUM(is_delivered), dated by actual_delivery_date.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "is_delivered",
+        "is_otif"
+      ],
+      "semantic_table": "delivered_lines"
+    },
+    "metric_name": "otif",
+    "numerator": "Delivered lines on time to commit whose first shipment covered the ordered quantity.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "OTIF",
+        "perfect order rate"
+      ],
+      "LOGISTICS_ROLE": [
+        "complete and on-time"
+      ],
+      "PLANNING_ROLE": [
+        "perfect delivery",
+        "OTIF"
+      ],
+      "PROCUREMENT_ROLE": [
+        "OTIF"
+      ]
+    },
+    "scor_attribute": "RL.1.1 Perfect order fulfilment (component)",
+    "status": "approved",
+    "steward": "Supply Chain Analytics Lead",
+    "synonyms": [
+      "OTIF",
+      "on-time in-full",
+      "perfect delivery"
+    ],
+    "title": "On-time in-full",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "snapshot_date",
+    "definition": "Share of location-part-days with demand allocated but nothing on hand.",
+    "denominator": "Location-part-days observed in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(inventory.stockout_days) / NULLIF(SUM(inventory.obs_days), 0)",
+    "formula_text": "SUM(stockout_days) / SUM(obs_days).",
+    "grain": "storage_location_part",
+    "lineage": {
+      "conformed_model": "fct_inventory_month",
+      "facts": [
+        "obs_days",
+        "stockout_days"
+      ],
+      "semantic_table": "inventory"
+    },
+    "metric_name": "stockout_rate",
+    "numerator": "Location-part-days with zero on hand and allocated demand.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "stockout rate"
+      ],
+      "LOGISTICS_ROLE": [
+        "stockout rate"
+      ],
+      "PLANNING_ROLE": [
+        "OOS rate",
+        "stockout"
+      ],
+      "PROCUREMENT_ROLE": [
+        "material shortage rate"
+      ]
+    },
+    "scor_attribute": "RL.3.x Stockout rate (adapted)",
+    "status": "approved",
+    "steward": "Inventory Manager",
+    "synonyms": [
+      "stockout frequency",
+      "out-of-stock rate",
+      "OOS rate"
+    ],
+    "title": "Stockout rate",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Procurement",
+    "approved_on": "2026-10-01",
+    "date_basis": "receipt_date",
+    "definition": "Median calendar days from placing a purchase order line to receiving it.",
+    "denominator": "not applicable (median)",
+    "deprecated_by": null,
+    "expression": "MEDIAN(po_lines.lead_days)",
+    "formula_text": "MEDIAN(receipt_date - order_date) over received lines, dated by receipt_date.",
+    "grain": "purchase_order_line",
+    "lineage": {
+      "conformed_model": "fct_po_line",
+      "facts": [
+        "lead_days"
+      ],
+      "semantic_table": "po_lines"
+    },
+    "metric_name": "supplier_lead_time_days",
+    "numerator": "Calendar days from PO date to goods receipt, received lines only.",
+    "owner": "VP Procurement",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "lead time"
+      ],
+      "LOGISTICS_ROLE": [
+        "inbound lead time"
+      ],
+      "PLANNING_ROLE": [
+        "lead time"
+      ],
+      "PROCUREMENT_ROLE": [
+        "supplier lead time"
+      ]
+    },
+    "scor_attribute": "RS.2.x Source cycle time",
+    "status": "approved",
+    "steward": "Procurement Analytics Lead",
+    "synonyms": [
+      "lead time",
+      "procurement lead time",
+      "receipt lead time"
+    ],
+    "title": "Supplier lead time",
+    "type": "percentile",
+    "unit": "days",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "receipt_date",
+    "definition": "Share of received purchase order lines that arrived on or before the supplier's promised date.",
+    "denominator": "Received PO lines with receipt_date in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
+    "formula_text": "SUM(is_on_time_receipt) / SUM(is_received), dated by receipt_date.",
+    "grain": "purchase_order_line",
+    "lineage": {
+      "conformed_model": "fct_po_line",
+      "facts": [
+        "is_on_time_receipt",
+        "is_received"
+      ],
+      "semantic_table": "po_lines"
+    },
+    "metric_name": "supplier_on_time_receipt",
+    "numerator": "Received PO lines with receipt_date <= promised_date.",
+    "owner": "VP Procurement",
+    "parent": "on_time_delivery",
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "on-time delivery",
+        "OTD"
+      ],
+      "LOGISTICS_ROLE": [
+        "delivery reliability"
+      ],
+      "PLANNING_ROLE": [
+        "delivery rate",
+        "OTD"
+      ],
+      "PROCUREMENT_ROLE": [
+        "customer delivery performance"
+      ]
+    },
+    "scor_attribute": "RS.3.x Deliver on time to supplier promise",
+    "status": "approved",
+    "steward": "Procurement Analytics Lead",
+    "synonyms": [
+      "supplier on-time",
+      "supplier delivery performance",
+      "on-time receipt"
+    ],
+    "title": "Supplier on-time receipt",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Logistics",
+    "approved_on": "2026-10-01",
+    "date_basis": "actual_delivery",
+    "definition": "Median hours a delivered shipment spent between pick-up and proof of delivery.",
+    "denominator": "not applicable (median)",
+    "deprecated_by": null,
+    "expression": "MEDIAN(shipments.transit_hours)",
+    "formula_text": "MEDIAN(delivered_utc - picked_up_utc) in hours, dated by actual_delivery.",
+    "grain": "shipment",
+    "lineage": {
+      "conformed_model": "fct_shipment",
+      "facts": [
+        "transit_hours"
+      ],
+      "semantic_table": "shipments"
+    },
+    "metric_name": "transit_hours",
+    "numerator": "Hours from the picked_up event to the delivered event, both in UTC.",
+    "owner": "VP Logistics",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "delivery time"
+      ],
+      "LOGISTICS_ROLE": [
+        "transit hours"
+      ],
+      "PLANNING_ROLE": [
+        "transit time"
+      ],
+      "PROCUREMENT_ROLE": [
+        "shipping duration"
+      ]
+    },
+    "scor_attribute": "DR.2.x Transport cycle time",
+    "status": "approved",
+    "steward": "Logistics Analytics Lead",
+    "synonyms": [
+      "transit time",
+      "transit hours",
+      "shipping time"
+    ],
+    "title": "Transit time",
+    "type": "percentile",
+    "unit": "hours",
+    "variants": [],
+    "version": 1,
+    "window": "period"
+  },
+  {
+    "approved_by": "VP Supply Chain",
+    "approved_on": "2026-10-01",
+    "date_basis": "requested_date",
+    "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+    "denominator": "Units ordered on non-cancelled lines requested in the period.",
+    "deprecated_by": null,
+    "expression": "SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)",
+    "formula_text": "SUM(first_shipment_qty) / SUM(ordered_qty), lines dated by requested_date, cancelled excluded.",
+    "grain": "sales_order_line",
+    "lineage": {
+      "conformed_model": "fct_sales_order_line",
+      "facts": [
+        "live_first_qty",
+        "live_ordered_qty"
+      ],
+      "semantic_table": "requested_lines"
+    },
+    "metric_name": "unit_fill_rate",
+    "numerator": "Units on the first shipment of non-cancelled lines requested in the period.",
+    "owner": "VP Supply Chain",
+    "parent": null,
+    "persona_synonyms": {
+      "EXECUTIVE_ROLE": [
+        "fill rate"
+      ],
+      "LOGISTICS_ROLE": [
+        "shipment completeness"
+      ],
+      "PLANNING_ROLE": [
+        "fill rate",
+        "availability"
+      ],
+      "PROCUREMENT_ROLE": [
+        "unit fill"
+      ]
+    },
+    "scor_attribute": "RL.2.2 Delivered in full",
+    "status": "approved",
+    "steward": "Demand Planning Manager",
+    "synonyms": [
+      "fill rate",
+      "unit fill",
+      "initial fill"
+    ],
+    "title": "Unit fill rate",
+    "type": "ratio",
+    "unit": "ratio",
+    "variants": [
+      "line_fill_rate",
+      "order_fill_rate"
+    ],
+    "version": 1,
+    "window": "period"
+  }
+]

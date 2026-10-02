@@ -1,0 +1,39 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 0.1
+source: scm_dev.conformed.fct_po_line
+joins:
+- name: parts
+  source: scm_dev.conformed.dim_part
+  'on': source.part_id = parts.part_id
+- name: plants
+  source: scm_dev.conformed.dim_plant
+  'on': source.plant_id = plants.plant_id
+- name: suppliers
+  source: scm_dev.conformed.dim_supplier
+  'on': source.supplier_id = suppliers.supplier_id
+dimensions:
+- name: period_month
+  expr: source.receipt_month
+- name: part_family
+  expr: parts.part_family
+- name: category
+  expr: parts.category
+- name: plant_id
+  expr: plants.plant_id
+- name: region
+  expr: plants.region
+- name: plant_name
+  expr: plants.plant_name
+- name: supplier_name
+  expr: suppliers.supplier_name
+- name: supplier_country
+  expr: suppliers.supplier_country
+measures:
+- name: landed_cost_per_unit
+  expr: SUM(source.landed_usd) / NULLIF(SUM(source.received_qty), 0)
+- name: lead_time_variability
+  expr: STDDEV_SAMP(source.lead_days)
+- name: supplier_lead_time_days
+  expr: MEDIAN(source.lead_days)
+- name: supplier_on_time_receipt
+  expr: SUM(source.is_on_time_receipt) / NULLIF(SUM(source.is_received), 0)

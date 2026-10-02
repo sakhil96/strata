@@ -1,0 +1,322 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+cubes:
+- name: delivered_lines
+  sql_table: CONFORMED.FCT_SALES_ORDER_LINE
+  dimensions:
+  - name: so_line_id
+    sql: so_line_id
+    type: string
+    primary_key: true
+  - name: customer_id
+    sql: customer_id
+    type: string
+  - name: part_id
+    sql: part_id
+    type: string
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: period_month
+    sql: delivery_month
+    type: time
+  measures:
+  - name: on_time_delivery
+    sql: SUM({CUBE}.is_on_time) / NULLIF(SUM({CUBE}.is_delivered), 0)
+    type: number
+    description: Share of delivered sales order lines that arrived on or before the date we committed to the customer.
+  - name: on_time_to_request
+    sql: SUM({CUBE}.is_on_time_to_request) / NULLIF(SUM({CUBE}.is_delivered), 0)
+    type: number
+    description: Share of delivered sales order lines that arrived on or before the date the customer asked for.
+  - name: order_fulfilment_cycle_days
+    sql: MEDIAN({CUBE}.cycle_days)
+    type: number
+    description: Median calendar days from a customer placing an order line to receiving it.
+  - name: otif
+    sql: SUM({CUBE}.is_otif) / NULLIF(SUM({CUBE}.is_delivered), 0)
+    type: number
+    description: Share of delivered sales order lines that were on time to commit and complete on the first shipment.
+  joins:
+  - name: customers
+    sql: '{CUBE}.customer_id = {customers}.customer_id'
+    relationship: many_to_one
+  - name: parts
+    sql: '{CUBE}.part_id = {parts}.part_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+- name: requested_lines
+  sql_table: CONFORMED.FCT_SALES_ORDER_LINE
+  dimensions:
+  - name: so_line_id
+    sql: so_line_id
+    type: string
+    primary_key: true
+  - name: customer_id
+    sql: customer_id
+    type: string
+  - name: part_id
+    sql: part_id
+    type: string
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: period_month
+    sql: request_month
+    type: time
+  measures:
+  - name: line_fill_rate
+    sql: SUM({CUBE}.is_line_filled) / NULLIF(SUM({CUBE}.is_live), 0)
+    type: number
+    description: Share of order lines filled completely on the first shipment.
+  - name: order_fill_rate
+    sql: SUM({CUBE}.is_order_filled) / NULLIF(SUM({CUBE}.is_order_head), 0)
+    type: number
+    description: Share of orders where every line was filled completely on the first shipment.
+  - name: unit_fill_rate
+    sql: SUM({CUBE}.live_first_qty) / NULLIF(SUM({CUBE}.live_ordered_qty), 0)
+    type: number
+    description: Share of ordered units that left on the first shipment, dated by the customer's requested date.
+  joins:
+  - name: customers
+    sql: '{CUBE}.customer_id = {customers}.customer_id'
+    relationship: many_to_one
+  - name: parts
+    sql: '{CUBE}.part_id = {parts}.part_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+- name: shipments
+  sql_table: CONFORMED.FCT_SHIPMENT
+  dimensions:
+  - name: shipment_id
+    sql: shipment_id
+    type: string
+    primary_key: true
+  - name: carrier_id
+    sql: carrier_id
+    type: string
+  - name: customer_id
+    sql: customer_id
+    type: string
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: period_month
+    sql: delivery_month
+    type: time
+  measures:
+  - name: carrier_on_time
+    sql: SUM({CUBE}.is_on_eta) / NULLIF(SUM({CUBE}.is_delivered), 0)
+    type: number
+    description: Share of delivered shipments that arrived on or before the carrier's own estimate.
+  - name: transit_hours
+    sql: MEDIAN({CUBE}.transit_hours)
+    type: number
+    description: Median hours a delivered shipment spent between pick-up and proof of delivery.
+  joins:
+  - name: carriers
+    sql: '{CUBE}.carrier_id = {carriers}.carrier_id'
+    relationship: many_to_one
+  - name: customers
+    sql: '{CUBE}.customer_id = {customers}.customer_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+- name: shipment_lines
+  sql_table: CONFORMED.FCT_SHIPMENT_LINE
+  dimensions:
+  - name: shipment_line_id
+    sql: shipment_line_id
+    type: string
+    primary_key: true
+  - name: carrier_id
+    sql: carrier_id
+    type: string
+  - name: customer_id
+    sql: customer_id
+    type: string
+  - name: part_id
+    sql: part_id
+    type: string
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: period_month
+    sql: ship_month
+    type: time
+  measures:
+  - name: freight_cost_per_unit
+    sql: SUM({CUBE}.freight_alloc_usd) / NULLIF(SUM({CUBE}.shipped_qty), 0)
+    type: number
+    description: Outbound freight cost in USD for each unit shipped, weighted by units.
+  joins:
+  - name: carriers
+    sql: '{CUBE}.carrier_id = {carriers}.carrier_id'
+    relationship: many_to_one
+  - name: customers
+    sql: '{CUBE}.customer_id = {customers}.customer_id'
+    relationship: many_to_one
+  - name: parts
+    sql: '{CUBE}.part_id = {parts}.part_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+- name: po_lines
+  sql_table: CONFORMED.FCT_PO_LINE
+  dimensions:
+  - name: po_line_id
+    sql: po_line_id
+    type: string
+    primary_key: true
+  - name: part_id
+    sql: part_id
+    type: string
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: supplier_id
+    sql: supplier_id
+    type: string
+  - name: period_month
+    sql: receipt_month
+    type: time
+  measures:
+  - name: landed_cost_per_unit
+    sql: SUM({CUBE}.landed_usd) / NULLIF(SUM({CUBE}.received_qty), 0)
+    type: number
+    description: Fully loaded USD cost of each received unit, weighted by received quantity.
+  - name: lead_time_variability
+    sql: STDDEV_SAMP({CUBE}.lead_days)
+    type: number
+    description: Sample standard deviation of supplier lead time in days; how far a planner can trust the median.
+  - name: supplier_lead_time_days
+    sql: MEDIAN({CUBE}.lead_days)
+    type: number
+    description: Median calendar days from placing a purchase order line to receiving it.
+  - name: supplier_on_time_receipt
+    sql: SUM({CUBE}.is_on_time_receipt) / NULLIF(SUM({CUBE}.is_received), 0)
+    type: number
+    description: Share of received purchase order lines that arrived on or before the supplier's promised date.
+  joins:
+  - name: parts
+    sql: '{CUBE}.part_id = {parts}.part_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+  - name: suppliers
+    sql: '{CUBE}.supplier_id = {suppliers}.supplier_id'
+    relationship: many_to_one
+- name: inventory
+  sql_table: CONFORMED.FCT_INVENTORY_MONTH
+  dimensions:
+  - name: row_key
+    sql: CAST(storage_location_id AS VARCHAR) || '|' || CAST(part_id AS VARCHAR) || '|' || CAST(snapshot_month AS
+      VARCHAR)
+    type: string
+    primary_key: true
+  - name: plant_id
+    sql: plant_id
+    type: string
+  - name: period_month
+    sql: snapshot_month
+    type: time
+  measures:
+  - name: days_of_inventory
+    sql: SUM({CUBE}.on_hand_value_end) / NULLIF(SUM({CUBE}.cogs_daily_90d), 0)
+    type: number
+    description: How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.
+  - name: dio_financial
+    sql: SUM({CUBE}.avg_value_x_days) / NULLIF(SUM({CUBE}.cogs_month), 0)
+    type: number
+    description: Days inventory outstanding on the finance basis, average inventory over cost of sales times days
+      in the period.
+  - name: doi_units
+    sql: SUM({CUBE}.on_hand_qty_end) / NULLIF(SUM({CUBE}.units_daily_90d), 0)
+    type: number
+    description: Days of inventory measured in units rather than value.
+  - name: inventory_turns
+    sql: SUM({CUBE}.cogs_annual_90d) / NULLIF(SUM({CUBE}.on_hand_value_end), 0)
+    type: number
+    description: How many times a year the month-end stock turns over at the trailing 90-day shipment rate.
+  - name: stockout_rate
+    sql: SUM({CUBE}.stockout_days) / NULLIF(SUM({CUBE}.obs_days), 0)
+    type: number
+    description: Share of location-part-days with demand allocated but nothing on hand.
+  joins:
+  - name: parts
+    sql: '{CUBE}.part_id = {parts}.part_id'
+    relationship: many_to_one
+  - name: plants
+    sql: '{CUBE}.plant_id = {plants}.plant_id'
+    relationship: many_to_one
+- name: plants
+  sql_table: CONFORMED.DIM_PLANT
+  dimensions:
+  - name: plant_id
+    sql: plant_id
+    type: string
+    primary_key: true
+  - name: region
+    sql: region
+    type: string
+  - name: plant_name
+    sql: plant_name
+    type: string
+- name: customers
+  sql_table: CONFORMED.DIM_CUSTOMER
+  dimensions:
+  - name: customer_id
+    sql: customer_id
+    type: string
+    primary_key: true
+  - name: segment
+    sql: segment
+    type: string
+  - name: account_name
+    sql: account_name
+    type: string
+- name: parts
+  sql_table: CONFORMED.DIM_PART
+  dimensions:
+  - name: part_id
+    sql: part_id
+    type: string
+    primary_key: true
+  - name: part_family
+    sql: part_family
+    type: string
+  - name: category
+    sql: category
+    type: string
+- name: suppliers
+  sql_table: CONFORMED.DIM_SUPPLIER
+  dimensions:
+  - name: supplier_id
+    sql: supplier_id
+    type: string
+    primary_key: true
+  - name: supplier_name
+    sql: supplier_name
+    type: string
+  - name: supplier_country
+    sql: supplier_country
+    type: string
+- name: carriers
+  sql_table: CONFORMED.DIM_CARRIER
+  dimensions:
+  - name: carrier_id
+    sql: carrier_id
+    type: string
+    primary_key: true
+  - name: carrier_name
+    sql: carrier_name
+    type: string
+  - name: carrier_type
+    sql: carrier_type
+    type: string

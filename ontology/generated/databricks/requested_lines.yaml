@@ -1,0 +1,37 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 0.1
+source: scm_dev.conformed.fct_sales_order_line
+joins:
+- name: customers
+  source: scm_dev.conformed.dim_customer
+  'on': source.customer_id = customers.customer_id
+- name: parts
+  source: scm_dev.conformed.dim_part
+  'on': source.part_id = parts.part_id
+- name: plants
+  source: scm_dev.conformed.dim_plant
+  'on': source.plant_id = plants.plant_id
+dimensions:
+- name: period_month
+  expr: source.request_month
+- name: segment
+  expr: customers.segment
+- name: account_name
+  expr: customers.account_name
+- name: part_family
+  expr: parts.part_family
+- name: category
+  expr: parts.category
+- name: plant_id
+  expr: plants.plant_id
+- name: region
+  expr: plants.region
+- name: plant_name
+  expr: plants.plant_name
+measures:
+- name: line_fill_rate
+  expr: SUM(source.is_line_filled) / NULLIF(SUM(source.is_live), 0)
+- name: order_fill_rate
+  expr: SUM(source.is_order_filled) / NULLIF(SUM(source.is_order_head), 0)
+- name: unit_fill_rate
+  expr: SUM(source.live_first_qty) / NULLIF(SUM(source.live_ordered_qty), 0)

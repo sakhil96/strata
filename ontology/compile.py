@@ -1,415 +1,454 @@
-"""Compile the SCM ontology and metric registry into downstream targets."""
+"""Compile the ontology and metric registry into every downstream target."""
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import click
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import semantic  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 ONTOLOGY_PATH = ROOT / "ontology" / "ontology.yaml"
-METRICS_PATH = ROOT / "ontology" / "metrics.yaml"
-GENERATED_DIR = ROOT / "ontology" / "generated"
+GENERATED = ROOT / "ontology" / "generated"
 SEMANTIC_DIR = ROOT / "snowflake" / "semantic"
-DBT_DIR = ROOT / "dbt"
+DBT_SCHEMA = ROOT / "dbt" / "models" / "conformed" / "schema.yml"
 CUBE_DIR = ROOT / "cube" / "model"
+DATABRICKS_DIR = ROOT / "ontology" / "generated" / "databricks"
+QUESTIONS = ROOT / "eval" / "questions.yaml"
 
-HEADER = "# Generated from ontology/*.yaml by compile.py; edit the registry, not this file."
-
-REQUIRED_METRIC_FIELDS = [
-    "title", "type", "grain", "date_basis", "window",
-    "numerator", "denominator", "definition", "formula_text",
-    "synonyms", "variants", "owner", "steward", "scor_attribute",
-    "unit", "persona_synonyms", "version", "status",
-    "approved_by", "approved_on",
-]
-
-PERSONA_VIEWS = ["PLANNING_SV", "PROCUREMENT_SV", "LOGISTICS_SV", "EXECUTIVE_SV"]
-PERSONA_ROLES = {
+HEADER = "Generated from ontology/*.yaml by compile.py; edit the registry, not this file."
+TARGETS = ("snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks")
+VIEWS = {
+    "SCM_GOVERNED": None,
     "PLANNING_SV": "PLANNING_ROLE",
     "PROCUREMENT_SV": "PROCUREMENT_ROLE",
     "LOGISTICS_SV": "LOGISTICS_ROLE",
     "EXECUTIVE_SV": "EXECUTIVE_ROLE",
 }
+VIEW_GRANTEE = {"SCM_GOVERNED": "SCM_READER", **{v: r for v, r in VIEWS.items() if r}}
+PERSONA_FOCUS = {
+    None: "Answer for any role. Prefer the governed default metric unless the question names a variant.",
+    "PLANNING_ROLE": "Planners think in plants, families and months; default to plant_id and period_month.",
+    "PROCUREMENT_ROLE": "Buyers think in suppliers and receipts; offer supplier_name when it is reachable.",
+    "LOGISTICS_ROLE": "Logistics thinks in carriers and lanes; offer carrier_name when it is reachable.",
+    "EXECUTIVE_ROLE": "Executives want the headline for the fiscal year and the trend by month.",
+}
+FACT_TYPES = {"transit_hours": "NUMBER(18,4)", "cycle_days": "NUMBER(9,0)", "lead_days": "NUMBER(9,0)"}
+ROW_POLICY_MODELS = ("FCT_SALES_ORDER_LINE", "FCT_SHIPMENT", "FCT_SHIPMENT_LINE", "FCT_PO_LINE", "FCT_INVENTORY_MONTH")
+DBT_RELATIONSHIPS = (
+    ("fct_sales_order_line", "customer_id", "dim_customer", "customer_id"),
+    ("fct_sales_order_line", "part_id", "dim_part", "part_id"),
+    ("fct_sales_order_line", "plant_id", "dim_plant", "plant_id"),
+    ("fct_po_line", "supplier_id", "dim_supplier", "supplier_id"),
+    ("fct_po_line", "part_id", "dim_part", "part_id"),
+    ("fct_shipment", "carrier_id", "dim_carrier", "carrier_id"),
+    ("fct_shipment_line", "shipment_id", "fct_shipment", "shipment_id"),
+    ("fct_receipt", "po_line_id", "fct_po_line", "po_line_id"),
+    ("fct_delivery_event", "shipment_id", "fct_shipment", "shipment_id"),
+)
+DBT_ACCEPTED = (
+    ("fct_delivery_event", "event_type", ["picked_up", "departed", "arrived", "delivered", "exception"]),
+    ("dim_plant", "region", ["US", "EMEA", "APAC"]),
+    ("dim_customer", "segment", ["Industrial", "Retail", "Government", "Healthcare"]),
+)
+CLASS_MODEL = {
+    "Supplier": "dim_supplier", "Part": "dim_part", "Plant": "dim_plant", "StorageLocation": "dim_storage_location",
+    "Customer": "dim_customer", "Carrier": "dim_carrier", "TariffCode": "dim_tariff_code",
+    "PurchaseOrderLine": "fct_po_line", "GoodsReceipt": "fct_receipt", "SalesOrderLine": "fct_sales_order_line",
+    "Shipment": "fct_shipment", "ShipmentLine": "fct_shipment_line", "DeliveryEvent": "fct_delivery_event",
+    "InventorySnapshot": "fct_inventory_snapshot", "FxRate": "fct_fx_rate",
+}
 
 
-def load_ontology() -> dict[str, Any]:
-    with open(ONTOLOGY_PATH) as f:
-        return yaml.safe_load(f)
+def dump(data: Any) -> str:
+    return f"# {HEADER}\n" + yaml.safe_dump(data, sort_keys=False, width=110, allow_unicode=True)
 
 
-def load_metrics() -> dict[str, Any]:
-    with open(METRICS_PATH) as f:
-        data = yaml.safe_load(f)
-    return data.get("metrics", {})
+def write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+    click.echo(f"  wrote {path.relative_to(ROOT)}")
 
 
-def validate_metrics(metrics: dict[str, Any], env: str) -> list[str]:
-    errors = []
-    for name, defn in metrics.items():
-        for field in REQUIRED_METRIC_FIELDS:
-            if field not in defn or defn[field] is None:
-                errors.append(f"metric '{name}' missing required field '{field}'")
-        if env == "prod" and defn.get("status") != "approved":
-            errors.append(f"metric '{name}' has status '{defn.get('status')}', only approved metrics deploy to prod")
-    return errors
+def approved_epoch(metric: dict[str, Any]) -> int:
+    day = datetime.strptime(str(metric["approved_on"]), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    return int(day.timestamp())
 
 
-def build_semantic_metric_expr(name: str, defn: dict[str, Any]) -> dict[str, Any]:
-    """Build a semantic view metric definition from the registry entry."""
-    return {
-        "name": name,
-        "title": defn["title"],
-        "type": defn["type"],
-        "definition": defn["definition"],
-        "formula_text": defn["formula_text"],
-        "grain": defn["grain"],
-        "date_basis": defn["date_basis"],
-        "owner": defn["owner"],
-        "steward": defn["steward"],
-        "version": defn["version"],
-    }
+def tag(db: str, name: str, value: Any) -> dict[str, Any]:
+    return {"name": {"database": db, "schema": "CONFORMED", "tag": name}, "value": str(value)}
 
 
-def extract_sensitivity_annotations(ontology: dict[str, Any]) -> list[dict[str, str]]:
-    """Extract columns with sensitivity annotations for policy generation."""
-    bindings = []
-    for cls_name, cls_def in ontology.get("classes", {}).items():
-        for attr_name, attr_def in (cls_def.get("attributes") or {}).items():
-            annotations = attr_def.get("annotations", {})
-            if "sensitivity" in annotations:
-                bindings.append({
-                    "class": cls_name,
-                    "attribute": attr_name,
-                    "sensitivity": annotations["sensitivity"],
-                })
-    return bindings
+def check_registry(registry: semantic.Registry, env: str) -> list[str]:
+    problems = []
+    for name, metric in registry.metrics.items():
+        table = metric["semantic"]["table"]
+        if table not in registry.tables:
+            problems.append(f"{name}: unknown logical table {table}")
+        if f"{table}." not in metric["semantic"]["expr"]:
+            problems.append(f"{name}: expression must reference {table}.<fact>")
+        if env == "prod" and metric["status"] != "approved":
+            problems.append(f"{name}: status {metric['status']} cannot ship to SCM_PROD")
+    return problems
 
 
-def generate_semantic_yaml(
-    ontology: dict[str, Any],
-    metrics: dict[str, Any],
-    env: str,
-    version: int,
-) -> dict[str, str]:
-    """Generate semantic view YAML files. Returns {filename: content}."""
-    outputs = {}
-
-    base_metrics = []
-    for name, defn in metrics.items():
-        base_metrics.append(build_semantic_metric_expr(name, defn))
-
-    governed_view = {
-        "name": f"SCM_GOVERNED_V{version}",
-        "database": f"SCM_{env.upper()}",
-        "schema": "SEMANTIC",
-        "description": "Governed semantic view covering all supply chain metrics.",
-        "metrics": base_metrics,
-    }
-
-    outputs[f"scm_governed_v{version}.yaml"] = yaml.dump(
-        governed_view, default_flow_style=False, sort_keys=False
-    )
-
-    for persona_view in PERSONA_VIEWS:
-        role = PERSONA_ROLES[persona_view]
-        role_key = role.replace("_ROLE", "_ROLE")
-
-        persona_metrics = []
-        for name, defn in metrics.items():
-            metric = build_semantic_metric_expr(name, defn)
-            synonyms = defn.get("persona_synonyms", {}).get(role, [])
-            if synonyms:
-                metric["synonyms"] = synonyms
-            persona_metrics.append(metric)
-
-        view = {
-            "name": f"{persona_view}_V{version}",
-            "database": f"SCM_{env.upper()}",
-            "schema": "SEMANTIC",
-            "description": f"Persona semantic view for {role}.",
-            "metrics": persona_metrics,
+def semantic_view(registry: semantic.Registry, view: str, persona: str | None, env: str, version: int,
+                  verified: list[dict[str, Any]]) -> dict[str, Any]:
+    db = f"SCM_{env.upper()}"
+    tables = []
+    for name, spec in registry.tables.items():
+        logical: dict[str, Any] = {
+            "name": name,
+            "description": spec["description"],
+            "base_table": {"database": db, "schema": "CONFORMED", "table": spec["base_table"]},
+            "primary_key": {"columns": list(spec["primary_key"])},
         }
+        dims = []
+        for key in sorted(spec.get("keys", {})):
+            dims.append({"name": key, "expr": key, "data_type": "VARCHAR"})
+        for dim, meta in spec.get("dimensions", {}).items():
+            if dim in spec["primary_key"]:
+                dims = [d for d in dims if d["name"] != dim]
+            dims.append({"name": dim, "synonyms": list(meta.get("synonyms", [])), "expr": dim, "data_type": "VARCHAR"})
+        for pk in spec["primary_key"]:
+            if pk not in {d["name"] for d in dims} and pk != spec.get("period"):
+                dims.append({"name": pk, "expr": pk, "data_type": "VARCHAR"})
+        if dims:
+            logical["dimensions"] = dims
+        if "period" in spec:
+            logical["time_dimensions"] = [{
+                "name": semantic.PERIOD,
+                "synonyms": ["month", "period"],
+                "description": f"First day of the month of {spec['period'].replace('_month', '')} for this table.",
+                "expr": spec["period"],
+                "data_type": "DATE",
+            }]
+        if spec.get("facts"):
+            logical["facts"] = [{"name": f, "expr": f, "data_type": FACT_TYPES.get(f, "NUMBER(38,6)"),
+                                 "access_modifier": "private_access"} for f in spec["facts"]]
+        metrics = []
+        for mname, m in registry.metrics.items():
+            if m["semantic"]["table"] != name:
+                continue
+            synonyms = list(m["synonyms"])
+            if persona:
+                synonyms += [s for s in m["persona_synonyms"].get(persona, []) if s not in synonyms]
+            entry: dict[str, Any] = {
+                "name": mname,
+                "synonyms": synonyms,
+                "description": f"{m['definition']} Grain {m['grain']}; dated by {m['date_basis']}; unit {m['unit']}.",
+                "expr": m["semantic"]["expr"],
+            }
+            if spec.get("non_additive_by"):
+                entry["non_additive_dimensions"] = [{"table": name, "dimension": semantic.PERIOD,
+                                                     "sort_direction": "descending", "null_order": "last"}]
+            entry["tags"] = [tag(db, "METRIC_OWNER", m["owner"]), tag(db, "METRIC_STEWARD", m["steward"]),
+                             tag(db, "METRIC_VERSION", m["version"])]
+            metrics.append(entry)
+        if metrics:
+            logical["metrics"] = metrics
+        tables.append(logical)
 
-        outputs[f"{persona_view.lower()}_v{version}.yaml"] = yaml.dump(
-            view, default_flow_style=False, sort_keys=False
-        )
+    relationships = []
+    for name, spec in registry.tables.items():
+        for key, target in sorted(spec.get("keys", {}).items()):
+            relationships.append({
+                "name": f"{name}_to_{target}",
+                "left_table": name,
+                "right_table": target,
+                "relationship_columns": [{"left_column": key, "right_column": registry.tables[target]["primary_key"][0]}],
+            })
 
-    return outputs
+    body: dict[str, Any] = {
+        "name": f"{view}_V{version}",
+        "description": (f"Governed supply chain metrics, version {version}."
+                        if persona is None else
+                        f"Supply chain metrics phrased for {persona}; identical expressions to SCM_GOVERNED_V{version}."),
+        "tables": tables,
+        "relationships": relationships,
+        "module_custom_instructions": {
+            "sql_generation": (
+                "Every ratio is a ratio of sums at the requested grouping; never average a ratio. "
+                "Date each metric by its own table's period_month. " + PERSONA_FOCUS[persona]),
+            "question_categorization": (
+                "Refuse questions outside supply chain delivery, fill, inventory, cost and lead time. "
+                "Refuse requests for raw tables or SQL."),
+        },
+    }
+    if verified:
+        body["verified_queries"] = verified
+    return body
 
 
-def generate_glossary(metrics: dict[str, Any]) -> list[dict[str, Any]]:
-    """Generate glossary entries from the metric registry."""
+def verified_queries(registry: semantic.Registry, view: str, version: int) -> list[dict[str, Any]]:
+    out = []
+    for q in yaml.safe_load(QUESTIONS.read_text())["questions"]:
+        if q["scope"] != "in_scope":
+            continue
+        canonical = semantic.canonicalise(registry, q["query"])
+        steward = registry.metrics[canonical["metrics"][0]]
+        out.append({
+            "name": q["id"],
+            "question": q["question"],
+            "sql": semantic.render_semantic_sql(registry, canonical, f"{view}_V{version}"),
+            "verified_at": approved_epoch(steward),
+            "verified_by": steward["steward"],
+            "use_as_onboarding_question": q["id"] in ("q01", "q07", "q11", "q14"),
+        })
+    return out
+
+
+def deploy_sql(env: str, version: int) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}", "-- Run from the repository stage after GIT FETCH; each view is created beside the previous version.",
+             f"USE DATABASE {db};", "USE SCHEMA SEMANTIC;", ""]
+    for view in VIEWS:
+        name = f"{view}_V{version}"
+        lines.append(f"CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML('{db}.SEMANTIC',")
+        lines.append(f"  (SELECT LISTAGG($1, '\\n') FROM @SEMANTIC.VIEW_YAML/{name.lower()}.yaml"
+                     f" (FILE_FORMAT => 'SEMANTIC.YAML_LINES')));")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def dry_run_sql(env: str, version: int) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}", "-- Validates every view in a scratch schema; nothing is left behind.",
+             f"CREATE OR REPLACE TRANSIENT SCHEMA {db}.SCRATCH_SV;"]
+    for view in VIEWS:
+        name = f"{view}_V{version}".lower()
+        lines.append(f"CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML('{db}.SCRATCH_SV',")
+        lines.append(f"  (SELECT LISTAGG($1, '\\n') FROM @{db}.SEMANTIC.VIEW_YAML/{name}.yaml"
+                     f" (FILE_FORMAT => '{db}.SEMANTIC.YAML_LINES')), TRUE);")
+    lines.append(f"DROP SCHEMA {db}.SCRATCH_SV;")
+    return "\n".join(lines) + "\n"
+
+
+def versioning_sql(env: str, version: int) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}",
+             f"-- Promote V{version}. Rollback is this file compiled with --version {version - 1}.",
+             "USE ROLE SCM_ADMIN;", ""]
+    for view, role in VIEW_GRANTEE.items():
+        lines.append(f"GRANT SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{version} TO ROLE {role};")
+        for older in range(1, version):
+            lines.append(f"REVOKE SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{older} FROM ROLE {role};")
+    lines.append("")
+    lines.append(f"UPDATE {db}.SEMANTIC.ACTIVE_VERSION SET version = {version}, promoted_at = CURRENT_TIMESTAMP();")
+    return "\n".join(lines) + "\n"
+
+
+def policies_sql(ontology: dict[str, Any], env: str) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}",
+             "-- Masking is tag-based: 04_policies.sql attaches one string and one number policy to the",
+             "-- SENSITIVITY tag, and each policy reads the tag value. Tagging a column is the whole binding.",
+             "USE ROLE SCM_ADMIN;", ""]
+    for cls, spec in ontology["classes"].items():
+        model = CLASS_MODEL.get(cls)
+        for attr, meta in (spec.get("attributes") or {}).items():
+            level = (meta.get("annotations") or {}).get("sensitivity")
+            if level and model:
+                lines.append(f"ALTER TABLE {db}.CONFORMED.{model.upper()} MODIFY COLUMN {attr} "
+                             f"SET TAG {db}.CONFORMED.SENSITIVITY = '{level}';")
+    lines.append("")
+    lines.append("-- Persona roles see the plants USER_PLANT_SCOPE grants them; admin and executive see all.")
+    for model in ROW_POLICY_MODELS:
+        lines.append(f"ALTER TABLE {db}.CONFORMED.{model} DROP ALL ROW ACCESS POLICIES;")
+        lines.append(f"ALTER TABLE {db}.CONFORMED.{model} ADD ROW ACCESS POLICY {db}.CONFORMED.PLANT_ACCESS ON (plant_id);")
+    return "\n".join(lines) + "\n"
+
+
+def dbt_schema(ontology: dict[str, Any], registry: semantic.Registry) -> str:
+    models = {}
+    for cls, model in CLASS_MODEL.items():
+        spec = ontology["classes"][cls]
+        columns = [{"name": attr, "description": meta.get("description", ""), "data_tests": ["unique", "not_null"]}
+                   for attr, meta in (spec.get("attributes") or {}).items() if meta.get("identifier")]
+        models[model] = {"name": model, "description": spec.get("description", ""), "columns": columns}
+    for model, column, target, field in DBT_RELATIONSHIPS:
+        models[model]["columns"].append({
+            "name": column, "data_tests": ["not_null", {"relationships": {"to": f"ref('{target}')", "field": field}}]})
+    for model, column, values in DBT_ACCEPTED:
+        models[model]["columns"].append({"name": column, "data_tests": [{"accepted_values": {"values": values}}]})
+    models["fct_inventory_month"] = {
+        "name": "fct_inventory_month", "description": "Month-end inventory position per storage location and part.",
+        "columns": [{"name": c, "data_tests": ["not_null"]} for c in ("snapshot_month", "plant_id", "on_hand_value_end")]}
+    missing = {t["base_table"].lower() for t in registry.tables.values()} - set(models)
+    if missing:
+        raise click.ClickException(f"semantic tables without a dbt model: {sorted(missing)}")
+    return dump({"version": 2, "models": list(models.values())})
+
+
+def glossary(registry: semantic.Registry) -> list[dict[str, Any]]:
     entries = []
-    for name, defn in metrics.items():
-        entry = {
-            "metric_name": name,
-            "title": defn["title"],
-            "definition": defn["definition"],
-            "formula_text": defn["formula_text"],
-            "owner": defn["owner"],
-            "steward": defn["steward"],
-            "version": defn["version"],
-            "status": defn["status"],
-            "scor_attribute": defn["scor_attribute"],
-            "unit": defn["unit"],
-            "grain": defn["grain"],
-            "date_basis": defn["date_basis"],
-            "synonyms": defn.get("synonyms", []),
-            "variants": list((defn.get("variants") or {}).keys()),
-        }
-        entries.append(entry)
+    for name, m in sorted(registry.metrics.items()):
+        table = m["semantic"]["table"]
+        base = registry.tables[table]["base_table"]
+        entries.append({
+            "metric_name": name, "title": m["title"], "parent": m["parent"], "variants": m["variants"],
+            "type": m["type"], "grain": m["grain"], "date_basis": m["date_basis"], "window": m["window"],
+            "numerator": m["numerator"], "denominator": m["denominator"], "definition": m["definition"],
+            "formula_text": m["formula_text"], "expression": m["semantic"]["expr"], "unit": m["unit"],
+            "owner": m["owner"], "steward": m["steward"], "scor_attribute": m["scor_attribute"],
+            "synonyms": m["synonyms"], "persona_synonyms": m["persona_synonyms"], "version": m["version"],
+            "status": m["status"], "approved_by": m["approved_by"], "approved_on": str(m["approved_on"]),
+            "deprecated_by": m.get("deprecated_by"),
+            "lineage": {"semantic_table": table, "conformed_model": base.lower(),
+                        "facts": sorted({f for f in registry.tables[table].get("facts", []) if f in m["semantic"]["expr"]})},
+        })
     return entries
 
 
-def generate_deploy_sql(env: str, version: int) -> str:
-    """Generate the deploy.sql for semantic views."""
+def glossary_load_sql(env: str) -> str:
     db = f"SCM_{env.upper()}"
-    lines = [HEADER, "", f"USE DATABASE {db};", "USE SCHEMA SEMANTIC;", ""]
-
-    view_files = [f"scm_governed_v{version}.yaml"] + [
-        f"{pv.lower()}_v{version}.yaml" for pv in PERSONA_VIEWS
-    ]
-
-    for vf in view_files:
-        view_name = vf.replace(".yaml", "").upper()
-        lines.append(f"-- Deploy {view_name}")
-        lines.append(
-            f"SELECT SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML("
-            f"'{db}.SEMANTIC.{view_name}', "
-            f"$$@SEMANTIC.VIEW_YAML/{vf}$$);"
-        )
-        lines.append("")
-
-    return "\n".join(lines)
+    return "\n".join([
+        f"-- {HEADER}",
+        f"CREATE TABLE IF NOT EXISTS {db}.SEMANTIC.GLOSSARY (metric_name STRING, entry VARIANT, loaded_at TIMESTAMP_NTZ);",
+        f"CREATE OR REPLACE TEMPORARY TABLE glossary_incoming AS",
+        f"  SELECT value:metric_name::STRING AS metric_name, value AS entry",
+        f"  FROM @{db}.SEMANTIC.VIEW_YAML/glossary.json (FILE_FORMAT => '{db}.SEMANTIC.JSON_DOC'),",
+        "  LATERAL FLATTEN(input => $1);",
+        f"MERGE INTO {db}.SEMANTIC.GLOSSARY g USING glossary_incoming i ON g.metric_name = i.metric_name",
+        "  WHEN MATCHED THEN UPDATE SET entry = i.entry, loaded_at = CURRENT_TIMESTAMP()",
+        "  WHEN NOT MATCHED THEN INSERT VALUES (i.metric_name, i.entry, CURRENT_TIMESTAMP());", ""])
 
 
-def generate_versioning_sql(env: str, version: int) -> str:
-    """Generate the versioning.sql that swaps grants from V{n} to V{n+1}."""
+def expr(text: str) -> dict[str, Any]:
+    return {"dialects": [{"dialect": "ANSI_SQL", "expression": text}]}
+
+
+def ossie(registry: semantic.Registry, env: str) -> dict[str, Any]:
     db = f"SCM_{env.upper()}"
-    lines = [HEADER, "", f"USE ROLE SECURITYADMIN;", ""]
-
-    prev = version - 1 if version > 1 else None
-
-    all_views = ["SCM_GOVERNED"] + PERSONA_VIEWS
-    role_map = {"SCM_GOVERNED": "SCM_READER", **PERSONA_ROLES}
-
-    for view_base in all_views:
-        role = role_map[view_base]
-        new_view = f"{db}.SEMANTIC.{view_base}_V{version}"
-        lines.append(f"GRANT SELECT ON VIEW {new_view} TO ROLE {role};")
-
-        if prev:
-            old_view = f"{db}.SEMANTIC.{view_base}_V{prev}"
-            lines.append(f"-- Keep {old_view} for rollback but revoke active grants")
-            lines.append(f"REVOKE SELECT ON VIEW {old_view} FROM ROLE {role};")
-        lines.append("")
-
-    return "\n".join(lines)
-
-
-def generate_dbt_schema(ontology: dict[str, Any]) -> str:
-    """Generate dbt schema.yml with descriptions and basic tests."""
-    models = []
-    for cls_name, cls_def in ontology.get("classes", {}).items():
-        columns = []
-        for attr_name, attr_def in (cls_def.get("attributes") or {}).items():
-            col = {
-                "name": attr_name,
-                "description": attr_def.get("description", ""),
-            }
-            tests = []
-            if attr_def.get("identifier"):
-                tests.extend(["unique", "not_null"])
-            col["tests"] = tests
-            columns.append(col)
-        models.append({
-            "name": cls_name.lower(),
-            "description": cls_def.get("description", ""),
-            "columns": columns,
-        })
-
-    schema = {"version": 2, "models": models}
-    return HEADER + "\n" + yaml.dump(schema, default_flow_style=False, sort_keys=False)
-
-
-def generate_ossie_model(ontology: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
-    """Generate an Apache Ossie semantic model."""
     datasets = []
-    for cls_name, cls_def in ontology.get("classes", {}).items():
-        fields = []
-        for attr_name, attr_def in (cls_def.get("attributes") or {}).items():
-            fields.append({
-                "name": attr_name,
-                "description": attr_def.get("description", ""),
-                "type": "dimension" if not attr_name.endswith(("_qty", "_value", "_cost", "_charge", "_rate", "_days", "_hours")) else "measure",
-            })
-        datasets.append({
-            "name": cls_name.lower(),
-            "description": cls_def.get("description", ""),
-            "fields": fields,
-        })
-
-    ossie_metrics = []
-    for name, defn in metrics.items():
-        ossie_metrics.append({
-            "name": name,
-            "title": defn["title"],
-            "definition": defn["definition"],
-            "formula": defn["formula_text"],
-            "type": defn["type"],
-        })
-
-    return {
-        "version": "1.0",
-        "name": "scm_ontology",
-        "description": "Supply chain ontology — Apache Ossie interchange model.",
-        "datasets": datasets,
-        "metrics": ossie_metrics,
-    }
+    for name, spec in registry.tables.items():
+        fields = [{"name": k, "expression": expr(k), "dimension": {"is_time": False}} for k in sorted(spec.get("keys", {}))]
+        fields += [{"name": d, "expression": expr(d), "dimension": {"is_time": False},
+                    "ai_context": {"synonyms": list(meta.get("synonyms", []))}}
+                   for d, meta in spec.get("dimensions", {}).items()]
+        if "period" in spec:
+            fields.append({"name": semantic.PERIOD, "expression": expr(spec["period"]), "dimension": {"is_time": True}})
+        fields += [{"name": f, "expression": expr(f)} for f in spec.get("facts", [])]
+        datasets.append({"name": name, "source": f"{db}.CONFORMED.{spec['base_table']}",
+                         "primary_key": list(spec["primary_key"]), "description": spec["description"],
+                         "fields": fields})
+    relationships = [{"name": f"{n}_to_{t}", "from": n, "to": t, "from_columns": [k],
+                      "to_columns": [registry.tables[t]["primary_key"][0]]}
+                     for n, spec in registry.tables.items() for k, t in sorted(spec.get("keys", {}).items())]
+    metrics = [{"name": n, "expression": expr(m["semantic"]["expr"]), "description": m["definition"],
+                "ai_context": {"synonyms": m["synonyms"], "instructions": m["formula_text"]},
+                "custom_extensions": [{"vendor_name": "SNOWFLAKE", "data": json.dumps(
+                    {"owner": m["owner"], "steward": m["steward"], "version": m["version"], "status": m["status"]},
+                    sort_keys=True)}]}
+               for n, m in sorted(registry.metrics.items())]
+    return {"version": "0.2.0.dev0", "name": "scm_ontology",
+            "description": "Supply chain ontology: delivery, fill, inventory, landed cost and lead time.",
+            "ai_context": {"instructions": "Every ratio is a ratio of sums at the requested grouping."},
+            "datasets": datasets, "relationships": relationships, "metrics": metrics}
 
 
-def generate_cube_models(ontology: dict[str, Any], metrics: dict[str, Any]) -> dict[str, str]:
-    """Generate Cube.js model files for the local DuckDB fallback."""
-    outputs = {}
+def cube_models(registry: semantic.Registry) -> dict[str, str]:
+    files = {}
+    cubes = []
+    for name, spec in registry.tables.items():
+        dims = [{"name": spec["primary_key"][0] if len(spec["primary_key"]) == 1 else "row_key",
+                 "sql": spec["primary_key"][0] if len(spec["primary_key"]) == 1
+                 else " || '|' || ".join(f"CAST({c} AS VARCHAR)" for c in spec["primary_key"]),
+                 "type": "string", "primary_key": True}]
+        dims += [{"name": d, "sql": d, "type": "string"} for d in spec.get("dimensions", {}) if d not in spec["primary_key"]]
+        dims += [{"name": k, "sql": k, "type": "string"} for k in sorted(spec.get("keys", {})) if k not in spec["primary_key"]]
+        if "period" in spec:
+            dims.append({"name": semantic.PERIOD, "sql": spec["period"], "type": "time"})
+        measures = [{"name": m, "sql": registry.metrics[m]["semantic"]["expr"].replace(f"{name}.", "{CUBE}."),
+                     "type": "number", "description": registry.metrics[m]["definition"]}
+                    for m in sorted(registry.metrics) if registry.metrics[m]["semantic"]["table"] == name]
+        joins = [{"name": t, "sql": f"{{CUBE}}.{k} = {{{t}}}.{registry.tables[t]['primary_key'][0]}",
+                  "relationship": "many_to_one"} for k, t in sorted(spec.get("keys", {}).items())]
+        cube: dict[str, Any] = {"name": name, "sql_table": f"CONFORMED.{spec['base_table']}", "dimensions": dims}
+        if measures:
+            cube["measures"] = measures
+        if joins:
+            cube["joins"] = joins
+        cubes.append(cube)
+    files["cubes.yml"] = dump({"cubes": cubes})
+    views = []
+    for view, persona in VIEWS.items():
+        if persona is None:
+            continue
+        includes = [{"join_path": t, "includes": "*"} for t, s in registry.tables.items() if "period" in s]
+        views.append({"name": view.lower(), "description": f"Persona view for {persona}.", "cubes": includes})
+    files["views.yml"] = dump({"views": views})
+    return files
 
-    for cls_name, cls_def in ontology.get("classes", {}).items():
-        dimensions = []
-        measures = []
-        for attr_name, attr_def in (cls_def.get("attributes") or {}).items():
-            if attr_name.endswith(("_qty", "_value_std", "_cost", "_charge", "_rate", "_price")):
-                measures.append(f"    {attr_name}: {{ sql: `{attr_name}`, type: `number` }}")
-            else:
-                dim_type = "time" if attr_def.get("range") in ("date", "datetime") else "string"
-                dimensions.append(f"    {attr_name}: {{ sql: `{attr_name}`, type: `{dim_type}` }}")
 
-        cube_content = f"""cube(`{cls_name}`, {{
-  sql: `SELECT * FROM {cls_name.lower()}`,
-
-  dimensions: {{
-{chr(10).join(dimensions)}
-  }},
-
-  measures: {{
-    count: {{ type: `count` }},
-{chr(10).join(measures)}
-  }}
-}});
-"""
-        outputs[f"{cls_name}.js"] = cube_content
-
-    return outputs
-
-
-def generate_policies_sql(ontology: dict[str, Any], env: str) -> str:
-    """Generate masking policy bindings from sensitivity annotations."""
-    db = f"SCM_{env.upper()}"
-    bindings = extract_sensitivity_annotations(ontology)
-    lines = [HEADER, "", f"USE ROLE SCM_ADMIN;", f"USE DATABASE {db};", ""]
-
-    for binding in bindings:
-        table = f"{db}.CONFORMED.{binding['class'].upper()}"
-        col = binding["attribute"]
-        sensitivity = binding["sensitivity"]
-
-        lines.append(f"ALTER TAG {db}.CONFORMED.SENSITIVITY SET ON COLUMN {table}.{col} = '{sensitivity}';")
-
-        if sensitivity == "CONFIDENTIAL":
-            lines.append(
-                f"ALTER TABLE {table} MODIFY COLUMN {col} "
-                f"SET MASKING POLICY {db}.CONFORMED.MASK_CONFIDENTIAL_STRING;"
-            )
-        elif sensitivity == "RESTRICTED":
-            lines.append(
-                f"ALTER TABLE {table} MODIFY COLUMN {col} "
-                f"SET MASKING POLICY {db}.CONFORMED.MASK_RESTRICTED_NUMBER;"
-            )
-        lines.append("")
-
-    return "\n".join(lines)
+def databricks_views(registry: semantic.Registry, env: str) -> dict[str, str]:
+    files = {}
+    for name, spec in registry.tables.items():
+        measures = [{"name": m, "expr": registry.metrics[m]["semantic"]["expr"].replace(f"{name}.", "source.")}
+                    for m in sorted(registry.metrics) if registry.metrics[m]["semantic"]["table"] == name]
+        if not measures:
+            continue
+        joins = [{"name": t, "source": f"scm_{env}.conformed.{registry.tables[t]['base_table'].lower()}",
+                  "on": f"source.{k} = {t}.{registry.tables[t]['primary_key'][0]}"}
+                 for k, t in sorted(spec.get("keys", {}).items())]
+        dims = [{"name": semantic.PERIOD, "expr": f"source.{spec['period']}"}]
+        dims += [{"name": d, "expr": f"{t}.{d}"} for t in sorted(set(spec.get("keys", {}).values()))
+                 for d in registry.tables[t].get("dimensions", {})]
+        files[f"{name}.yaml"] = dump({"version": 0.1,
+                                      "source": f"scm_{env}.conformed.{spec['base_table'].lower()}",
+                                      "joins": joins, "dimensions": dims, "measures": measures})
+    return files
 
 
 @click.command()
-@click.option("--target", multiple=True, default=["all"],
-              help="Targets: snowflake-semantic, vqr, policies, dbt, glossary, ossie, cube, databricks, all")
+@click.option("--target", "targets", multiple=True, type=click.Choice([*TARGETS, "all"]), default=["all"])
 @click.option("--env", default="dev", type=click.Choice(["dev", "test", "prod"]))
-@click.option("--version", default=1, type=int, help="Semantic view version number")
-def compile_ontology(target: tuple[str, ...], env: str, version: int) -> None:
-    """Compile the SCM ontology into downstream targets."""
-    targets = set(target)
-    if "all" in targets:
-        targets = {"snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks"}
+@click.option("--version", default=1, type=int, help="Semantic view version suffix.")
+def main(targets: tuple[str, ...], env: str, version: int) -> None:
+    chosen = set(TARGETS) if "all" in targets else set(targets)
+    try:
+        registry = semantic.load_registry()
+    except semantic.SemanticError as exc:
+        raise click.ClickException(str(exc)) from exc
+    problems = check_registry(registry, env)
+    if problems:
+        raise click.ClickException("registry rejected:\n  " + "\n  ".join(problems))
+    ontology = yaml.safe_load(ONTOLOGY_PATH.read_text())
+    click.echo(f"compiling {len(registry.metrics)} metrics and variants for SCM_{env.upper()} at V{version}")
 
-    ontology = load_ontology()
-    metrics = load_metrics()
-
-    errors = validate_metrics(metrics, env)
-    if errors:
-        for err in errors:
-            click.echo(f"  {err}", err=True)
-        sys.exit(1)
-
-    click.echo(f"Compiling {len(metrics)} metrics for {env} environment, version {version}")
-    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-
-    if "snowflake-semantic" in targets:
-        SEMANTIC_DIR.mkdir(parents=True, exist_ok=True)
-        yamls = generate_semantic_yaml(ontology, metrics, env, version)
-        for filename, content in yamls.items():
-            out_path = SEMANTIC_DIR / filename
-            out_path.write_text(HEADER + "\n" + content)
-            click.echo(f"  wrote {out_path.relative_to(ROOT)}")
-
-        deploy_sql = generate_deploy_sql(env, version)
-        deploy_path = SEMANTIC_DIR / "deploy.sql"
-        deploy_path.write_text(deploy_sql)
-        click.echo(f"  wrote {deploy_path.relative_to(ROOT)}")
-
-        versioning_sql = generate_versioning_sql(env, version)
-        versioning_path = SEMANTIC_DIR / "versioning.sql"
-        versioning_path.write_text(versioning_sql)
-        click.echo(f"  wrote {versioning_path.relative_to(ROOT)}")
-
-    if "policies" in targets:
-        policies_sql = generate_policies_sql(ontology, env)
-        policies_path = SEMANTIC_DIR / "policies.sql"
-        policies_path.write_text(policies_sql)
-        click.echo(f"  wrote {policies_path.relative_to(ROOT)}")
-
-    if "dbt" in targets:
-        schema_yml = generate_dbt_schema(ontology)
-        schema_path = DBT_DIR / "models" / "conformed" / "schema.yml"
-        schema_path.parent.mkdir(parents=True, exist_ok=True)
-        schema_path.write_text(schema_yml)
-        click.echo(f"  wrote {schema_path.relative_to(ROOT)}")
-
-    if "glossary" in targets:
-        glossary = generate_glossary(metrics)
-        glossary_path = GENERATED_DIR / "glossary.json"
-        glossary_path.write_text(json.dumps(glossary, indent=2))
-        click.echo(f"  wrote {glossary_path.relative_to(ROOT)}")
-
-    if "ossie" in targets:
-        ossie = generate_ossie_model(ontology, metrics)
-        ossie_path = GENERATED_DIR / "ossie_model.yaml"
-        ossie_path.write_text(HEADER + "\n" + yaml.dump(ossie, default_flow_style=False, sort_keys=False))
-        click.echo(f"  wrote {ossie_path.relative_to(ROOT)}")
-
-    if "cube" in targets:
-        CUBE_DIR.mkdir(parents=True, exist_ok=True)
-        cubes = generate_cube_models(ontology, metrics)
-        for filename, content in cubes.items():
-            out_path = CUBE_DIR / filename
-            out_path.write_text(content)
-        click.echo(f"  wrote {len(cubes)} Cube models to {CUBE_DIR.relative_to(ROOT)}/")
-
-    click.echo("Compilation complete.")
+    if chosen & {"snowflake-semantic", "vqr"}:
+        for view, persona in VIEWS.items():
+            vqrs = verified_queries(registry, view, version) if "vqr" in chosen else []
+            body = semantic_view(registry, view, persona, env, version, vqrs)
+            write(SEMANTIC_DIR / f"{view.lower()}_v{version}.yaml", dump(body))
+        write(SEMANTIC_DIR / "deploy.sql", deploy_sql(env, version))
+        write(SEMANTIC_DIR / "dry_run.sql", dry_run_sql(env, version))
+        write(SEMANTIC_DIR / "versioning.sql", versioning_sql(env, version))
+    if "policies" in chosen:
+        write(SEMANTIC_DIR / "policies.sql", policies_sql(ontology, env))
+    if "dbt" in chosen:
+        write(DBT_SCHEMA, dbt_schema(ontology, registry))
+    if "glossary" in chosen:
+        write(GENERATED / "glossary.json", json.dumps(glossary(registry), indent=2, sort_keys=True) + "\n")
+        write(SEMANTIC_DIR / "load_glossary.sql", glossary_load_sql(env))
+    if "ossie" in chosen:
+        write(GENERATED / "ossie_model.yaml", dump(ossie(registry, env)))
+    if "cube" in chosen:
+        for f in CUBE_DIR.glob("*"):
+            f.unlink()
+        for fname, text in cube_models(registry).items():
+            write(CUBE_DIR / fname, text)
+    if "databricks" in chosen:
+        for fname, text in databricks_views(registry, env).items():
+            write(DATABRICKS_DIR / fname, text)
 
 
 if __name__ == "__main__":
-    compile_ontology()
+    main()

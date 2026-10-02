@@ -1,0 +1,927 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 0.2.0.dev0
+name: scm_ontology
+description: 'Supply chain ontology: delivery, fill, inventory, landed cost and lead time.'
+ai_context:
+  instructions: Every ratio is a ratio of sums at the requested grouping.
+datasets:
+- name: delivered_lines
+  source: SCM_DEV.CONFORMED.FCT_SALES_ORDER_LINE
+  primary_key:
+  - so_line_id
+  description: Sales order lines dated by actual delivery date.
+  fields:
+  - name: customer_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: customer_id
+    dimension:
+      is_time: false
+  - name: part_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: delivery_month
+    dimension:
+      is_time: true
+  - name: is_delivered
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_delivered
+  - name: is_on_time
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_on_time
+  - name: is_on_time_to_request
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_on_time_to_request
+  - name: is_otif
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_otif
+  - name: cycle_days
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: cycle_days
+- name: requested_lines
+  source: SCM_DEV.CONFORMED.FCT_SALES_ORDER_LINE
+  primary_key:
+  - so_line_id
+  description: Sales order lines dated by customer-requested date.
+  fields:
+  - name: customer_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: customer_id
+    dimension:
+      is_time: false
+  - name: part_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: request_month
+    dimension:
+      is_time: true
+  - name: live_ordered_qty
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: live_ordered_qty
+  - name: live_first_qty
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: live_first_qty
+  - name: is_line_filled
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_line_filled
+  - name: is_live
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_live
+  - name: is_order_head
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_order_head
+  - name: is_order_filled
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_order_filled
+- name: shipments
+  source: SCM_DEV.CONFORMED.FCT_SHIPMENT
+  primary_key:
+  - shipment_id
+  description: Outbound shipments dated by proof of delivery.
+  fields:
+  - name: carrier_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: carrier_id
+    dimension:
+      is_time: false
+  - name: customer_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: customer_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: delivery_month
+    dimension:
+      is_time: true
+  - name: is_delivered
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_delivered
+  - name: is_on_eta
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_on_eta
+  - name: transit_hours
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: transit_hours
+- name: shipment_lines
+  source: SCM_DEV.CONFORMED.FCT_SHIPMENT_LINE
+  primary_key:
+  - shipment_line_id
+  description: Shipment lines dated by departure, carrying allocated freight.
+  fields:
+  - name: carrier_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: carrier_id
+    dimension:
+      is_time: false
+  - name: customer_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: customer_id
+    dimension:
+      is_time: false
+  - name: part_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: ship_month
+    dimension:
+      is_time: true
+  - name: freight_alloc_usd
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: freight_alloc_usd
+  - name: shipped_qty
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: shipped_qty
+- name: po_lines
+  source: SCM_DEV.CONFORMED.FCT_PO_LINE
+  primary_key:
+  - po_line_id
+  description: Purchase order lines dated by goods receipt.
+  fields:
+  - name: part_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: supplier_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: supplier_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: receipt_month
+    dimension:
+      is_time: true
+  - name: is_received
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_received
+  - name: is_on_time_receipt
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: is_on_time_receipt
+  - name: landed_usd
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: landed_usd
+  - name: received_qty
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: received_qty
+  - name: lead_days
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: lead_days
+- name: inventory
+  source: SCM_DEV.CONFORMED.FCT_INVENTORY_MONTH
+  primary_key:
+  - storage_location_id
+  - part_id
+  - snapshot_month
+  description: Month-end inventory position per storage location and part.
+  fields:
+  - name: part_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_id
+    dimension:
+      is_time: false
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+  - name: period_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: snapshot_month
+    dimension:
+      is_time: true
+  - name: on_hand_value_end
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: on_hand_value_end
+  - name: on_hand_qty_end
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: on_hand_qty_end
+  - name: cogs_daily_90d
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: cogs_daily_90d
+  - name: units_daily_90d
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: units_daily_90d
+  - name: cogs_annual_90d
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: cogs_annual_90d
+  - name: stockout_days
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: stockout_days
+  - name: obs_days
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: obs_days
+  - name: avg_value_x_days
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: avg_value_x_days
+  - name: cogs_month
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: cogs_month
+- name: plants
+  source: SCM_DEV.CONFORMED.DIM_PLANT
+  primary_key:
+  - plant_id
+  description: Plants and distribution centres.
+  fields:
+  - name: plant_id
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_id
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - plant
+      - site
+      - facility
+  - name: region
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: region
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - geography
+      - theatre
+  - name: plant_name
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: plant_name
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms: []
+- name: customers
+  source: SCM_DEV.CONFORMED.DIM_CUSTOMER
+  primary_key:
+  - customer_id
+  description: Ship-to customers with their segment.
+  fields:
+  - name: segment
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: segment
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - market segment
+      - customer segment
+  - name: account_name
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: account_name
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - account
+- name: parts
+  source: SCM_DEV.CONFORMED.DIM_PART
+  primary_key:
+  - part_id
+  description: Parts with their product family and category.
+  fields:
+  - name: part_family
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: part_family
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - family
+      - product family
+  - name: category
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: category
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - product category
+- name: suppliers
+  source: SCM_DEV.CONFORMED.DIM_SUPPLIER
+  primary_key:
+  - supplier_id
+  description: Suppliers resolved to one golden key.
+  fields:
+  - name: supplier_name
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: supplier_name
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - vendor
+  - name: supplier_country
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: supplier_country
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - supplier country
+- name: carriers
+  source: SCM_DEV.CONFORMED.DIM_CARRIER
+  primary_key:
+  - carrier_id
+  description: Freight carriers.
+  fields:
+  - name: carrier_name
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: carrier_name
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - haulier
+      - forwarder
+  - name: carrier_type
+    expression:
+      dialects:
+      - dialect: ANSI_SQL
+        expression: carrier_type
+    dimension:
+      is_time: false
+    ai_context:
+      synonyms:
+      - mode
+relationships:
+- name: delivered_lines_to_customers
+  from: delivered_lines
+  to: customers
+  from_columns:
+  - customer_id
+  to_columns:
+  - customer_id
+- name: delivered_lines_to_parts
+  from: delivered_lines
+  to: parts
+  from_columns:
+  - part_id
+  to_columns:
+  - part_id
+- name: delivered_lines_to_plants
+  from: delivered_lines
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+- name: requested_lines_to_customers
+  from: requested_lines
+  to: customers
+  from_columns:
+  - customer_id
+  to_columns:
+  - customer_id
+- name: requested_lines_to_parts
+  from: requested_lines
+  to: parts
+  from_columns:
+  - part_id
+  to_columns:
+  - part_id
+- name: requested_lines_to_plants
+  from: requested_lines
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+- name: shipments_to_carriers
+  from: shipments
+  to: carriers
+  from_columns:
+  - carrier_id
+  to_columns:
+  - carrier_id
+- name: shipments_to_customers
+  from: shipments
+  to: customers
+  from_columns:
+  - customer_id
+  to_columns:
+  - customer_id
+- name: shipments_to_plants
+  from: shipments
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+- name: shipment_lines_to_carriers
+  from: shipment_lines
+  to: carriers
+  from_columns:
+  - carrier_id
+  to_columns:
+  - carrier_id
+- name: shipment_lines_to_customers
+  from: shipment_lines
+  to: customers
+  from_columns:
+  - customer_id
+  to_columns:
+  - customer_id
+- name: shipment_lines_to_parts
+  from: shipment_lines
+  to: parts
+  from_columns:
+  - part_id
+  to_columns:
+  - part_id
+- name: shipment_lines_to_plants
+  from: shipment_lines
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+- name: po_lines_to_parts
+  from: po_lines
+  to: parts
+  from_columns:
+  - part_id
+  to_columns:
+  - part_id
+- name: po_lines_to_plants
+  from: po_lines
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+- name: po_lines_to_suppliers
+  from: po_lines
+  to: suppliers
+  from_columns:
+  - supplier_id
+  to_columns:
+  - supplier_id
+- name: inventory_to_parts
+  from: inventory
+  to: parts
+  from_columns:
+  - part_id
+  to_columns:
+  - part_id
+- name: inventory_to_plants
+  from: inventory
+  to: plants
+  from_columns:
+  - plant_id
+  to_columns:
+  - plant_id
+metrics:
+- name: carrier_on_time
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(shipments.is_on_eta) / NULLIF(SUM(shipments.is_delivered), 0)
+  description: Share of delivered shipments that arrived on or before the carrier's own estimate.
+  ai_context:
+    synonyms:
+    - carrier on-time
+    - carrier OTD
+    - on time to ETA
+    instructions: SUM(is_on_eta) / SUM(is_delivered), shipments dated by actual_delivery.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Logistics", "status": "approved", "steward": "Logistics Analytics Lead", "version": 1}'
+- name: days_of_inventory
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)
+  description: How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.
+  ai_context:
+    synonyms:
+    - DOI
+    - days on hand
+    - days of supply
+    instructions: SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Inventory Manager", "version": 1}'
+- name: dio_financial
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(inventory.avg_value_x_days) / NULLIF(SUM(inventory.cogs_month), 0)
+  description: Days inventory outstanding on the finance basis, average inventory over cost of sales times days
+    in the period.
+  ai_context:
+    synonyms:
+    - DIO
+    - days inventory outstanding
+    instructions: SUM(avg_inventory_value * days_in_period) / SUM(cost_of_sales).
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "Finance", "status": "approved", "steward": "Financial Planning Lead", "version": 1}'
+- name: doi_units
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(inventory.on_hand_qty_end) / NULLIF(SUM(inventory.units_daily_90d), 0)
+  description: Days of inventory measured in units rather than value.
+  ai_context:
+    synonyms:
+    - DOI in units
+    - unit days of supply
+    instructions: SUM(on_hand_qty_end) / (SUM(units_90d) / 90).
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Inventory Manager", "version": 1}'
+- name: freight_cost_per_unit
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(shipment_lines.freight_alloc_usd) / NULLIF(SUM(shipment_lines.shipped_qty), 0)
+  description: Outbound freight cost in USD for each unit shipped, weighted by units.
+  ai_context:
+    synonyms:
+    - freight cost
+    - shipping cost per unit
+    - transport cost per unit
+    instructions: SUM(freight_alloc_usd) / SUM(shipped_qty), dated by ship_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Logistics", "status": "approved", "steward": "Logistics Analytics Lead", "version": 1}'
+- name: inventory_turns
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(inventory.cogs_annual_90d) / NULLIF(SUM(inventory.on_hand_value_end), 0)
+  description: How many times a year the month-end stock turns over at the trailing 90-day shipment rate.
+  ai_context:
+    synonyms:
+    - turns
+    - stock turns
+    - inventory turnover
+    instructions: (SUM(cogs_90d) / 90 * 365) / SUM(on_hand_value_end); inventory_turns x days_of_inventory = 365.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Inventory Manager", "version": 1}'
+- name: landed_cost_per_unit
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)
+  description: Fully loaded USD cost of each received unit, weighted by received quantity.
+  ai_context:
+    synonyms:
+    - landed cost
+    - total acquisition cost
+    - all-in cost
+    instructions: SUM(material + freight + duty + insurance + handling) / SUM(received_qty), dated by receipt_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Procurement", "status": "approved", "steward": "Procurement Analytics Lead", "version":
+      1}'
+- name: lead_time_variability
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: STDDEV_SAMP(po_lines.lead_days)
+  description: Sample standard deviation of supplier lead time in days; how far a planner can trust the median.
+  ai_context:
+    synonyms:
+    - lead time variability
+    - lead time spread
+    - lead time standard deviation
+    instructions: STDDEV_SAMP(receipt_date - order_date) over received lines, dated by receipt_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Procurement", "status": "approved", "steward": "Procurement Analytics Lead", "version":
+      1}'
+- name: line_fill_rate
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(requested_lines.is_line_filled) / NULLIF(SUM(requested_lines.is_live), 0)
+  description: Share of order lines filled completely on the first shipment.
+  ai_context:
+    synonyms:
+    - line fill
+    - line fill rate
+    instructions: SUM(is_line_filled) / SUM(is_live), dated by requested_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Demand Planning Manager", "version": 1}'
+- name: on_time_delivery
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+  description: Share of delivered sales order lines that arrived on or before the date we committed to the customer.
+  ai_context:
+    synonyms:
+    - OTD
+    - on-time delivery rate
+    - delivery performance
+    instructions: SUM(is_on_time) / SUM(is_delivered), lines dated by actual_delivery_date, cancelled lines excluded
+      from both.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Supply Chain Analytics Lead", "version":
+      1}'
+- name: on_time_to_request
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(delivered_lines.is_on_time_to_request) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+  description: Share of delivered sales order lines that arrived on or before the date the customer asked for.
+  ai_context:
+    synonyms:
+    - on-time to request
+    - OTR
+    - on time to customer request
+    instructions: SUM(is_on_time_to_request) / SUM(is_delivered), dated by actual_delivery_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Supply Chain Analytics Lead", "version":
+      1}'
+- name: order_fill_rate
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(requested_lines.is_order_filled) / NULLIF(SUM(requested_lines.is_order_head), 0)
+  description: Share of orders where every line was filled completely on the first shipment.
+  ai_context:
+    synonyms:
+    - order fill
+    - complete orders
+    instructions: SUM(is_order_filled) / SUM(is_order_head), counted once per order on its first live line.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Demand Planning Manager", "version": 1}'
+- name: order_fulfilment_cycle_days
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: MEDIAN(delivered_lines.cycle_days)
+  description: Median calendar days from a customer placing an order line to receiving it.
+  ai_context:
+    synonyms:
+    - cycle time
+    - order-to-delivery
+    - order cycle time
+    instructions: MEDIAN(actual_delivery_date - order_date), dated by actual_delivery_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Supply Chain Analytics Lead", "version":
+      1}'
+- name: otif
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(delivered_lines.is_otif) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+  description: Share of delivered sales order lines that were on time to commit and complete on the first shipment.
+  ai_context:
+    synonyms:
+    - OTIF
+    - on-time in-full
+    - perfect delivery
+    instructions: SUM(is_otif) / SUM(is_delivered), dated by actual_delivery_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Supply Chain Analytics Lead", "version":
+      1}'
+- name: stockout_rate
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(inventory.stockout_days) / NULLIF(SUM(inventory.obs_days), 0)
+  description: Share of location-part-days with demand allocated but nothing on hand.
+  ai_context:
+    synonyms:
+    - stockout frequency
+    - out-of-stock rate
+    - OOS rate
+    instructions: SUM(stockout_days) / SUM(obs_days).
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Inventory Manager", "version": 1}'
+- name: supplier_lead_time_days
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: MEDIAN(po_lines.lead_days)
+  description: Median calendar days from placing a purchase order line to receiving it.
+  ai_context:
+    synonyms:
+    - lead time
+    - procurement lead time
+    - receipt lead time
+    instructions: MEDIAN(receipt_date - order_date) over received lines, dated by receipt_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Procurement", "status": "approved", "steward": "Procurement Analytics Lead", "version":
+      1}'
+- name: supplier_on_time_receipt
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)
+  description: Share of received purchase order lines that arrived on or before the supplier's promised date.
+  ai_context:
+    synonyms:
+    - supplier on-time
+    - supplier delivery performance
+    - on-time receipt
+    instructions: SUM(is_on_time_receipt) / SUM(is_received), dated by receipt_date.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Procurement", "status": "approved", "steward": "Procurement Analytics Lead", "version":
+      1}'
+- name: transit_hours
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: MEDIAN(shipments.transit_hours)
+  description: Median hours a delivered shipment spent between pick-up and proof of delivery.
+  ai_context:
+    synonyms:
+    - transit time
+    - transit hours
+    - shipping time
+    instructions: MEDIAN(delivered_utc - picked_up_utc) in hours, dated by actual_delivery.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Logistics", "status": "approved", "steward": "Logistics Analytics Lead", "version": 1}'
+- name: unit_fill_rate
+  expression:
+    dialects:
+    - dialect: ANSI_SQL
+      expression: SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)
+  description: Share of ordered units that left on the first shipment, dated by the customer's requested date.
+  ai_context:
+    synonyms:
+    - fill rate
+    - unit fill
+    - initial fill
+    instructions: SUM(first_shipment_qty) / SUM(ordered_qty), lines dated by requested_date, cancelled excluded.
+  custom_extensions:
+  - vendor_name: SNOWFLAKE
+    data: '{"owner": "VP Supply Chain", "status": "approved", "steward": "Demand Planning Manager", "version": 1}'

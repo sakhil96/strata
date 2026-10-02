@@ -1,0 +1,35 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 0.1
+source: scm_dev.conformed.fct_shipment
+joins:
+- name: carriers
+  source: scm_dev.conformed.dim_carrier
+  'on': source.carrier_id = carriers.carrier_id
+- name: customers
+  source: scm_dev.conformed.dim_customer
+  'on': source.customer_id = customers.customer_id
+- name: plants
+  source: scm_dev.conformed.dim_plant
+  'on': source.plant_id = plants.plant_id
+dimensions:
+- name: period_month
+  expr: source.delivery_month
+- name: carrier_name
+  expr: carriers.carrier_name
+- name: carrier_type
+  expr: carriers.carrier_type
+- name: segment
+  expr: customers.segment
+- name: account_name
+  expr: customers.account_name
+- name: plant_id
+  expr: plants.plant_id
+- name: region
+  expr: plants.region
+- name: plant_name
+  expr: plants.plant_name
+measures:
+- name: carrier_on_time
+  expr: SUM(source.is_on_eta) / NULLIF(SUM(source.is_delivered), 0)
+- name: transit_hours
+  expr: MEDIAN(source.transit_hours)

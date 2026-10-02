@@ -1,0 +1,34 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 0.1
+source: scm_dev.conformed.fct_inventory_month
+joins:
+- name: parts
+  source: scm_dev.conformed.dim_part
+  'on': source.part_id = parts.part_id
+- name: plants
+  source: scm_dev.conformed.dim_plant
+  'on': source.plant_id = plants.plant_id
+dimensions:
+- name: period_month
+  expr: source.snapshot_month
+- name: part_family
+  expr: parts.part_family
+- name: category
+  expr: parts.category
+- name: plant_id
+  expr: plants.plant_id
+- name: region
+  expr: plants.region
+- name: plant_name
+  expr: plants.plant_name
+measures:
+- name: days_of_inventory
+  expr: SUM(source.on_hand_value_end) / NULLIF(SUM(source.cogs_daily_90d), 0)
+- name: dio_financial
+  expr: SUM(source.avg_value_x_days) / NULLIF(SUM(source.cogs_month), 0)
+- name: doi_units
+  expr: SUM(source.on_hand_qty_end) / NULLIF(SUM(source.units_daily_90d), 0)
+- name: inventory_turns
+  expr: SUM(source.cogs_annual_90d) / NULLIF(SUM(source.on_hand_value_end), 0)
+- name: stockout_rate
+  expr: SUM(source.stockout_days) / NULLIF(SUM(source.obs_days), 0)

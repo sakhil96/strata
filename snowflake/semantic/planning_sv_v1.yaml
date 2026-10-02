@@ -1,0 +1,1413 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+name: PLANNING_SV_V1
+description: Supply chain metrics phrased for PLANNING_ROLE; identical expressions to SCM_GOVERNED_V1.
+tables:
+- name: delivered_lines
+  description: Sales order lines dated by actual delivery date.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_SALES_ORDER_LINE
+  primary_key:
+    columns:
+    - so_line_id
+  dimensions:
+  - name: customer_id
+    expr: customer_id
+    data_type: VARCHAR
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: so_line_id
+    expr: so_line_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of delivery for this table.
+    expr: delivery_month
+    data_type: DATE
+  facts:
+  - name: is_delivered
+    expr: is_delivered
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_on_time
+    expr: is_on_time
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_on_time_to_request
+    expr: is_on_time_to_request
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_otif
+    expr: is_otif
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: cycle_days
+    expr: cycle_days
+    data_type: NUMBER(9,0)
+    access_modifier: private_access
+  metrics:
+  - name: on_time_delivery
+    synonyms:
+    - OTD
+    - on-time delivery rate
+    - delivery performance
+    - delivery rate
+    description: Share of delivered sales order lines that arrived on or before the date we committed to the customer.
+      Grain sales_order_line; dated by actual_delivery_date; unit ratio.
+    expr: SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Supply Chain Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: on_time_to_request
+    synonyms:
+    - on-time to request
+    - OTR
+    - on time to customer request
+    - delivery rate
+    - OTD
+    description: Share of delivered sales order lines that arrived on or before the date the customer asked for.
+      Grain sales_order_line; dated by actual_delivery_date; unit ratio.
+    expr: SUM(delivered_lines.is_on_time_to_request) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Supply Chain Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: otif
+    synonyms:
+    - OTIF
+    - on-time in-full
+    - perfect delivery
+    description: Share of delivered sales order lines that were on time to commit and complete on the first shipment.
+      Grain sales_order_line; dated by actual_delivery_date; unit ratio.
+    expr: SUM(delivered_lines.is_otif) / NULLIF(SUM(delivered_lines.is_delivered), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Supply Chain Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: order_fulfilment_cycle_days
+    synonyms:
+    - cycle time
+    - order-to-delivery
+    - order cycle time
+    description: Median calendar days from a customer placing an order line to receiving it. Grain sales_order_line;
+      dated by actual_delivery_date; unit days.
+    expr: MEDIAN(delivered_lines.cycle_days)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Supply Chain Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: requested_lines
+  description: Sales order lines dated by customer-requested date.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_SALES_ORDER_LINE
+  primary_key:
+    columns:
+    - so_line_id
+  dimensions:
+  - name: customer_id
+    expr: customer_id
+    data_type: VARCHAR
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: so_line_id
+    expr: so_line_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of request for this table.
+    expr: request_month
+    data_type: DATE
+  facts:
+  - name: live_ordered_qty
+    expr: live_ordered_qty
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: live_first_qty
+    expr: live_first_qty
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_line_filled
+    expr: is_line_filled
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_live
+    expr: is_live
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_order_head
+    expr: is_order_head
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_order_filled
+    expr: is_order_filled
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  metrics:
+  - name: unit_fill_rate
+    synonyms:
+    - fill rate
+    - unit fill
+    - initial fill
+    - availability
+    description: Share of ordered units that left on the first shipment, dated by the customer's requested date.
+      Grain sales_order_line; dated by requested_date; unit ratio.
+    expr: SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Demand Planning Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: line_fill_rate
+    synonyms:
+    - line fill
+    - line fill rate
+    - fill rate
+    - availability
+    description: Share of order lines filled completely on the first shipment. Grain sales_order_line; dated by
+      requested_date; unit ratio.
+    expr: SUM(requested_lines.is_line_filled) / NULLIF(SUM(requested_lines.is_live), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Demand Planning Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: order_fill_rate
+    synonyms:
+    - order fill
+    - complete orders
+    - fill rate
+    - availability
+    description: Share of orders where every line was filled completely on the first shipment. Grain sales_order;
+      dated by requested_date; unit ratio.
+    expr: SUM(requested_lines.is_order_filled) / NULLIF(SUM(requested_lines.is_order_head), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Demand Planning Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: shipments
+  description: Outbound shipments dated by proof of delivery.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_SHIPMENT
+  primary_key:
+    columns:
+    - shipment_id
+  dimensions:
+  - name: carrier_id
+    expr: carrier_id
+    data_type: VARCHAR
+  - name: customer_id
+    expr: customer_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: shipment_id
+    expr: shipment_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of delivery for this table.
+    expr: delivery_month
+    data_type: DATE
+  facts:
+  - name: is_delivered
+    expr: is_delivered
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_on_eta
+    expr: is_on_eta
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: transit_hours
+    expr: transit_hours
+    data_type: NUMBER(18,4)
+    access_modifier: private_access
+  metrics:
+  - name: carrier_on_time
+    synonyms:
+    - carrier on-time
+    - carrier OTD
+    - on time to ETA
+    - delivery rate
+    - OTD
+    description: Share of delivered shipments that arrived on or before the carrier's own estimate. Grain shipment;
+      dated by actual_delivery; unit ratio.
+    expr: SUM(shipments.is_on_eta) / NULLIF(SUM(shipments.is_delivered), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Logistics
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Logistics Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: transit_hours
+    synonyms:
+    - transit time
+    - transit hours
+    - shipping time
+    description: Median hours a delivered shipment spent between pick-up and proof of delivery. Grain shipment;
+      dated by actual_delivery; unit hours.
+    expr: MEDIAN(shipments.transit_hours)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Logistics
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Logistics Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: shipment_lines
+  description: Shipment lines dated by departure, carrying allocated freight.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_SHIPMENT_LINE
+  primary_key:
+    columns:
+    - shipment_line_id
+  dimensions:
+  - name: carrier_id
+    expr: carrier_id
+    data_type: VARCHAR
+  - name: customer_id
+    expr: customer_id
+    data_type: VARCHAR
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: shipment_line_id
+    expr: shipment_line_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of ship for this table.
+    expr: ship_month
+    data_type: DATE
+  facts:
+  - name: freight_alloc_usd
+    expr: freight_alloc_usd
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: shipped_qty
+    expr: shipped_qty
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  metrics:
+  - name: freight_cost_per_unit
+    synonyms:
+    - freight cost
+    - shipping cost per unit
+    - transport cost per unit
+    description: Outbound freight cost in USD for each unit shipped, weighted by units. Grain shipment_line; dated
+      by ship_date; unit usd_per_unit.
+    expr: SUM(shipment_lines.freight_alloc_usd) / NULLIF(SUM(shipment_lines.shipped_qty), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Logistics
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Logistics Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: po_lines
+  description: Purchase order lines dated by goods receipt.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_PO_LINE
+  primary_key:
+    columns:
+    - po_line_id
+  dimensions:
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: supplier_id
+    expr: supplier_id
+    data_type: VARCHAR
+  - name: po_line_id
+    expr: po_line_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of receipt for this table.
+    expr: receipt_month
+    data_type: DATE
+  facts:
+  - name: is_received
+    expr: is_received
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: is_on_time_receipt
+    expr: is_on_time_receipt
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: landed_usd
+    expr: landed_usd
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: received_qty
+    expr: received_qty
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: lead_days
+    expr: lead_days
+    data_type: NUMBER(9,0)
+    access_modifier: private_access
+  metrics:
+  - name: supplier_on_time_receipt
+    synonyms:
+    - supplier on-time
+    - supplier delivery performance
+    - on-time receipt
+    - delivery rate
+    - OTD
+    description: Share of received purchase order lines that arrived on or before the supplier's promised date.
+      Grain purchase_order_line; dated by receipt_date; unit ratio.
+    expr: SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Procurement
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Procurement Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: landed_cost_per_unit
+    synonyms:
+    - landed cost
+    - total acquisition cost
+    - all-in cost
+    - cost per unit
+    description: Fully loaded USD cost of each received unit, weighted by received quantity. Grain purchase_order_line;
+      dated by receipt_date; unit usd_per_unit.
+    expr: SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Procurement
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Procurement Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: supplier_lead_time_days
+    synonyms:
+    - lead time
+    - procurement lead time
+    - receipt lead time
+    description: Median calendar days from placing a purchase order line to receiving it. Grain purchase_order_line;
+      dated by receipt_date; unit days.
+    expr: MEDIAN(po_lines.lead_days)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Procurement
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Procurement Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: lead_time_variability
+    synonyms:
+    - lead time variability
+    - lead time spread
+    - lead time standard deviation
+    description: Sample standard deviation of supplier lead time in days; how far a planner can trust the median.
+      Grain purchase_order_line; dated by receipt_date; unit days.
+    expr: STDDEV_SAMP(po_lines.lead_days)
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Procurement
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Procurement Analytics Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: inventory
+  description: Month-end inventory position per storage location and part.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: FCT_INVENTORY_MONTH
+  primary_key:
+    columns:
+    - storage_location_id
+    - part_id
+    - snapshot_month
+  dimensions:
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+  - name: plant_id
+    expr: plant_id
+    data_type: VARCHAR
+  - name: storage_location_id
+    expr: storage_location_id
+    data_type: VARCHAR
+  time_dimensions:
+  - name: period_month
+    synonyms:
+    - month
+    - period
+    description: First day of the month of snapshot for this table.
+    expr: snapshot_month
+    data_type: DATE
+  facts:
+  - name: on_hand_value_end
+    expr: on_hand_value_end
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: on_hand_qty_end
+    expr: on_hand_qty_end
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: cogs_daily_90d
+    expr: cogs_daily_90d
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: units_daily_90d
+    expr: units_daily_90d
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: cogs_annual_90d
+    expr: cogs_annual_90d
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: stockout_days
+    expr: stockout_days
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: obs_days
+    expr: obs_days
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: avg_value_x_days
+    expr: avg_value_x_days
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  - name: cogs_month
+    expr: cogs_month
+    data_type: NUMBER(38,6)
+    access_modifier: private_access
+  metrics:
+  - name: days_of_inventory
+    synonyms:
+    - DOI
+    - days on hand
+    - days of supply
+    description: How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.
+      Grain storage_location_part; dated by snapshot_date; unit days.
+    expr: SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)
+    non_additive_dimensions:
+    - table: inventory
+      dimension: period_month
+      sort_direction: descending
+      null_order: last
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Inventory Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: doi_units
+    synonyms:
+    - DOI in units
+    - unit days of supply
+    - DOI
+    - days of supply
+    description: Days of inventory measured in units rather than value. Grain storage_location_part; dated by snapshot_date;
+      unit days.
+    expr: SUM(inventory.on_hand_qty_end) / NULLIF(SUM(inventory.units_daily_90d), 0)
+    non_additive_dimensions:
+    - table: inventory
+      dimension: period_month
+      sort_direction: descending
+      null_order: last
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Inventory Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: dio_financial
+    synonyms:
+    - DIO
+    - days inventory outstanding
+    - DOI
+    - days of supply
+    description: Days inventory outstanding on the finance basis, average inventory over cost of sales times days
+      in the period. Grain storage_location_part; dated by snapshot_date; unit days.
+    expr: SUM(inventory.avg_value_x_days) / NULLIF(SUM(inventory.cogs_month), 0)
+    non_additive_dimensions:
+    - table: inventory
+      dimension: period_month
+      sort_direction: descending
+      null_order: last
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: Finance
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Financial Planning Lead
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: inventory_turns
+    synonyms:
+    - turns
+    - stock turns
+    - inventory turnover
+    - stock velocity
+    description: How many times a year the month-end stock turns over at the trailing 90-day shipment rate. Grain
+      storage_location_part; dated by snapshot_date; unit turns_per_year.
+    expr: SUM(inventory.cogs_annual_90d) / NULLIF(SUM(inventory.on_hand_value_end), 0)
+    non_additive_dimensions:
+    - table: inventory
+      dimension: period_month
+      sort_direction: descending
+      null_order: last
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Inventory Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+  - name: stockout_rate
+    synonyms:
+    - stockout frequency
+    - out-of-stock rate
+    - OOS rate
+    - stockout
+    description: Share of location-part-days with demand allocated but nothing on hand. Grain storage_location_part;
+      dated by snapshot_date; unit ratio.
+    expr: SUM(inventory.stockout_days) / NULLIF(SUM(inventory.obs_days), 0)
+    non_additive_dimensions:
+    - table: inventory
+      dimension: period_month
+      sort_direction: descending
+      null_order: last
+    tags:
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_OWNER
+      value: VP Supply Chain
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_STEWARD
+      value: Inventory Manager
+    - name:
+        database: SCM_DEV
+        schema: CONFORMED
+        tag: METRIC_VERSION
+      value: '1'
+- name: plants
+  description: Plants and distribution centres.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: DIM_PLANT
+  primary_key:
+    columns:
+    - plant_id
+  dimensions:
+  - name: plant_id
+    synonyms:
+    - plant
+    - site
+    - facility
+    expr: plant_id
+    data_type: VARCHAR
+  - name: region
+    synonyms:
+    - geography
+    - theatre
+    expr: region
+    data_type: VARCHAR
+  - name: plant_name
+    synonyms: []
+    expr: plant_name
+    data_type: VARCHAR
+- name: customers
+  description: Ship-to customers with their segment.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: DIM_CUSTOMER
+  primary_key:
+    columns:
+    - customer_id
+  dimensions:
+  - name: segment
+    synonyms:
+    - market segment
+    - customer segment
+    expr: segment
+    data_type: VARCHAR
+  - name: account_name
+    synonyms:
+    - account
+    expr: account_name
+    data_type: VARCHAR
+  - name: customer_id
+    expr: customer_id
+    data_type: VARCHAR
+- name: parts
+  description: Parts with their product family and category.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: DIM_PART
+  primary_key:
+    columns:
+    - part_id
+  dimensions:
+  - name: part_family
+    synonyms:
+    - family
+    - product family
+    expr: part_family
+    data_type: VARCHAR
+  - name: category
+    synonyms:
+    - product category
+    expr: category
+    data_type: VARCHAR
+  - name: part_id
+    expr: part_id
+    data_type: VARCHAR
+- name: suppliers
+  description: Suppliers resolved to one golden key.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: DIM_SUPPLIER
+  primary_key:
+    columns:
+    - supplier_id
+  dimensions:
+  - name: supplier_name
+    synonyms:
+    - vendor
+    expr: supplier_name
+    data_type: VARCHAR
+  - name: supplier_country
+    synonyms:
+    - supplier country
+    expr: supplier_country
+    data_type: VARCHAR
+  - name: supplier_id
+    expr: supplier_id
+    data_type: VARCHAR
+- name: carriers
+  description: Freight carriers.
+  base_table:
+    database: SCM_DEV
+    schema: CONFORMED
+    table: DIM_CARRIER
+  primary_key:
+    columns:
+    - carrier_id
+  dimensions:
+  - name: carrier_name
+    synonyms:
+    - haulier
+    - forwarder
+    expr: carrier_name
+    data_type: VARCHAR
+  - name: carrier_type
+    synonyms:
+    - mode
+    expr: carrier_type
+    data_type: VARCHAR
+  - name: carrier_id
+    expr: carrier_id
+    data_type: VARCHAR
+relationships:
+- name: delivered_lines_to_customers
+  left_table: delivered_lines
+  right_table: customers
+  relationship_columns:
+  - left_column: customer_id
+    right_column: customer_id
+- name: delivered_lines_to_parts
+  left_table: delivered_lines
+  right_table: parts
+  relationship_columns:
+  - left_column: part_id
+    right_column: part_id
+- name: delivered_lines_to_plants
+  left_table: delivered_lines
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+- name: requested_lines_to_customers
+  left_table: requested_lines
+  right_table: customers
+  relationship_columns:
+  - left_column: customer_id
+    right_column: customer_id
+- name: requested_lines_to_parts
+  left_table: requested_lines
+  right_table: parts
+  relationship_columns:
+  - left_column: part_id
+    right_column: part_id
+- name: requested_lines_to_plants
+  left_table: requested_lines
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+- name: shipments_to_carriers
+  left_table: shipments
+  right_table: carriers
+  relationship_columns:
+  - left_column: carrier_id
+    right_column: carrier_id
+- name: shipments_to_customers
+  left_table: shipments
+  right_table: customers
+  relationship_columns:
+  - left_column: customer_id
+    right_column: customer_id
+- name: shipments_to_plants
+  left_table: shipments
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+- name: shipment_lines_to_carriers
+  left_table: shipment_lines
+  right_table: carriers
+  relationship_columns:
+  - left_column: carrier_id
+    right_column: carrier_id
+- name: shipment_lines_to_customers
+  left_table: shipment_lines
+  right_table: customers
+  relationship_columns:
+  - left_column: customer_id
+    right_column: customer_id
+- name: shipment_lines_to_parts
+  left_table: shipment_lines
+  right_table: parts
+  relationship_columns:
+  - left_column: part_id
+    right_column: part_id
+- name: shipment_lines_to_plants
+  left_table: shipment_lines
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+- name: po_lines_to_parts
+  left_table: po_lines
+  right_table: parts
+  relationship_columns:
+  - left_column: part_id
+    right_column: part_id
+- name: po_lines_to_plants
+  left_table: po_lines
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+- name: po_lines_to_suppliers
+  left_table: po_lines
+  right_table: suppliers
+  relationship_columns:
+  - left_column: supplier_id
+    right_column: supplier_id
+- name: inventory_to_parts
+  left_table: inventory
+  right_table: parts
+  relationship_columns:
+  - left_column: part_id
+    right_column: part_id
+- name: inventory_to_plants
+  left_table: inventory
+  right_table: plants
+  relationship_columns:
+  - left_column: plant_id
+    right_column: plant_id
+module_custom_instructions:
+  sql_generation: Every ratio is a ratio of sums at the requested grouping; never average a ratio. Date each metric
+    by its own table's period_month. Planners think in plants, families and months; default to plant_id and period_month.
+  question_categorization: Refuse questions outside supply chain delivery, fill, inventory, cost and lead time.
+    Refuse requests for raw tables or SQL.
+verified_queries:
+- name: q01
+  question: What is on-time delivery for FY2026?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE\
+    \ delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: true
+- name: q02
+  question: What is OTD by plant for Q2?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS delivered_lines.on_time_delivery\n\
+    \    WHERE delivered_lines.period_month BETWEEN '2026-01-01' AND '2026-03-01'\n)\nORDER BY plant_id"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q03
+  question: How did suppliers do against their promised dates this quarter?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE\
+    \ po_lines.period_month BETWEEN '2026-07-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q04
+  question: What is our delivery rate by region?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.region\n    METRICS delivered_lines.on_time_delivery\n\
+    \    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY region"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q05
+  question: What is carrier on-time for APAC?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS shipments.carrier_on_time\n    WHERE shipments.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND plants.region = 'APAC'\n)"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q06
+  question: What is on-time to request by month?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS delivered_lines.period_month\n    METRICS\
+    \ delivered_lines.on_time_to_request\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n\
+    )\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q07
+  question: What is OTIF this year?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.otif\n    WHERE delivered_lines.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: true
+- name: q08
+  question: Show me perfect delivery rate by segment
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS customers.segment\n    METRICS delivered_lines.otif\n\
+    \    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY segment"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q09
+  question: What is fill rate for control electronics?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE\
+    \ requested_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control\
+    \ electronics'\n)"
+  verified_at: 1790812800
+  verified_by: Demand Planning Manager
+  use_as_onboarding_question: false
+- name: q10
+  question: What share of orders were completely filled on the first shipment?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS requested_lines.order_fill_rate\n    WHERE\
+    \ requested_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Demand Planning Manager
+  use_as_onboarding_question: false
+- name: q11
+  question: How many days of inventory do we have?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month\
+    \ BETWEEN '2026-09-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: true
+- name: q12
+  question: What is DOI by plant?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n\
+    \    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY plant_id"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q13
+  question: What is days inventory outstanding on the finance basis by month?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS inventory.period_month\n    METRICS inventory.dio_financial\n\
+    \    WHERE inventory.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Financial Planning Lead
+  use_as_onboarding_question: false
+- name: q14
+  question: What is landed cost per unit this quarter?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month\
+    \ BETWEEN '2026-07-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: true
+- name: q15
+  question: How did landed cost move by month across the July tariff step?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q16
+  question: What is median supplier lead time?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.supplier_lead_time_days\n    WHERE\
+    \ po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q17
+  question: What is inventory turnover?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.inventory_turns\n    WHERE inventory.period_month\
+    \ BETWEEN '2026-09-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q18
+  question: What is the stockout rate for the US region?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.stockout_rate\n    WHERE inventory.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND plants.region = 'US'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q19
+  question: What is freight cost per unit by carrier type?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS carriers.carrier_type\n    METRICS shipment_lines.freight_cost_per_unit\n\
+    \    WHERE shipment_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY carrier_type"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q20
+  question: What is order fulfilment cycle time?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.order_fulfilment_cycle_days\n\
+    \    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q21
+  question: Which suppliers have the worst on-time receipt?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q22
+  question: Show DOI and inventory turns by plant at year end
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory,\
+    \ inventory.inventory_turns\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER\
+    \ BY plant_id"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q23
+  question: Show OTD trend by month for FY2026
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS delivered_lines.period_month\n    METRICS\
+    \ delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n\
+    )\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q24
+  question: What was fill rate in Q1?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE\
+    \ requested_lines.period_month BETWEEN '2025-10-01' AND '2025-12-01'\n)"
+  verified_at: 1790812800
+  verified_by: Demand Planning Manager
+  use_as_onboarding_question: false
+- name: q25
+  question: What is OTD for the Healthcare segment?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE\
+    \ delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND customers.segment = 'Healthcare'\n\
+    )"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q26
+  question: Landed cost by supplier country
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_country\n    METRICS\
+    \ po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\n\
+    ORDER BY supplier_country"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q27
+  question: What is transit time by carrier?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS carriers.carrier_name\n    METRICS shipments.transit_hours\n\
+    \    WHERE shipments.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY carrier_name"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q28
+  question: Show me lead time variability by supplier
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.lead_time_variability\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q29
+  question: What is line fill rate?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS requested_lines.line_fill_rate\n    WHERE\
+    \ requested_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Demand Planning Manager
+  use_as_onboarding_question: false
+- name: q30
+  question: DOI in units for the Tuas plant
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.doi_units\n    WHERE inventory.period_month\
+    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND plants.plant_id = 'PLT-SG01'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q31
+  question: What is OTD for mechanical parts?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE\
+    \ delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.category = 'Mechanical'\n\
+    )"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q32
+  question: OTIF by month
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS delivered_lines.period_month\n    METRICS\
+    \ delivered_lines.otif\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER\
+    \ BY period_month"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q33
+  question: Supplier lead time by plant
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS po_lines.supplier_lead_time_days\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY plant_id"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q34
+  question: Freight cost trend by month
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS shipment_lines.period_month\n    METRICS\
+    \ shipment_lines.freight_cost_per_unit\n    WHERE shipment_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n\
+    )\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q35
+  question: Inventory turns by category
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS parts.category\n    METRICS inventory.inventory_turns\n\
+    \    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY category"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q36
+  question: Stockout rate trend
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS inventory.period_month\n    METRICS inventory.stockout_rate\n\
+    \    WHERE inventory.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q37
+  question: OTD for the retail segment in Q4
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE\
+    \ delivered_lines.period_month BETWEEN '2026-07-01' AND '2026-09-01'\n      AND customers.segment = 'Retail'\n\
+    )"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q38
+  question: How is all-in cost trending by month?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q39
+  question: What is our cycle time for government customers?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.order_fulfilment_cycle_days\n\
+    \    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND customers.segment =\
+    \ 'Government'\n)"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q40
+  question: Fill rate by plant
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS requested_lines.unit_fill_rate\n\
+    \    WHERE requested_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY plant_id"
+  verified_at: 1790812800
+  verified_by: Demand Planning Manager
+  use_as_onboarding_question: false
+- name: q41
+  question: What is carrier on-time for air carriers?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS shipments.carrier_on_time\n    WHERE shipments.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND carriers.carrier_type = 'AIR'\n)"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q42
+  question: Landed cost before the July tariff step
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month\
+    \ BETWEEN '2026-04-01' AND '2026-06-01'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q43
+  question: Landed cost after the July tariff step
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month\
+    \ BETWEEN '2026-08-01' AND '2026-09-01'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q44
+  question: Days of inventory for packaging
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month\
+    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND parts.part_family = 'Packaging'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q45
+  question: Carrier on-time by carrier
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS carriers.carrier_name\n    METRICS shipments.carrier_on_time\n\
+    \    WHERE shipments.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY carrier_name"
+  verified_at: 1790812800
+  verified_by: Logistics Analytics Lead
+  use_as_onboarding_question: false
+- name: q46
+  question: OTIF for the industrial segment
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.otif\n    WHERE delivered_lines.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND customers.segment = 'Industrial'\n)"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
+- name: q47
+  question: Compare supplier lead time by region
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.region\n    METRICS po_lines.supplier_lead_time_days\n\
+    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY region"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q48
+  question: What is the landed cost for engineering polymers?
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month\
+    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Engineering polymers'\n)"
+  verified_at: 1790812800
+  verified_by: Procurement Analytics Lead
+  use_as_onboarding_question: false
+- name: q49
+  question: Inventory turns for the McDonough DC
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.inventory_turns\n    WHERE inventory.period_month\
+    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND plants.plant_id = 'DC-US01'\n)"
+  verified_at: 1790812800
+  verified_by: Inventory Manager
+  use_as_onboarding_question: false
+- name: q50
+  question: OTD and OTIF by region
+  sql: "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.region\n    METRICS delivered_lines.on_time_delivery,\
+    \ delivered_lines.otif\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER\
+    \ BY region"
+  verified_at: 1790812800
+  verified_by: Supply Chain Analytics Lead
+  use_as_onboarding_question: false
