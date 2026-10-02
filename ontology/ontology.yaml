@@ -1,0 +1,461 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+id: https://scm-ontology.example.com/schema
+name: scm_ontology
+title: Supply Chain Ontology
+description: >-
+  An enterprise supply chain ontology covering procurement, logistics, inventory
+  and sales order fulfilment. Entities map to the IOF Supply Chain Reference
+  Ontology where a class exists.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  scm: https://scm-ontology.example.com/schema/
+  iof_scro: https://spec.industrialontologies.org/ontology/supplychain/
+
+default_range: string
+
+imports:
+  - linkml:types
+
+classes:
+
+  Supplier:
+    class_uri: iof_scro:Supplier
+    description: An organisation that supplies parts under contractual agreements.
+    attributes:
+      supplier_id:
+        identifier: true
+        range: string
+        description: Golden key for the supplier, resolved from crosswalk.
+      supplier_name:
+        range: string
+        description: Legal name of the supplier entity.
+      supplier_site:
+        range: string
+        description: Physical site identifier within the supplier organisation.
+      parent_supplier_id:
+        range: string
+        description: Parent supplier in the supplier hierarchy (site > parent).
+      country_code:
+        range: string
+        description: ISO 3166-1 alpha-2 country code of the supplier site.
+      contact_name:
+        range: string
+        description: Primary contact name.
+        annotations:
+          sensitivity: CONFIDENTIAL
+      contact_email:
+        range: string
+        description: Primary contact email.
+        annotations:
+          sensitivity: CONFIDENTIAL
+      bank_account:
+        range: string
+        description: Bank account number for payments.
+        annotations:
+          sensitivity: RESTRICTED
+      source_systems:
+        range: string
+        multivalued: true
+        description: Systems of record (erp, portal).
+      synonyms:
+        range: string
+        multivalued: true
+        description: Alternative names (vendor, seller).
+
+  Part:
+    class_uri: iof_scro:MaterialProduct
+    description: A stock-keeping unit that can be purchased, stored, and sold.
+    attributes:
+      part_id:
+        identifier: true
+        range: string
+        description: Golden key for the part.
+      part_name:
+        range: string
+      part_family:
+        range: string
+        description: Product family in the Part > ProductFamily > Category hierarchy.
+      category:
+        range: string
+        description: Top-level category.
+      base_uom:
+        range: string
+        description: Base unit of measure (each, kg, litre).
+      pack_factor:
+        range: float
+        description: Units per case.
+      pallet_factor:
+        range: float
+        description: Cases per pallet.
+      weight_kg:
+        range: float
+        description: Unit weight in kilograms.
+      source_systems:
+        range: string
+        multivalued: true
+
+  SupplierPartAgreement:
+    class_uri: iof_scro:SupplyAgreement
+    description: A contractual agreement for a supplier to supply a specific part.
+    attributes:
+      agreement_id:
+        identifier: true
+        range: string
+      supplier_id:
+        range: Supplier
+        description: The supplying party.
+      part_id:
+        range: Part
+        description: The supplied part.
+      unit_cost:
+        range: float
+        description: Agreed unit cost in the transaction currency.
+        annotations:
+          sensitivity: RESTRICTED
+      currency:
+        range: string
+        description: ISO 4217 currency code.
+      incoterm:
+        range: string
+        description: Incoterms 2020 rule (EXW, FOB, CIF, DDP).
+      quoted_lead_days:
+        range: integer
+        description: Supplier-quoted lead time in calendar days.
+      effective_from:
+        range: date
+      effective_to:
+        range: date
+
+  Plant:
+    class_uri: iof_scro:Facility
+    description: A manufacturing or distribution facility.
+    attributes:
+      plant_id:
+        identifier: true
+        range: string
+      plant_name:
+        range: string
+      plant_type:
+        range: string
+        description: MANUFACTURING or DISTRIBUTION.
+      region:
+        range: string
+        description: Geographic region (US, EMEA, APAC).
+      country_code:
+        range: string
+      timezone:
+        range: string
+        description: IANA timezone identifier (e.g. America/Chicago).
+
+  StorageLocation:
+    class_uri: iof_scro:StorageLocation
+    description: A named location within a plant where inventory is held.
+    attributes:
+      storage_location_id:
+        identifier: true
+        range: string
+      storage_location_name:
+        range: string
+      plant_id:
+        range: Plant
+        description: The containing plant.
+      location_type:
+        range: string
+        description: RACK, BULK, COLD, YARD.
+
+  Customer:
+    class_uri: iof_scro:Customer
+    description: An organisation that purchases finished goods.
+    attributes:
+      customer_id:
+        identifier: true
+        range: string
+        description: Golden key for the customer.
+      customer_name:
+        range: string
+      ship_to_id:
+        range: string
+        description: Ship-to location in the Customer hierarchy.
+      sold_to_id:
+        range: string
+        description: Sold-to party.
+      account_id:
+        range: string
+        description: Account in the hierarchy.
+      segment:
+        range: string
+        description: Market segment (Industrial, Retail, Government, Healthcare).
+      country_code:
+        range: string
+      contact_name:
+        range: string
+        annotations:
+          sensitivity: CONFIDENTIAL
+      contact_email:
+        range: string
+        annotations:
+          sensitivity: CONFIDENTIAL
+
+  PurchaseOrderLine:
+    class_uri: iof_scro:PurchaseOrderLine
+    description: A line on a purchase order placed with a supplier.
+    attributes:
+      po_line_id:
+        identifier: true
+        range: string
+      po_number:
+        range: string
+      line_number:
+        range: integer
+      supplier_id:
+        range: Supplier
+      part_id:
+        range: Part
+      deliver_to_plant_id:
+        range: Plant
+      ordered_qty:
+        range: float
+      unit_cost:
+        range: float
+        annotations:
+          sensitivity: RESTRICTED
+      currency:
+        range: string
+      order_date:
+        range: date
+      promised_date:
+        range: date
+        description: Supplier-promised delivery date.
+      confirmed_date:
+        range: date
+        description: Supplier-confirmed delivery date (may differ from promised).
+      status:
+        range: string
+        description: OPEN, RECEIVED, PARTIAL, CANCELLED.
+
+  GoodsReceipt:
+    class_uri: iof_scro:GoodsReceipt
+    description: A record of parts received against a purchase order line.
+    attributes:
+      receipt_id:
+        identifier: true
+        range: string
+      po_line_id:
+        range: PurchaseOrderLine
+      receipt_date:
+        range: date
+      received_qty:
+        range: float
+      quality_status:
+        range: string
+        description: ACCEPTED, REJECTED, QUARANTINE.
+      inspector_name:
+        range: string
+        annotations:
+          sensitivity: CONFIDENTIAL
+
+  SalesOrderLine:
+    class_uri: iof_scro:SalesOrderLine
+    description: A line on a customer sales order.
+    attributes:
+      so_line_id:
+        identifier: true
+        range: string
+      so_number:
+        range: string
+      line_number:
+        range: integer
+      customer_id:
+        range: Customer
+      part_id:
+        range: Part
+      fulfilled_from_location_id:
+        range: StorageLocation
+      ordered_qty:
+        range: float
+      unit_price:
+        range: float
+      currency:
+        range: string
+      requested_date:
+        range: date
+        description: Customer-requested delivery date.
+      committed_date:
+        range: date
+        description: Date committed to the customer.
+      actual_ship_date:
+        range: date
+        description: Date the shipment left the warehouse.
+      actual_delivery_date:
+        range: date
+        description: Date confirmed delivered to the customer.
+      status:
+        range: string
+        description: OPEN, SHIPPED, DELIVERED, CANCELLED.
+
+  Shipment:
+    class_uri: iof_scro:Shipment
+    description: A transport movement from origin to destination.
+    attributes:
+      shipment_id:
+        identifier: true
+        range: string
+      carrier_id:
+        range: Carrier
+      lane_id:
+        range: Lane
+      origin_plant_id:
+        range: Plant
+      destination_id:
+        range: string
+        description: Customer ship-to or inter-plant destination.
+      ship_date:
+        range: date
+      carrier_eta:
+        range: date
+        description: Carrier-estimated arrival date.
+      actual_delivery:
+        range: date
+        description: Actual delivery date from carrier confirmation.
+      chargeable_weight_kg:
+        range: float
+      freight_charge:
+        range: float
+        annotations:
+          sensitivity: RESTRICTED
+      freight_currency:
+        range: string
+      status:
+        range: string
+        description: IN_TRANSIT, DELIVERED, EXCEPTION.
+
+  ShipmentLine:
+    description: Links a sales order line to a shipment with the shipped quantity.
+    attributes:
+      shipment_line_id:
+        identifier: true
+        range: string
+      shipment_id:
+        range: Shipment
+      so_line_id:
+        range: SalesOrderLine
+      shipped_qty:
+        range: float
+      is_first_shipment:
+        range: boolean
+        description: True if this is the first shipment against the sales order line.
+
+  Carrier:
+    class_uri: iof_scro:Carrier
+    description: A freight carrier or logistics service provider.
+    attributes:
+      carrier_id:
+        identifier: true
+        range: string
+      carrier_name:
+        range: string
+      carrier_type:
+        range: string
+        description: OCEAN, AIR, ROAD, RAIL, PARCEL.
+      scac_code:
+        range: string
+        description: Standard Carrier Alpha Code.
+
+  Lane:
+    description: A defined transportation route between an origin and destination.
+    attributes:
+      lane_id:
+        identifier: true
+        range: string
+      origin_region:
+        range: string
+      destination_region:
+        range: string
+      mode:
+        range: string
+        description: Primary transport mode.
+      transit_days_typical:
+        range: integer
+
+  DeliveryEvent:
+    description: A timestamped event in the lifecycle of a shipment.
+    attributes:
+      event_id:
+        identifier: true
+        range: string
+      shipment_id:
+        range: Shipment
+      event_type:
+        range: string
+        description: picked_up, departed, arrived, delivered, exception.
+      event_time_utc:
+        range: datetime
+        description: Event timestamp in UTC.
+      site_tz:
+        range: string
+        description: IANA timezone of the event location.
+      location_id:
+        range: string
+        description: Identifier of the event location.
+
+  InventorySnapshot:
+    class_uri: iof_scro:InventoryPosition
+    description: A daily snapshot of inventory at a storage location for a part.
+    attributes:
+      snapshot_id:
+        identifier: true
+        range: string
+      storage_location_id:
+        range: StorageLocation
+      part_id:
+        range: Part
+      snapshot_date:
+        range: date
+      on_hand_qty:
+        range: float
+        description: Quantity on hand in base UOM.
+      on_hand_value_std:
+        range: float
+        description: On-hand value in standard cost (USD).
+      in_transit_qty:
+        range: float
+      allocated_qty:
+        range: float
+
+  TariffCode:
+    description: An HTS tariff classification with duty rates and effective dates.
+    attributes:
+      tariff_id:
+        identifier: true
+        range: string
+      hts_code:
+        range: string
+        description: Harmonized Tariff Schedule code (6 or 10 digit).
+      description:
+        range: string
+      duty_rate:
+        range: float
+        description: Ad valorem duty rate as a decimal (0.05 = 5%).
+      effective_from:
+        range: date
+      effective_to:
+        range: date
+      part_id:
+        range: Part
+        description: The part classified under this tariff code.
+
+  FxRate:
+    description: A daily foreign exchange rate to USD.
+    attributes:
+      fx_date:
+        range: date
+      from_currency:
+        range: string
+        description: ISO 4217 source currency.
+      to_currency:
+        range: string
+        description: Always USD.
+      rate:
+        range: float
+        description: Units of to_currency per unit of from_currency.
