@@ -117,13 +117,20 @@ export default function ComparePage() {
       <div aria-live="polite">
         {busy && !result ? <Loading what="Asking as planning, procurement and logistics" /> : null}
         {problem ? <Problem problem={problem} /> : null}
-        {result ? <Convergence columns={result.columns} converged={result.converged} hash={result.hash} settled={settled} /> : null}
+        {result ? (
+          <Convergence columns={result.columns} converged={result.converged} hash={result.hash} settled={settled} />
+        ) : null}
       </div>
       {result ? (
         <div className="mt-8 grid grid-cols-12 gap-x-3">
           {result.columns.map((c) => (
             <div key={c.role} className="col-span-12 md:col-span-4">
-              <button type="button" className="quiet-action" aria-expanded={open === c.role} onClick={() => setOpen(open === c.role ? null : c.role)}>
+              <button
+                type="button"
+                className="quiet-action"
+                aria-expanded={open === c.role}
+                onClick={() => setOpen(open === c.role ? null : c.role)}
+              >
                 {open === c.role ? "Close" : "Open"} the {PERSONA_LABEL[c.role].toLowerCase()} ledger
               </button>
               {open === c.role && c.ledger ? <Ledger answer={c.ledger} /> : null}

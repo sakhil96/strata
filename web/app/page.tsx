@@ -39,9 +39,9 @@ export default function Landing() {
             <em className="font-normal text-ore">One question.</em>
           </h1>
           <p className="mt-4 max-w-measure text-lg text-ash">
-            Planning, procurement and logistics each reported on-time delivery for FY2026, and each was right by its own
-            rules. We wrote the rules down once, compiled them into governed semantic views, and every role now gets the
-            same number with its working shown.
+            Planning, procurement and logistics each reported on-time delivery for FY2026, and each was right by its own rules. We
+            wrote the rules down once, compiled them into governed semantic views, and every role now gets the same number with
+            its working shown.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link href="/compare" className="action">
@@ -130,7 +130,11 @@ export default function Landing() {
           </Link>
         </Section>
 
-        <Section numeral="04" title="Proof" lede="Seven evaluation suites gate every release to production. The latest run is below.">
+        <Section
+          numeral="04"
+          title="Proof"
+          lede="Seven evaluation suites gate every release to production. The latest run is below."
+        >
           {report.state === "ready" ? (
             <p className="font-mono text-sm text-bone">
               {String((report.value as { summary?: string }).summary ?? "")}{" "}

@@ -45,7 +45,9 @@ export function Shell({ children }: { children: ReactNode }) {
                 href={n.href}
                 aria-current={here ? "page" : undefined}
                 className={`text-sm underline-offset-4 transition-colors duration-160 ${
-                  here ? "text-bone underline decoration-ore" : "text-ash hover:text-bone hover:underline hover:decoration-hairline"
+                  here
+                    ? "text-bone underline decoration-ore"
+                    : "text-ash hover:text-bone hover:underline hover:decoration-hairline"
                 }`}
               >
                 {n.label}

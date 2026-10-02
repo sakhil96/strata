@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "license": "Apache-2.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "build:demo": "STRATA_MODE=demo next build",
     "typecheck": "tsc --noEmit",
-    "lint": "node scripts/lint-copy.mjs && prettier --check .",
+    "lint": "python3 ../scripts/authorship_lint.py && prettier --check .",
     "format": "prettier --write .",
     "e2e": "playwright test",
     "lighthouse": "node scripts/lighthouse.mjs"

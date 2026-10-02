@@ -5,7 +5,17 @@ import { motion, useReducedMotion } from "framer-motion";
 import { formatValue } from "@/lib/format";
 import type { LegacyNumber } from "@/lib/types";
 
-export function Strata({ legacy, governed, basis, revealed }: { legacy: LegacyNumber[]; governed: number; basis: string; revealed: boolean }) {
+export function Strata({
+  legacy,
+  governed,
+  basis,
+  revealed,
+}: {
+  legacy: LegacyNumber[];
+  governed: number;
+  basis: string;
+  revealed: boolean;
+}) {
   const still = useReducedMotion();
   return (
     <div>
@@ -16,7 +26,9 @@ export function Strata({ legacy, governed, basis, revealed }: { legacy: LegacyNu
               {String(i + 1).padStart(2, "0")} {l.team} · {l.label}
             </p>
             <div className="relative col-span-12 md:col-span-4">
-              <p className={`font-display text-3xl font-light tabular transition-colors duration-240 ${revealed ? "text-ash" : "text-bone"}`}>
+              <p
+                className={`font-display text-3xl font-light tabular transition-colors duration-240 ${revealed ? "text-ash" : "text-bone"}`}
+              >
                 {formatValue(l.value, "ratio")}
               </p>
               <motion.span
@@ -40,7 +52,9 @@ export function Strata({ legacy, governed, basis, revealed }: { legacy: LegacyNu
         aria-hidden={!revealed}
       >
         <p className="micro col-span-12 text-ore md:col-span-3">Governed · on_time_delivery v1</p>
-        <p className="col-span-12 font-display text-5xl font-light tabular text-ore md:col-span-5">{formatValue(governed, "ratio")}</p>
+        <p className="col-span-12 font-display text-5xl font-light tabular text-ore md:col-span-5">
+          {formatValue(governed, "ratio")}
+        </p>
         <p className="col-span-12 text-sm text-bone md:col-span-4">{basis}</p>
       </motion.div>
     </div>

@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-10-02T21:57:02+00:00",
+  "environment": "local DuckDB build",
+  "pass_rate": 0.9765,
+  "summary": "83 of 85 checks passed across 7 suites; 2 checks need the account.",
+  "suites": [
+    {
+      "name": "metric_identity",
+      "title": "1 \u00b7 Metric identity against truth",
+      "status": "passed",
+      "passed": 20,
+      "total": 20,
+      "needs_account": [],
+      "detail": "all checks ran"
+    },
+    {
+      "name": "nl_accuracy",
+      "title": "2 \u00b7 Words to governed query",
+      "status": "passed",
+      "passed": 5,
+      "total": 5,
+      "needs_account": [
+        "test_agent_meets_the_same_floors_through_agent_run"
+      ],
+      "detail": "1 check(s) need the account"
+    },
+    {
+      "name": "persona_consistency",
+      "title": "3 \u00b7 One question, three roles, one hash",
+      "status": "passed",
+      "passed": 22,
+      "total": 22,
+      "needs_account": [],
+      "detail": "all checks ran"
+    },
+    {
+      "name": "governance",
+      "title": "4 \u00b7 Governance rules",
+      "status": "passed",
+      "passed": 19,
+      "total": 19,
+      "needs_account": [],
+      "detail": "all checks ran"
+    },
+    {
+      "name": "resilience",
+      "title": "5 \u00b7 Resilience and operations",
+      "status": "passed",
+      "passed": 8,
+      "total": 8,
+      "needs_account": [
+        "test_restore_from_a_time_travel_clone_matches_the_original"
+      ],
+      "detail": "1 check(s) need the account"
+    },
+    {
+      "name": "frontend",
+      "title": "6 \u00b7 Front end",
+      "status": "passed",
+      "passed": 6,
+      "total": 6,
+      "needs_account": [],
+      "detail": "1 skipped locally"
+    },
+    {
+      "name": "supply_chain",
+      "title": "7 \u00b7 Software supply chain",
+      "status": "failed",
+      "passed": 3,
+      "total": 5,
+      "needs_account": [],
+      "detail": "failing: test_python_dependencies_have_no_known_high_severity_vulnerabilities, test_web_dependencies_have_no_high_severity_advisories"
+    }
+  ]
+}

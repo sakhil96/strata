@@ -22,8 +22,8 @@ export function Ledger({ answer, placeholderless = false }: { answer: Answer | n
       <aside aria-label="Resolution ledger" className="py-2">
         <p className="micro">Resolution ledger</p>
         <p className="mt-1 text-sm text-ash">
-          Every answer is set here like a receipt: which governed metric we used, how it is defined, the exact query, its
-          hash, the SQL that ran, where the numbers came from and the role they ran under.
+          Every answer is set here like a receipt: which governed metric we used, how it is defined, the exact query, its hash,
+          the SQL that ran, where the numbers came from and the role they ran under.
         </p>
       </aside>
     );
@@ -63,7 +63,7 @@ export function Ledger({ answer, placeholderless = false }: { answer: Answer | n
       </dl>
       <div className="mt-2">
         <p className="micro">Canonical query</p>
-        <pre className="mt-0.5 overflow-x-auto font-mono text-micro leading-5 text-ash">
+        <pre tabIndex={0} aria-label="Canonical query" className="mt-0.5 overflow-x-auto font-mono text-micro leading-5 text-ash">
           {JSON.stringify(answer.canonical_query, null, 2)}
         </pre>
       </div>
@@ -71,7 +71,11 @@ export function Ledger({ answer, placeholderless = false }: { answer: Answer | n
         <button type="button" aria-expanded={showSql} onClick={() => setShowSql((v) => !v)} className="quiet-action">
           {showSql ? "Hide the SQL that ran" : "Show the SQL that ran"}
         </button>
-        {showSql ? <pre className="mt-1 overflow-x-auto font-mono text-micro leading-5 text-bone">{answer.sql}</pre> : null}
+        {showSql ? (
+          <pre tabIndex={0} aria-label="Rendered SQL" className="mt-1 overflow-x-auto font-mono text-micro leading-5 text-bone">
+            {answer.sql}
+          </pre>
+        ) : null}
       </div>
       <div className="mt-2">
         <p className="micro">Lineage</p>

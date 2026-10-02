@@ -51,92 +51,97 @@ export function Chart({
   const tick = (k: string) => (temporal ? monthLabel(k) : k);
   const shown = hover ?? points.length - 1;
 
-  const series = temporal ? (
-    (() => {
-      const x = scalePoint({ domain: keys, range: [0, innerW] });
-      return (
-        <>
-          {marker ? (
-            <g>
-              <line x1={x(marker.at) ?? 0} x2={x(marker.at) ?? 0} y1={0} y2={innerH} stroke="rgb(var(--ash))" strokeDasharray="2 4" />
-              <text x={(x(marker.at) ?? 0) + 6} y={12} fill="rgb(var(--ash))" fontSize={11} fontFamily="JetBrains Mono">
-                {marker.label}
-              </text>
-            </g>
-          ) : null}
-          <LinePath
-            data={points}
-            x={(r) => x(String(r[dimension])) ?? 0}
-            y={(r) => y(Number(r[metric]))}
-            stroke="rgb(var(--ore))"
-            strokeWidth={1.5}
-            curve={curveMonotoneX}
-          />
-          {points.map((r, i) => (
-            <circle
-              key={i}
-              cx={x(String(r[dimension])) ?? 0}
-              cy={y(Number(r[metric]))}
-              r={i === shown ? 3.5 : 0}
-              fill="rgb(var(--ore))"
+  const series = temporal
+    ? (() => {
+        const x = scalePoint({ domain: keys, range: [0, innerW] });
+        return (
+          <>
+            {marker ? (
+              <g>
+                <line
+                  x1={x(marker.at) ?? 0}
+                  x2={x(marker.at) ?? 0}
+                  y1={0}
+                  y2={innerH}
+                  stroke="rgb(var(--ash))"
+                  strokeDasharray="2 4"
+                />
+                <text x={(x(marker.at) ?? 0) + 6} y={12} fill="rgb(var(--ash))" fontSize={11} fontFamily="JetBrains Mono">
+                  {marker.label}
+                </text>
+              </g>
+            ) : null}
+            <LinePath
+              data={points}
+              x={(r) => x(String(r[dimension])) ?? 0}
+              y={(r) => y(Number(r[metric]))}
+              stroke="rgb(var(--ore))"
+              strokeWidth={1.5}
+              curve={curveMonotoneX}
             />
-          ))}
-          {points.map((r, i) => (
-            <rect
-              key={`hit-${i}`}
-              x={(x(String(r[dimension])) ?? 0) - innerW / points.length / 2}
-              width={innerW / points.length}
-              y={0}
-              height={innerH}
-              fill="transparent"
-              onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
-            />
-          ))}
-          <text
-            x={(x(keys[shown]) ?? 0) + 8}
-            y={y(values[shown]) - 8}
-            fill="rgb(var(--bone))"
-            fontSize={12}
-            fontFamily="JetBrains Mono"
-          >
-            {`${tick(keys[shown])} ${formatValue(values[shown], unit)}`}
-          </text>
-          <AxisBottom top={innerH} scale={x} tickFormat={(k) => tick(String(k))} numTicks={6} {...AXIS} />
-        </>
-      );
-    })()
-  ) : (
-    (() => {
-      const x = scaleBand({ domain: keys, range: [0, innerW], padding: 0.4 });
-      return (
-        <>
-          {points.map((r, i) => (
-            <g key={i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
-              <Bar
-                x={x(String(r[dimension]))}
-                width={x.bandwidth()}
-                y={y(Number(r[metric]))}
-                height={innerH - y(Number(r[metric]))}
-                fill={i === shown ? "rgb(var(--ore))" : "rgb(var(--ash) / 0.35)"}
+            {points.map((r, i) => (
+              <circle
+                key={i}
+                cx={x(String(r[dimension])) ?? 0}
+                cy={y(Number(r[metric]))}
+                r={i === shown ? 3.5 : 0}
+                fill="rgb(var(--ore))"
               />
-              <text
-                x={(x(String(r[dimension])) ?? 0) + x.bandwidth() / 2}
-                y={y(Number(r[metric])) - 6}
-                textAnchor="middle"
-                fill={i === shown ? "rgb(var(--bone))" : "rgb(var(--ash))"}
-                fontSize={11}
-                fontFamily="JetBrains Mono"
-              >
-                {formatValue(Number(r[metric]), unit)}
-              </text>
-            </g>
-          ))}
-          <AxisBottom top={innerH} scale={x} {...AXIS} />
-        </>
-      );
-    })()
-  );
+            ))}
+            {points.map((r, i) => (
+              <rect
+                key={`hit-${i}`}
+                x={(x(String(r[dimension])) ?? 0) - innerW / points.length / 2}
+                width={innerW / points.length}
+                y={0}
+                height={innerH}
+                fill="transparent"
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover(null)}
+              />
+            ))}
+            <text
+              x={(x(keys[shown]) ?? 0) + 8}
+              y={y(values[shown]) - 8}
+              fill="rgb(var(--bone))"
+              fontSize={12}
+              fontFamily="JetBrains Mono"
+            >
+              {`${tick(keys[shown])} ${formatValue(values[shown], unit)}`}
+            </text>
+            <AxisBottom top={innerH} scale={x} tickFormat={(k) => tick(String(k))} numTicks={6} {...AXIS} />
+          </>
+        );
+      })()
+    : (() => {
+        const x = scaleBand({ domain: keys, range: [0, innerW], padding: 0.4 });
+        return (
+          <>
+            {points.map((r, i) => (
+              <g key={i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+                <Bar
+                  x={x(String(r[dimension]))}
+                  width={x.bandwidth()}
+                  y={y(Number(r[metric]))}
+                  height={innerH - y(Number(r[metric]))}
+                  fill={i === shown ? "rgb(var(--ore))" : "rgb(var(--ash) / 0.35)"}
+                />
+                <text
+                  x={(x(String(r[dimension])) ?? 0) + x.bandwidth() / 2}
+                  y={y(Number(r[metric])) - 6}
+                  textAnchor="middle"
+                  fill={i === shown ? "rgb(var(--bone))" : "rgb(var(--ash))"}
+                  fontSize={11}
+                  fontFamily="JetBrains Mono"
+                >
+                  {formatValue(Number(r[metric]), unit)}
+                </text>
+              </g>
+            ))}
+            <AxisBottom top={innerH} scale={x} {...AXIS} />
+          </>
+        );
+      })();
 
   return (
     <figure>

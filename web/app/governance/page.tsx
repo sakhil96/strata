@@ -50,7 +50,11 @@ export default function GovernancePage() {
         lede="What the agent may touch, who may read what, and whether the last evaluation held. Everything on this page is read from the build or the account, not typed in."
       />
       <div className="space-y-12">
-        <Section numeral="11.1" title="Evaluation" lede="Seven suites. A production release is refused unless every one is green.">
+        <Section
+          numeral="11.1"
+          title="Evaluation"
+          lede="Seven suites. A production release is refused unless every one is green."
+        >
           {report.state === "loading" ? <Loading what="Reading the evaluation report" /> : null}
           {report.state === "failed" ? (
             <Empty title="No evaluation report yet">Run make eval; the report lands in eval/report.json and appears here.</Empty>
@@ -80,9 +84,7 @@ export default function GovernancePage() {
                       >
                         {STATUS_COPY[s.status]}
                       </td>
-                      <td className="py-1 pr-2 font-mono tabular">
-                        {s.total ? `${s.passed}/${s.total}` : "—"}
-                      </td>
+                      <td className="py-1 pr-2 font-mono tabular">{s.total ? `${s.passed}/${s.total}` : "—"}</td>
                       <td className="py-1 text-ash">{s.detail}</td>
                     </tr>
                   ))}
@@ -92,7 +94,11 @@ export default function GovernancePage() {
           ) : null}
         </Section>
 
-        <Section numeral="11.2" title="Agent tools" lede="Rendered from the agent specification. No tool here can run SQL you write.">
+        <Section
+          numeral="11.2"
+          title="Agent tools"
+          lede="Rendered from the agent specification. No tool here can run SQL you write."
+        >
           {snapshot.state === "loading" ? <Loading what="Reading the governance snapshot" /> : null}
           {snapshot.state === "failed" ? <Problem problem={snapshot.problem} /> : null}
           {snapshot.state === "ready" ? (
@@ -114,14 +120,21 @@ export default function GovernancePage() {
           ) : null}
         </Section>
 
-        <Section numeral="11.3" title="Grants and policies" lede="The committed snapshot that CI diffs against SHOW GRANTS on every run.">
+        <Section
+          numeral="11.3"
+          title="Grants and policies"
+          lede="The committed snapshot that CI diffs against SHOW GRANTS on every run."
+        >
           {snapshot.state === "ready" ? (
             <div className="grid grid-cols-12 gap-x-3 gap-y-6">
               <div className="col-span-12 lg:col-span-7">
                 <p className="micro">Grants</p>
                 <ul className="mt-1 font-mono text-micro">
                   {snapshot.value.grants.map((g) => (
-                    <li key={`${g.role}-${g.privilege}-${g.object}`} className="grid grid-cols-[150px_110px_1fr] gap-x-2 border-b border-hairline py-0.5">
+                    <li
+                      key={`${g.role}-${g.privilege}-${g.object}`}
+                      className="grid grid-cols-[150px_110px_1fr] gap-x-2 border-b border-hairline py-0.5"
+                    >
                       <span className="text-bone">{g.role}</span>
                       <span className="text-ash">{g.privilege}</span>
                       <span className="text-ash">{g.object}</span>

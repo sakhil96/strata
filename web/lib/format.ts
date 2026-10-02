@@ -12,8 +12,9 @@ export function formatValue(value: number | null | undefined, unit: string, digi
 
 export function unitLabel(unit: string): string {
   return (
-    { ratio: "share of lines", usd_per_unit: "USD per unit", days: "days", hours: "hours", turns_per_year: "turns a year" }[unit] ??
-    unit
+    { ratio: "share of lines", usd_per_unit: "USD per unit", days: "days", hours: "hours", turns_per_year: "turns a year" }[
+      unit
+    ] ?? unit
   );
 }
 

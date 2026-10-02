@@ -57,8 +57,8 @@ export function Degraded({ reason, onBuild }: { reason?: string | null; onBuild?
     <div role="status" className="border-l border-warn py-1 pl-2">
       <p className="micro text-warn">Answered without the model</p>
       <p className="mt-0.5 max-w-measure text-sm text-ash">
-        The agent was not used{reason ? ` (${reason})` : ""}. We matched your words to the governed registry instead;
-        the number below is the same governed number the agent would have returned.
+        The agent was not used{reason ? ` (${reason})` : ""}. We matched your words to the governed registry instead; the number
+        below is the same governed number the agent would have returned.
       </p>
       {onBuild ? (
         <button type="button" onClick={onBuild} className="quiet-action mt-1">

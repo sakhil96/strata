@@ -37,14 +37,17 @@ async function call<T>(path: string, persona: Persona | null, init?: RequestInit
   } catch {
     throw new ApiProblem({ error: "unreachable", message: "The service did not answer. Check your connection and retry." }, 0);
   }
-  const body = await response.json().catch(() => ({ error: "unreadable", message: "The service sent a reply we could not read." }));
+  const body = await response
+    .json()
+    .catch(() => ({ error: "unreadable", message: "The service sent a reply we could not read." }));
   if (!response.ok) throw new ApiProblem(body as Problem, response.status);
   return body as T;
 }
 
 async function recorded<T>(name: string): Promise<T> {
   const response = await fetch(`/recorded/${name}.json`);
-  if (!response.ok) throw new ApiProblem({ error: "not_recorded", message: "This answer was not recorded for the public mirror." }, 404);
+  if (!response.ok)
+    throw new ApiProblem({ error: "not_recorded", message: "This answer was not recorded for the public mirror." }, 404);
   return (await response.json()) as T;
 }
 

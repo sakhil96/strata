@@ -81,10 +81,26 @@ export function ContourField({ seed = 20261002 }: { seed?: number }) {
             const bottom: [number, number] = [x + lerp(d, c) * cell, y + cell];
             const left: [number, number] = [x, y + lerp(a, d) * cell];
             const segs: [number, number][][] = {
-              1: [[left, bottom]], 2: [[bottom, right]], 3: [[left, right]], 4: [[top, right]],
-              5: [[left, top], [bottom, right]], 6: [[top, bottom]], 7: [[left, top]], 8: [[left, top]],
-              9: [[top, bottom]], 10: [[left, bottom], [top, right]], 11: [[top, right]], 12: [[left, right]],
-              13: [[bottom, right]], 14: [[left, bottom]],
+              1: [[left, bottom]],
+              2: [[bottom, right]],
+              3: [[left, right]],
+              4: [[top, right]],
+              5: [
+                [left, top],
+                [bottom, right],
+              ],
+              6: [[top, bottom]],
+              7: [[left, top]],
+              8: [[left, top]],
+              9: [[top, bottom]],
+              10: [
+                [left, bottom],
+                [top, right],
+              ],
+              11: [[top, right]],
+              12: [[left, right]],
+              13: [[bottom, right]],
+              14: [[left, bottom]],
             }[code] as [number, number][][];
             for (const [p, q] of segs) {
               ctx.moveTo(p[0], p[1]);

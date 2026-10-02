@@ -6,7 +6,8 @@ import { useResource } from "@/lib/use-resource";
 export function StatusLine() {
   const status = useResource(() => api.status(), []);
   if (status.state === "loading") return <p className="micro">Reading system status</p>;
-  if (status.state === "failed") return <p className="micro text-critical">Status unavailable · {status.problem.problem.error}</p>;
+  if (status.state === "failed")
+    return <p className="micro text-critical">Status unavailable · {status.problem.problem.error}</p>;
   const s = status.value;
   const evalRate = s.eval.pass_rate;
   return (

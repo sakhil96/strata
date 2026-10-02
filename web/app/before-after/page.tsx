@@ -18,7 +18,12 @@ export default function BeforeAfterPage() {
   const landed = useResource(
     () =>
       api.query(
-        { metrics: ["landed_cost_per_unit"], dimensions: ["period_month"], time: { range: "fy2026" }, filters: [{ dimension: "part_family", operator: "=", value: "Control electronics" }] },
+        {
+          metrics: ["landed_cost_per_unit"],
+          dimensions: ["period_month"],
+          time: { range: "fy2026" },
+          filters: [{ dimension: "part_family", operator: "=", value: "Control electronics" }],
+        },
         persona,
       ),
     [persona],
@@ -47,7 +52,12 @@ export default function BeforeAfterPage() {
           {story.state === "ready" ? (
             <>
               <p className="micro mb-3">{period(story.value.window)}</p>
-              <Strata legacy={story.value.legacy} governed={story.value.governed.value} basis={story.value.governed.basis} revealed={revealed} />
+              <Strata
+                legacy={story.value.legacy}
+                governed={story.value.governed.value}
+                basis={story.value.governed.basis}
+                revealed={revealed}
+              />
               <button type="button" className="quiet-action mt-4" onClick={() => setRevealed((v) => !v)}>
                 {revealed ? "Hide the governed answer" : "Reveal the governed answer"}
               </button>
@@ -58,8 +68,8 @@ export default function BeforeAfterPage() {
           <p className="micro">Why they differ</p>
           <ul className="mt-1 space-y-2 text-sm text-ash">
             <li>
-              Planning measured against the date the customer asked for, which is earlier than the date we committed to, so
-              its number runs low.
+              Planning measured against the date the customer asked for, which is earlier than the date we committed to, so its
+              number runs low.
             </li>
             <li>
               Logistics measured shipments against the carrier&rsquo;s own estimate, set after pick-up, and counted shipments
@@ -97,7 +107,8 @@ export default function BeforeAfterPage() {
                   marker={{ at: "2026-08-01", label: "duty step 24 Jul" }}
                 />
                 <p className="mt-1 font-mono text-micro text-ash">
-                  control electronics · {formatValue(Number(landed.value.rows[0]?.landed_cost_per_unit), "usd_per_unit")} in October
+                  control electronics · {formatValue(Number(landed.value.rows[0]?.landed_cost_per_unit), "usd_per_unit")} in
+                  October
                 </p>
               </div>
               <div className="col-span-12 lg:col-span-4">

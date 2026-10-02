@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ApiProblem } from "./api";
 
-export type Resource<T> =
-  | { state: "loading" }
-  | { state: "ready"; value: T }
-  | { state: "failed"; problem: ApiProblem };
+export type Resource<T> = { state: "loading" } | { state: "ready"; value: T } | { state: "failed"; problem: ApiProblem };
 
 export function useResource<T>(load: () => Promise<T>, deps: unknown[]): Resource<T> {
   const [resource, setResource] = useState<Resource<T>>({ state: "loading" });

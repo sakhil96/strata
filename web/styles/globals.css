@@ -22,7 +22,9 @@
   }
   .font-display {
     font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 0, "WONK" 0;
+    font-variation-settings:
+      "SOFT" 0,
+      "WONK" 0;
   }
   .font-mono,
   .tabular {

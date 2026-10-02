@@ -178,7 +178,10 @@ export default function AskPage() {
                           </td>
                           {answer.canonical_query.metrics.map((m) => (
                             <td key={m} className="py-0.5 text-right tabular">
-                              {formatValue(r[m] === null ? null : Number(r[m]), answer.metrics.find((x) => x.name === m)?.unit ?? unit)}
+                              {formatValue(
+                                r[m] === null ? null : Number(r[m]),
+                                answer.metrics.find((x) => x.name === m)?.unit ?? unit,
+                              )}
                             </td>
                           ))}
                         </tr>

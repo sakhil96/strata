@@ -14,7 +14,7 @@ export function LineagePath({ lineage }: { lineage: Lineage }) {
   const focus = new Set(columns[columns.length - 2]?.objects.slice(0, 1) ?? []);
 
   return (
-    <figure className="overflow-x-auto" aria-label={`Lineage of ${lineage.metric}`}>
+    <figure tabIndex={0} className="overflow-x-auto" aria-label={`Lineage of ${lineage.metric}`}>
       <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} role="img" className="max-w-none">
         <title>{`Lineage of ${lineage.metric} from source files to the semantic view`}</title>
         {columns.slice(0, -1).map((col, c) =>

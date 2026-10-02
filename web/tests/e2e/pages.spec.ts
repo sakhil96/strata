@@ -1,7 +1,18 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const PAGES = ["/", "/ask", "/compare", "/before-after", "/glossary", "/lineage/otif", "/governance", "/operations", "/about", "/styleguide"];
+const PAGES = [
+  "/",
+  "/ask",
+  "/compare",
+  "/before-after",
+  "/glossary",
+  "/lineage/otif",
+  "/governance",
+  "/operations",
+  "/about",
+  "/styleguide",
+];
 
 function watchConsole(page: Page): string[] {
   const problems: string[] = [];

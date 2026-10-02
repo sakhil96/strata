@@ -19,7 +19,12 @@ interface Ops {
   cost: { week: string; credits: number | null; note: string };
 }
 
-const SLO_COLOUR: Record<Slo["status"], string> = { met: "text-good", breached: "text-critical", needs_account: "text-warn", no_data: "text-ash" };
+const SLO_COLOUR: Record<Slo["status"], string> = {
+  met: "text-good",
+  breached: "text-critical",
+  needs_account: "text-warn",
+  no_data: "text-ash",
+};
 
 export default function OperationsPage() {
   const status = useResource(() => api.status(), []);
@@ -42,9 +47,15 @@ export default function OperationsPage() {
                 <caption className="sr-only">Source freshness</caption>
                 <thead>
                   <tr className="border-b border-hairline text-left">
-                    <th scope="col" className="micro pb-1 font-normal">Source</th>
-                    <th scope="col" className="micro pb-1 font-normal">Last loaded, UTC</th>
-                    <th scope="col" className="micro pb-1 text-right font-normal">Files</th>
+                    <th scope="col" className="micro pb-1 font-normal">
+                      Source
+                    </th>
+                    <th scope="col" className="micro pb-1 font-normal">
+                      Last loaded, UTC
+                    </th>
+                    <th scope="col" className="micro pb-1 text-right font-normal">
+                      Files
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -62,14 +73,20 @@ export default function OperationsPage() {
                 <dd className="font-display text-3xl font-light tabular">
                   {status.value.dbt.passed}
                   <span className="text-lg text-ash"> passed</span>
-                  {status.value.dbt.failed ? <span className="text-lg text-critical"> · {status.value.dbt.failed} failed</span> : null}
+                  {status.value.dbt.failed ? (
+                    <span className="text-lg text-critical"> · {status.value.dbt.failed} failed</span>
+                  ) : null}
                 </dd>
                 <dd className="font-mono text-micro text-ash">{status.value.dbt.finished_at ?? "no run recorded"}</dd>
               </dl>
             </div>
           ) : null}
         </Section>
-        <Section numeral="12.2" title="Service levels" lede="Targets from docs/slo.md, measured from the audit trail and the event table.">
+        <Section
+          numeral="12.2"
+          title="Service levels"
+          lede="Targets from docs/slo.md, measured from the audit trail and the event table."
+        >
           {ops.state === "loading" ? <Loading what="Measuring service levels" /> : null}
           {ops.state === "failed" ? <Problem problem={ops.problem} /> : null}
           {ops.state === "ready" ? (
@@ -78,7 +95,9 @@ export default function OperationsPage() {
               <thead>
                 <tr className="border-b border-hairline text-left">
                   {["Objective", "Target", "Measured", "Status", "Measured from"].map((h) => (
-                    <th key={h} scope="col" className="micro pb-1 font-normal">{h}</th>
+                    <th key={h} scope="col" className="micro pb-1 font-normal">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -88,7 +107,9 @@ export default function OperationsPage() {
                     <td className="py-1 text-bone">{s.name}</td>
                     <td className="py-1 font-mono">{s.target}</td>
                     <td className="py-1 font-mono tabular">{s.measured ?? "—"}</td>
-                    <td className={`py-1 font-mono text-micro uppercase ${SLO_COLOUR[s.status]}`}>{s.status.replace("_", " ")}</td>
+                    <td className={`py-1 font-mono text-micro uppercase ${SLO_COLOUR[s.status]}`}>
+                      {s.status.replace("_", " ")}
+                    </td>
                     <td className="py-1 text-ash">{s.source}</td>
                   </tr>
                 ))}
@@ -105,7 +126,9 @@ export default function OperationsPage() {
                     <span>
                       <span className="font-mono text-bone">{a.name}</span> <span className="text-ash">· {a.schedule}</span>
                     </span>
-                    <span className="font-mono text-micro uppercase text-ash">{a.last_fired ? `fired ${a.last_fired}` : a.state}</span>
+                    <span className="font-mono text-micro uppercase text-ash">
+                      {a.last_fired ? `fired ${a.last_fired}` : a.state}
+                    </span>
                   </li>
                 ))}
               </ul>

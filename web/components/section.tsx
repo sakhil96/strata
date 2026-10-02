@@ -29,7 +29,17 @@ export function Section({
   );
 }
 
-export function PageHead({ numeral, kicker, title, lede }: { numeral: string; kicker: string; title: ReactNode; lede?: ReactNode }) {
+export function PageHead({
+  numeral,
+  kicker,
+  title,
+  lede,
+}: {
+  numeral: string;
+  kicker: string;
+  title: ReactNode;
+  lede?: ReactNode;
+}) {
   return (
     <header className="grid grid-cols-12 gap-x-3 pb-6 pt-8">
       <p className="col-span-12 font-display text-xl font-light text-ash md:col-span-2" aria-hidden>

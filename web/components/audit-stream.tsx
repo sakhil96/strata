@@ -13,7 +13,9 @@ export function AuditStream({ entries }: { entries: AuditEntry[] }) {
             {e.ts.slice(11, 19) || e.ts}
           </time>
           <span className="text-bone">{PERSONA_LABEL[e.role] ?? e.role}</span>
-          <span className={e.refusal ? "text-warn" : "text-bone"}>{e.refusal ? `refused · ${e.refusal.replaceAll("_", " ")}` : e.metric}</span>
+          <span className={e.refusal ? "text-warn" : "text-bone"}>
+            {e.refusal ? `refused · ${e.refusal.replaceAll("_", " ")}` : e.metric}
+          </span>
           <span className="text-ore">{e.hash ? shortHash(e.hash) : ""}</span>
         </li>
       ))}
