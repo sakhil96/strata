@@ -257,6 +257,8 @@ tables:
     synonyms:
     - order fill
     - complete orders
+    - orders were completely filled
+    - orders completely filled
     description: Share of orders where every line was filled completely on the first shipment. Grain sales_order;
       dated by requested_date; unit ratio.
     expr: SUM(requested_lines.is_order_filled) / NULLIF(SUM(requested_lines.is_order_head), 0)
@@ -492,6 +494,8 @@ tables:
     - supplier on-time
     - supplier delivery performance
     - on-time receipt
+    - promised dates
+    - supplier promise
     description: Share of received purchase order lines that arrived on or before the supplier's promised date.
       Grain purchase_order_line; dated by receipt_date; unit ratio.
     expr: SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)

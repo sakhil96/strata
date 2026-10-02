@@ -262,6 +262,8 @@ tables:
     synonyms:
     - order fill
     - complete orders
+    - orders were completely filled
+    - orders completely filled
     - fill rate
     description: Share of orders where every line was filled completely on the first shipment. Grain sales_order;
       dated by requested_date; unit ratio.
@@ -501,6 +503,8 @@ tables:
     - supplier on-time
     - supplier delivery performance
     - on-time receipt
+    - promised dates
+    - supplier promise
     - on-time delivery
     - OTD
     description: Share of received purchase order lines that arrived on or before the supplier's promised date.

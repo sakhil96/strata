@@ -33,8 +33,17 @@ GRANT ROLE SCM_READER TO ROLE EXECUTIVE_ROLE;
 GRANT ROLE SCM_ADMIN TO ROLE SYSADMIN;
 
 -- Service user for the SPCS container (key-pair auth, no password)
+-- Key-pair only: TYPE = SERVICE users cannot hold a password. The public key is set by
+-- runbooks/rotate-keys.md, never in this file.
 CREATE USER IF NOT EXISTS SCM_SERVICE_USER
+    TYPE = SERVICE
     DEFAULT_ROLE = SCM_READER
-    COMMENT = 'Service account for the STRATA SPCS container'
-    MUST_CHANGE_PASSWORD = FALSE;
+    COMMENT = 'Service account for the Strata container and CI';
 GRANT ROLE SCM_READER TO USER SCM_SERVICE_USER;
+
+-- Reviewers get one read-only role: every persona view, the audit trail and the evaluation
+-- results, no masked columns unmasked, no warehouse larger than XSMALL, nothing writable.
+CREATE ROLE IF NOT EXISTS JUDGE_ROLE
+    COMMENT = 'Read-only reviewer access to the governed views, audit and evaluation';
+GRANT ROLE SCM_READER TO ROLE JUDGE_ROLE;
+GRANT ROLE JUDGE_ROLE TO ROLE SCM_DEPLOY;

@@ -127,6 +127,9 @@ class LocalBackend:
                 "part_family": distinct("select distinct part_family from conformed.dim_part"),
                 "category": distinct("select distinct category from conformed.dim_part"),
                 "region": distinct("select distinct region from conformed.dim_plant"),
+                "plant_id": distinct("select plant_id from conformed.dim_plant"),
+                "carrier_type": distinct("select distinct carrier_type from conformed.dim_carrier"),
+                "supplier_country": distinct("select distinct supplier_country from conformed.dim_supplier"),
             }
         return self._values
 
@@ -237,6 +240,25 @@ class LocalBackend:
             "data_card": card,
         }
 
+    def operations(self) -> dict[str, Any]:
+        latencies = sorted(r["latency_ms"] for r in self._recent if r.get("latency_ms") is not None)
+        p95 = latencies[min(len(latencies) - 1, int(0.95 * len(latencies)))] if latencies else None
+        report_path = ROOT / "eval" / "report.json"
+        rate = json.loads(report_path.read_text()).get("pass_rate") if report_path.exists() else None
+        slo = [
+            slo_row("p95 answer latency through /query", "≤ 1500 ms", p95, 1500, "ms",
+                    f"local audit trail, {len(latencies)} answers"),
+            {"name": "p95 answer latency through the agent", "target": "≤ 6 s", "measured": None,
+             "status": "needs_account", "source": "AUDIT.ANSWERS where path = agent"},
+            {"name": "Service availability", "target": "99.5% a month", "measured": None,
+             "status": "needs_account", "source": "SPCS readiness probe history in the event table"},
+            slo_row("Evaluation pass rate", "≥ 90%", None if rate is None else round(rate * 100, 1), 90, "%",
+                    "eval/report.json", higher_is_better=True),
+        ]
+        return {"slo": slo, "alerts": ALERTS,
+                "cost": {"week": "this week", "credits": None,
+                         "note": "Locally nothing is spent. On the account this reads the weekly cost task's output."}}
+
     def health(self) -> dict[str, Any]:
         self._cursor().execute("select 1").fetchone()
         return {"status": "ready", "mode": self.mode, "metrics": len(self.registry.metrics)}
@@ -264,11 +286,11 @@ class SnowflakeBackend:
                 connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", f"scm_{os.getenv('SCM_ENV', 'dev')}"),
                 database=self.db, schema="AGENT")
 
-    def _call(self, caller: Caller, procedure: str, *args: Any) -> dict[str, Any]:
+    def _call(self, caller: Caller, procedure: str, *args: Any, path: str = "api") -> dict[str, Any]:
+        tag = json.dumps({"app": "strata", "request_id": caller.request_id, "user": caller.user, "path": path})
         with self._connect() as conn, conn.cursor() as cur:
-            cur.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 30, QUERY_TAG = %s",
-                        (json.dumps({"app": "strata", "request_id": caller.request_id, "user": caller.user}),))
-            cur.execute(f"USE SECONDARY ROLES NONE")
+            cur.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 30, QUERY_TAG = %s", (tag,))
+            cur.execute("USE SECONDARY ROLES NONE")
             cur.execute("USE ROLE IDENTIFIER(%s)", (caller.role,))
             placeholders = ", ".join(["PARSE_JSON(%s)" if isinstance(a, (dict, list)) else "%s" for a in args])
             cur.execute(f"CALL {self.db}.AGENT.{procedure}({placeholders})",
@@ -282,7 +304,8 @@ class SnowflakeBackend:
     def query(self, caller: Caller, query: dict[str, Any], question: str | None = None) -> dict[str, Any]:
         canonical = semantic.canonicalise(self.registry, query)
         answer = self._call(caller, "GOVERNED_QUERY", view_for(caller.role), canonical["metrics"],
-                            canonical["dimensions"], canonical["time"], canonical["filters"], question or "")
+                            canonical["dimensions"], canonical["time"], canonical["filters"], question or "",
+                            path="builder" if question is None else "resolver")
         if "error" in answer:
             raise semantic.SemanticError(answer["error"], answer.get("message", answer["error"]),
                                          **{k: v for k, v in answer.items() if k not in ("error", "message")})
@@ -316,6 +339,19 @@ class SnowflakeBackend:
                 "dbt": {"finished_at": str(dbt[0]), "passed": dbt[1], "failed": dbt[2]},
                 "eval": {"pass_rate": ev[0] if ev else None, "generated_at": str(ev[1]) if ev else None}}
 
+    def operations(self) -> dict[str, Any]:
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(f"SELECT * FROM {self.db}.OPS.SLO_STATUS")
+            cols = [c[0].lower() for c in cur.description]
+            slo = [dict(zip(cols, r)) for r in cur.fetchall()]
+            cur.execute(f"SELECT name, schedule, last_fired, state FROM {self.db}.OPS.ALERT_STATUS")
+            alerts = [dict(zip(("name", "schedule", "last_fired", "state"), r)) for r in cur.fetchall()]
+            cur.execute(f"SELECT week, credits FROM {self.db}.OPS.WEEKLY_COST ORDER BY week DESC LIMIT 1")
+            week = cur.fetchone()
+        return {"slo": slo, "alerts": alerts,
+                "cost": {"week": str(week[0]) if week else None, "credits": float(week[1]) if week else None,
+                         "note": "From the weekly cost task over ACCOUNT_USAGE."}}
+
     def health(self) -> dict[str, Any]:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute("SELECT 1")
@@ -323,6 +359,29 @@ class SnowflakeBackend:
 
     def record_refusal(self, caller: Caller, question: str, reason: str) -> None:
         self._call(caller, "RECORD_REFUSAL", question, reason)
+
+
+ALERTS = [
+    {"name": "STALE_SOURCE_ALERT", "schedule": "hourly, any source older than 6 h", "last_fired": None,
+     "state": "defined, runs on the account"},
+    {"name": "DBT_TEST_FAILURE_ALERT", "schedule": "hourly, failures in the last 2 h", "last_fired": None,
+     "state": "defined, runs on the account"},
+    {"name": "EVAL_REGRESSION_ALERT", "schedule": "daily 03:00 UTC, pass rate under 90%", "last_fired": None,
+     "state": "defined, runs on the account"},
+    {"name": "SLO_BREACH_ALERT", "schedule": "every 15 min, p95 over target", "last_fired": None,
+     "state": "defined, runs on the account"},
+    {"name": "SCM_PROD_MONITOR", "schedule": "resource monitor, 50/75/90/100%", "last_fired": None,
+     "state": "defined, runs on the account"},
+]
+
+
+def slo_row(name: str, target: str, measured: float | None, limit: float, unit: str, source: str,
+            higher_is_better: bool = False) -> dict[str, Any]:
+    if measured is None:
+        return {"name": name, "target": target, "measured": None, "status": "no_data", "source": source}
+    met = measured >= limit if higher_is_better else measured <= limit
+    return {"name": name, "target": target, "measured": f"{measured} {unit}", "status": "met" if met else "breached",
+            "source": source}
 
 
 _backend: Backend | None = None

@@ -39,3 +39,9 @@ def governance(request: Request):
 def status(request: Request):
     caller(request)
     return backend().status()
+
+
+@router.get("/operations", summary="Service levels, alerts and this week's cost")
+def operations(request: Request):
+    caller(request)
+    return backend().operations()

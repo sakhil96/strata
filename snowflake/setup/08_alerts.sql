@@ -55,3 +55,14 @@ CREATE OR REPLACE ALERT {{DB}}.OPS.EVAL_REGRESSION_ALERT
 ALTER ALERT {{DB}}.OPS.STALE_SOURCE_ALERT RESUME;
 ALTER ALERT {{DB}}.OPS.DBT_TEST_FAILURE_ALERT RESUME;
 ALTER ALERT {{DB}}.OPS.EVAL_REGRESSION_ALERT RESUME;
+
+-- SLO breach: either latency objective over target in the last 30 days.
+CREATE OR REPLACE ALERT {{DB}}.OPS.SLO_BREACH_ALERT
+    WAREHOUSE = SCM_WH_{{ENV}}
+    SCHEDULE = '15 MINUTE'
+    IF (EXISTS (SELECT 1 FROM {{DB}}.OPS.SLO_STATUS WHERE status = 'breached'))
+    THEN
+        CALL SYSTEM$SEND_EMAIL('scm_alerts', '42152708+sakhil96@users.noreply.github.com',
+            'Strata {{ENV}}: service level breached',
+            'An objective in OPS.SLO_STATUS is breached. Open /operations and runbooks/incident.md.');
+ALTER ALERT {{DB}}.OPS.SLO_BREACH_ALERT RESUME;
