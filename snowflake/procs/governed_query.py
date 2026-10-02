@@ -1,0 +1,105 @@
+"""GOVERNED_QUERY: the only path from a question to a number.
+
+Runs with caller's rights, so row access and masking apply to whoever asked. The
+canonical form and hash come from ontology/semantic.py, the same module the API and
+the evaluation suites import, so a hash means the same thing everywhere.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+import time
+from typing import Any
+
+import semantic
+from snowflake import telemetry
+from snowflake.snowpark import Session
+
+from explain_lineage import lineage_for
+
+STATEMENT_TIMEOUT_S = 30
+ROW_CAP = 10_000
+log = logging.getLogger("scm.governed_query")
+
+
+def _declared(session: Session, kind: str, view: str) -> set[str]:
+    rows = session.sql(f"SHOW SEMANTIC {kind} IN SEMANTIC VIEW IDENTIFIER(?)", params=[view]).collect()
+    return {r["name"].lower() for r in rows}
+
+
+def run(session: Session, view: str, metrics: list, dimensions: list, time_window: dict, filters: list,
+        question: str = "") -> dict[str, Any]:
+    started = time.perf_counter()
+    db = session.get_current_database().strip('"')
+    qualified = f"{db}.SEMANTIC.{view}"
+    registry = semantic.load_registry(semantic.REGISTRY_PATH)
+    telemetry.set_span_attribute("scm.view", view)
+
+    try:
+        canonical = semantic.canonicalise(registry, {
+            "metrics": metrics or [], "dimensions": dimensions or [], "time": time_window or {},
+            "filters": [{"dimension": f.get("dimension"), "operator": f.get("operator", "="),
+                         "value": f.get("values", f.get("value"))} for f in (filters or [])]})
+        declared_metrics = _declared(session, "METRICS", qualified)
+        declared_dims = _declared(session, "DIMENSIONS", qualified) | {semantic.PERIOD}
+        missing = [m for m in canonical["metrics"] if m not in declared_metrics]
+        if missing:
+            raise semantic.SemanticError("unknown_metrics", f"{view} does not expose {', '.join(missing)}",
+                                         suggestions={m: semantic.closest(m, sorted(declared_metrics)) for m in missing})
+        missing = [d for d in canonical["dimensions"] if d not in declared_dims]
+        if missing:
+            raise semantic.SemanticError("unknown_dimensions", f"{view} does not expose {', '.join(missing)}",
+                                         valid_dimensions=sorted(declared_dims))
+    except semantic.SemanticError as exc:
+        _audit(session, db, question, None, None, None, None, 0, started, refusal=exc.code)
+        return exc.as_dict()
+
+    digest = semantic.query_hash(canonical)
+    sql = semantic.render_semantic_sql(registry, canonical, qualified)
+    telemetry.set_span_attribute("scm.semantic_query_hash", digest)
+    session.sql(f"ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = {STATEMENT_TIMEOUT_S}").collect()
+    try:
+        frame = session.sql(f"{sql}\nLIMIT {ROW_CAP + 1}").collect()
+    except Exception as exc:
+        _audit(session, db, question, canonical, digest, sql, None, 0, started, refusal="query_failed")
+        log.error("governed_query_failed", extra={"hash": digest})
+        return {"error": "query_failed", "message": f"The semantic view rejected the query: {exc.__class__.__name__}",
+                "sql": sql}
+    rows = [{k.lower(): (v.isoformat() if hasattr(v, "isoformat") else (float(v) if hasattr(v, "as_integer_ratio") else v))
+             for k, v in r.as_dict().items()} for r in frame]
+    truncated = len(rows) > ROW_CAP
+    rows = rows[:ROW_CAP]
+    checksum = hashlib.sha256(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()[:16]
+    latency_ms = _audit(session, db, question, canonical, digest, sql, checksum, len(rows), started)
+
+    metric_cards = []
+    for name in canonical["metrics"]:
+        m = registry.metrics[name]
+        metric_cards.append({k: m[k] for k in ("name", "title", "definition", "formula_text", "version", "status",
+                                                "grain", "date_basis", "window", "denominator", "unit", "owner",
+                                                "steward", "parent")})
+    log.info("governed_query_answered", extra={"hash": digest, "rows": len(rows), "latency_ms": latency_ms})
+    return {
+        "metric_name": ", ".join(canonical["metrics"]), "metrics": metric_cards,
+        "definition": " ".join(c["definition"] for c in metric_cards), "canonical_query": canonical,
+        "semantic_query_hash": digest, "sql": sql, "view": view, "engine": "snowflake",
+        "lineage": lineage_for(session, registry, canonical["metrics"][0]),
+        "role": session.get_current_role().strip('"'), "user": session.sql("SELECT CURRENT_USER()").collect()[0][0],
+        "rows": rows, "row_count": len(rows), "truncated": truncated, "result_checksum": checksum,
+        "latency_ms": latency_ms, "notes": [], "request_id": session.query_tag or "",
+    }
+
+
+def _audit(session, db, question, canonical, digest, sql, checksum, row_count, started, refusal=None) -> int:
+    latency_ms = int((time.perf_counter() - started) * 1000)
+    session.sql(
+        f"INSERT INTO {db}.AUDIT.ANSWERS (ts, username, role_used, question, metric_names, canonical_query,"
+        " semantic_query_hash, sql_executed, result_checksum, row_count, latency_ms, refusal, path)"
+        " SELECT CURRENT_TIMESTAMP(), CURRENT_USER(), CURRENT_ROLE(), ?, ?, PARSE_JSON(?), ?, ?, ?, ?, ?, ?,"
+        " COALESCE(TRY_PARSE_JSON(CURRENT_QUERY_TAG()):path::STRING, 'procedure')",
+        params=[question or None, ", ".join(canonical["metrics"]) if canonical else None,
+                json.dumps(canonical) if canonical else None, digest, sql, checksum, row_count, latency_ms, refusal],
+    ).collect()
+    return latency_ms
