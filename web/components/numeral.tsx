@@ -19,7 +19,7 @@ export function Numeral({
   const ref = useRef<HTMLSpanElement>(null);
   const seen = useInView(ref, { once: true });
   const still = useReducedMotion();
-  const [shown, setShown] = useState<number | null>(still ? (value ?? null) : 0);
+  const [shown, setShown] = useState<number | null>(0);
   const counted = useRef(false);
 
   useEffect(() => {
@@ -32,8 +32,11 @@ export function Numeral({
   }, [value, seen, still]);
 
   return (
-    <span ref={ref} className={`font-display tabular ${className}`} aria-label={formatValue(value, unit, digits)}>
-      <span aria-hidden>{formatValue(shown, unit, digits)}</span>
+    <span ref={ref} className={`font-display tabular ${className}`}>
+      <span className="sr-only">{formatValue(value, unit, digits)}</span>
+      <span aria-hidden data-numeral={formatValue(value, unit, digits)}>
+        {formatValue(shown, unit, digits)}
+      </span>
     </span>
   );
 }

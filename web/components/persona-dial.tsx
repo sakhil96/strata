@@ -39,7 +39,7 @@ export function PersonaDial() {
               active ? "text-ore" : "text-ash hover:text-bone"
             }`}
           >
-            <span className="mr-0.5 tabular text-hairline group-hover:text-ash" aria-hidden>
+            <span className="mr-0.5 tabular text-ash" aria-hidden>
               {String(i + 1).padStart(2, "0")}
             </span>
             {PERSONA_LABEL[role]}

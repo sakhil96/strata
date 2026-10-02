@@ -17,9 +17,12 @@ export function unitLabel(unit: string): string {
   );
 }
 
+// Fixed abbreviations, not the browser's locale data: the same month must read the same everywhere.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function monthLabel(iso: string): string {
-  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
-  return d.toLocaleDateString("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
+  const [year, month] = iso.slice(0, 7).split("-");
+  return `${MONTHS[Number(month) - 1]} ${year.slice(2)}`;
 }
 
 export function period(window: { start: string; end: string }): string {
