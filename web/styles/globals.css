@@ -1,0 +1,62 @@
+@import "./tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background: rgb(var(--ground));
+    color: rgb(var(--bone));
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgb(var(--ore));
+    color: rgb(var(--ground));
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ore));
+    outline-offset: 3px;
+  }
+  .font-display {
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 0, "WONK" 0;
+  }
+  .font-mono,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .micro {
+    @apply font-mono text-micro uppercase text-ash;
+  }
+  .rule {
+    @apply border-t border-hairline;
+  }
+  .link {
+    @apply text-bone underline decoration-hairline decoration-1 underline-offset-4 transition-colors duration-160 hover:decoration-ore;
+  }
+  .control {
+    @apply rounded-sm border border-hairline bg-stratum px-2 py-1 font-sans text-base text-bone transition-colors duration-160 hover:border-ash focus-visible:border-ore;
+  }
+  .action {
+    @apply inline-flex items-center gap-1 rounded-sm border border-ore px-2 py-1 font-sans text-sm text-ore transition-colors duration-160 hover:bg-ore hover:text-ground disabled:cursor-not-allowed disabled:border-hairline disabled:text-ash disabled:hover:bg-transparent;
+  }
+  .quiet-action {
+    @apply inline-flex items-center gap-1 font-sans text-sm text-ash underline decoration-hairline underline-offset-4 transition-colors duration-160 hover:text-bone hover:decoration-ore;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,39 @@
+"use client";
+
+import { animate, useInView, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+import { formatValue } from "@/lib/format";
+
+export function Numeral({
+  value,
+  unit,
+  className = "",
+  digits,
+}: {
+  value: number | null | undefined;
+  unit: string;
+  className?: string;
+  digits?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const seen = useInView(ref, { once: true });
+  const still = useReducedMotion();
+  const [shown, setShown] = useState<number | null>(still ? (value ?? null) : 0);
+  const counted = useRef(false);
+
+  useEffect(() => {
+    if (value === null || value === undefined) return setShown(null);
+    if (still || counted.current) return setShown(value);
+    if (!seen) return;
+    counted.current = true;
+    const controls = animate(0, value, { duration: 0.6, ease: [0.16, 1, 0.3, 1], onUpdate: setShown });
+    return () => controls.stop();
+  }, [value, seen, still]);
+
+  return (
+    <span ref={ref} className={`font-display tabular ${className}`} aria-label={formatValue(value, unit, digits)}>
+      <span aria-hidden>{formatValue(shown, unit, digits)}</span>
+    </span>
+  );
+}

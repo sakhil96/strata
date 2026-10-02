@@ -812,6 +812,8 @@ metrics:
     synonyms:
     - order fill
     - complete orders
+    - orders were completely filled
+    - orders completely filled
     instructions: SUM(is_order_filled) / SUM(is_order_head), counted once per order on its first live line.
   custom_extensions:
   - vendor_name: SNOWFLAKE
@@ -890,6 +892,8 @@ metrics:
     - supplier on-time
     - supplier delivery performance
     - on-time receipt
+    - promised dates
+    - supplier promise
     instructions: SUM(is_on_time_receipt) / SUM(is_received), dated by receipt_date.
   custom_extensions:
   - vendor_name: SNOWFLAKE

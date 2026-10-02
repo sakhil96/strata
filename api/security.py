@@ -25,10 +25,11 @@ BASE_HEADERS = {
 
 def content_security_policy(script_hashes: tuple[str, ...] = ()) -> str:
     # Next's static export inlines its flight data; we allow exactly those script bodies by hash.
+    # React renders style attributes for motion; attributes may be inline, style elements may not.
     scripts = " ".join(["'self'", *(f"'sha256-{h}'" for h in script_hashes)])
     return ("default-src 'self'; "
             f"script-src {scripts}; "
-            "style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; "
+            "style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; "
             "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; "
             "upgrade-insecure-requests")
 

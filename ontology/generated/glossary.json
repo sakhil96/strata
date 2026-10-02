@@ -623,7 +623,9 @@
     "steward": "Demand Planning Manager",
     "synonyms": [
       "order fill",
-      "complete orders"
+      "complete orders",
+      "orders were completely filled",
+      "orders completely filled"
     ],
     "title": "Order fill rate",
     "type": "ratio",
@@ -881,7 +883,9 @@
     "synonyms": [
       "supplier on-time",
       "supplier delivery performance",
-      "on-time receipt"
+      "on-time receipt",
+      "promised dates",
+      "supplier promise"
     ],
     "title": "Supplier on-time receipt",
     "type": "ratio",

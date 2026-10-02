@@ -37,7 +37,8 @@ def test_security_headers_are_on_every_response(client):
         headers = client.get(path).headers
         assert "max-age" in headers["strict-transport-security"]
         assert "frame-ancestors 'none'" in headers["content-security-policy"]
-        assert "'unsafe-inline'" not in headers["content-security-policy"]
+        script_src = next(d for d in headers["content-security-policy"].split(";") if d.strip().startswith("script-src"))
+        assert "unsafe-inline" not in script_src and "unsafe-eval" not in script_src
         assert headers["x-content-type-options"] == "nosniff"
         assert headers["x-request-id"]
 

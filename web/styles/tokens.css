@@ -1,0 +1,58 @@
+/* Colour tokens are RGB triples so Tailwind can apply opacity. Named by meaning, not hue. */
+:root {
+  --ground: 11 13 16;
+  --stratum: 18 21 25;
+  --stratum-2: 24 28 34;
+  --hairline: 35 40 48;
+  --bone: 233 228 218;
+  --ash: 154 160 166;
+  --ore: 227 111 46;
+  --good: 111 207 151;
+  --warn: 242 201 76;
+  --critical: 235 87 87;
+  --paper: 244 241 234;
+  --ink: 18 18 18;
+  color-scheme: dark;
+}
+
+@media print {
+  :root {
+    --ground: 244 241 234;
+    --stratum: 244 241 234;
+    --stratum-2: 236 232 223;
+    --hairline: 200 196 188;
+    --bone: 18 18 18;
+    --ash: 74 78 84;
+    color-scheme: light;
+  }
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-full.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-full-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  src: url("/fonts/instrument-sans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+}
