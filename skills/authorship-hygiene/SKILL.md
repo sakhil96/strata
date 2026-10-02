@@ -9,7 +9,8 @@ description: Enforce the authorship rules — no machine fingerprints, domain na
 Never write comments containing: "generated", "AI", "assistant", "here is", "example",
 "placeholder", "sample", "TODO", "lorem", "foo", "bar".
 
-Exception: the compiler's single-line header on generated files.
+Compiled files carry no header; `scripts/authorship_lint.py` skips the compiled output directories.
+Run `python scripts/authorship_lint.py` before every commit.
 
 ## Naming
 Use domain names: ledger, persona, basis, grain, stratum, lane, receipt, shipment,

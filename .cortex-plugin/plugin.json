@@ -1,5 +1,10 @@
 {
   "name": "scm-ontology",
-  "description": "Supply chain ontology compiler, governed semantic views and STRATA front end on Snowflake",
-  "version": "0.1.0"
+  "description": "Supply chain ontology compiler, governed semantic views and the STRATA front end on Snowflake",
+  "version": "1.0.0",
+  "skills": "./skills",
+  "commands": "./commands",
+  "agents": "./agents",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
 }

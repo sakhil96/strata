@@ -13,6 +13,6 @@ Check the following and report deviations:
 4. **Masking policies**: attached to every column tagged with sensitivity >= CONFIDENTIAL.
 5. **Resource monitors**: exist with notify and suspend thresholds.
 6. **Event table**: configured and receiving logs.
-7. **Secrets**: no plaintext credentials in any file; all secrets use Snowflake SECRET objects.
-8. **Service spec**: no host networking, secrets via snowflakeSecret references only.
+7. **Secrets**: no plaintext credentials in any file; connections use key-pair JWT from `~/.snowflake`.
+8. **Service spec**: no host networking; the container authenticates with the SPCS session token, so it holds no secret.
 9. **Time Travel**: DATA_RETENTION_TIME_IN_DAYS set to edition maximum on CONFORMED and AUDIT schemas.

@@ -5,7 +5,8 @@ description: Run the evaluation suites against a target environment and report r
 
 # Evaluation runner
 
-Run with `/eval [--env ENV] [--suite SUITE]`.
+Run with `/eval`. Locally: `make eval` (DuckDB build). Against an account: `make eval-account ENV=test`.
+Checks that need an account are skipped and reported as `needs_account`, never as passes.
 
 ## Suites
 

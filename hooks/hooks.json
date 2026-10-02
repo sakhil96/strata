@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "sql_execute",
+        "hooks": [{ "type": "command", "command": "python3 \"${CORTEX_PLUGIN_ROOT:-.}/hooks/guard.py\" sql" }]
+      },
+      {
+        "matcher": "bash",
+        "hooks": [{ "type": "command", "command": "python3 \"${CORTEX_PLUGIN_ROOT:-.}/hooks/guard.py\" bash" }]
+      },
+      {
+        "matcher": "write|edit",
+        "hooks": [{ "type": "command", "command": "python3 \"${CORTEX_PLUGIN_ROOT:-.}/hooks/guard.py\" file" }]
+      }
+    ]
+  }
+}

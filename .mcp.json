@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "playwright": { "type": "stdio", "command": "npx", "args": ["@playwright/mcp@0.0.41", "--headless"] },
+    "github": { "type": "http", "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer ${GITHUB_TOKEN}" } },
+    "strata": { "type": "stdio", "command": ".venv/bin/python", "args": ["snowflake/agent/mcp_server.py"] }
+  }
+}

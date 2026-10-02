@@ -11,4 +11,5 @@ When working with semantic views:
 2. After compile, validate with `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML` in a scratch schema.
 3. Verify round-trip: `SYSTEM$READ_YAML_FROM_SEMANTIC_VIEW` output must match source YAML modulo key ordering.
 4. Check `SHOW SEMANTIC METRICS` returns identical expressions across all four persona views.
-5. VQR seeds go in `eval/questions.yaml` and are compiled into the YAML by `compile.py --target vqr`.
+5. Verified queries come from `eval/questions.yaml` through `compile.py --target vqr`; each must execute locally before it is emitted.
+6. Query a view only with `SELECT * FROM SEMANTIC_VIEW(view DIMENSIONS ... METRICS ... WHERE ...)`, rendered by `ontology/semantic.py`.
