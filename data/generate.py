@@ -238,31 +238,37 @@ def build_sales(rng, customers, parts, locations, carriers):
     plant_region = dict(zip(PLANTS.plant_id, PLANTS.region))
     pack = dict(zip(parts.part_id, parts.pack_factor))
 
-    order_rows, line_rows, ship_rows, ship_line_rows = [], [], [], []
+    line_rows, ship_rows, ship_line_rows = [], [], []
     n_orders = 15000
     order_days = rng.integers(0, (AS_OF - FY_START).days - 3, size=n_orders)
     ship_seq = 0
+    customer_rows = customers.to_dict("records")
+    home_plants = {r: PLANTS[PLANTS.region == r].plant_id.tolist() for r in PLANTS.region.unique()}
+    all_plants = PLANTS.plant_id.to_numpy()
+    locs_at = {p: locations[locations.plant_id == p].storage_location_id.to_numpy() for p in all_plants}
+    parts_at = {loc: g.part_id.to_numpy() for loc, g in combos.groupby("storage_location_id")}
+    carriers_in = {r: g.to_dict("records") for r, g in carriers.groupby("home_region")}
     for o in range(n_orders):
-        cust = customers.iloc[int(rng.integers(0, len(customers)))]
-        home = PLANTS[PLANTS.region == cust.region].plant_id.tolist()
-        plant = rng.choice(home) if home and rng.random() < 0.85 else rng.choice(PLANTS.plant_id)
-        loc = rng.choice(locations[locations.plant_id == plant].storage_location_id)
-        loc_parts = combos[combos.storage_location_id == loc].part_id.to_numpy()
+        cust = customer_rows[int(rng.integers(0, len(customer_rows)))]
+        home = home_plants.get(cust["region"], [])
+        plant = rng.choice(home) if home and rng.random() < 0.85 else rng.choice(all_plants)
+        loc = rng.choice(locs_at[plant])
+        loc_parts = parts_at[loc]
         n_lines = int(rng.integers(3, 6))
         chosen = rng.choice(loc_parts, size=n_lines, replace=False)
 
         order_date = FY_START + timedelta(days=int(order_days[o]))
         requested = order_date + timedelta(days=int(rng.integers(6, 22)))
         committed = requested + timedelta(days=int(rng.choice([0, 0, 0, 1, 1, 2, 3])))
-        cross = plant_region[plant] != cust.region
+        cross = plant_region[plant] != cust["region"]
         transit = 4 if cross else 2
         ship_date = committed - timedelta(days=transit) + timedelta(
             days=int(rng.choice([-2, -1, -1, -1, -1, -1, -1, -1, 0, 0, 1])))
         ship_date = max(ship_date, order_date + timedelta(days=1))
         delivery = ship_date + timedelta(days=transit + int(rng.choice([-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2])))
         eta = ship_date + timedelta(days=transit + 1)
-        home_carriers = carriers[carriers.home_region == plant_region[plant]]
-        carrier = home_carriers.iloc[int(rng.integers(0, len(home_carriers)))]
+        home_carriers = carriers_in[plant_region[plant]]
+        carrier = home_carriers[int(rng.integers(0, len(home_carriers)))]
         so = f"SO-{o + 1:07d}"
 
         first_lines, backorder_lines = [], []
@@ -274,7 +280,7 @@ def build_sales(rng, customers, parts, locations, carriers):
                 first_qty = int(qty * float(rng.uniform(0.5, 0.95)))
             line = {
                 "so_line_id": f"{so}-{(k + 1) * 10:03d}", "so_number": so, "line_number": (k + 1) * 10,
-                "customer_id": cust.customer_id, "part_id": part_id, "storage_location_id": loc,
+                "customer_id": cust["customer_id"], "part_id": part_id, "storage_location_id": loc,
                 "plant_id": plant, "ordered_qty": qty, "order_date": order_date,
                 "requested_date": requested, "committed_date": committed, "is_cancelled": cancelled,
             }
@@ -294,10 +300,10 @@ def build_sales(rng, customers, parts, locations, carriers):
             ship_seq += 1
             sid = f"SHP{ship_seq:07d}"
             ship_rows.append({
-                "shipment_id": sid, "carrier_id": carrier.carrier_id, "origin_plant_id": plant,
-                "customer_id": cust.customer_id, "ship_date": depart, "carrier_eta": carrier_eta,
+                "shipment_id": sid, "carrier_id": carrier["carrier_id"], "origin_plant_id": plant,
+                "customer_id": cust["customer_id"], "ship_date": depart, "carrier_eta": carrier_eta,
                 "actual_delivery": pod if pod <= AS_OF else None, "is_cross_region": cross,
-                "billing_currency": carrier.billing_currency,
+                "billing_currency": carrier["billing_currency"],
             })
             for so_line_id, part_id, qty in legs_lines:
                 ship_line_rows.append({
@@ -481,6 +487,76 @@ def build_procurement(rng, suppliers, parts, fx_of, tariffs, constants):
     return agreements, pd.DataFrame(po_lines), pd.DataFrame(inbound)
 
 
+EXCEPTION_CAUSES = [
+    ("carrier_delay", "Linehaul missed its cut-off at {hub}; carrier re-booked on the next departure.", True),
+    ("customs_hold", "Held at {hub} customs for documentation; commercial invoice re-issued with HS code corrected.", True),
+    ("damage_in_transit", "Two cartons crushed on arrival at {hub}; consignee signed with remarks, claim opened.", True),
+    ("address_issue", "Dock closed at the ship-to address; delivery re-attempted the next morning.", True),
+    ("weather", "Storm closure on the {hub} corridor; carrier held freight at the terminal for safety.", True),
+    ("documentation", "POD scan illegible; carrier re-sent the signed delivery note, no change to delivery.", False),
+]
+HUBS = ["Memphis", "Duisburg", "Rotterdam", "Changi", "Laredo", "Antwerp", "Louisville", "Leipzig"]
+CLAUSES = [
+    ("lead_time_commitment", "Lead time",
+     "Supplier shall deliver within {lead} calendar days of a firm purchase order under {incoterm} terms."),
+    ("late_delivery_penalty", "Late delivery",
+     "For each full week of delay beyond the confirmed date, Buyer may deduct 1.5% of the line value, capped at 7.5%."),
+    ("price_adjustment", "Price review",
+     "Unit prices in {ccy} are fixed for the fiscal year and reviewed on 1 October against the agreed index."),
+    ("quality", "Quality",
+     "Lots failing incoming inspection are returned at Supplier's cost and do not count as delivered."),
+    ("force_majeure", "Force majeure",
+     "Neither party is liable for delay caused by events beyond reasonable control, notified within 5 business days."),
+]
+PROCEDURES = [
+    ("Receiving against a purchase order", "Match the delivery note to the PO line before posting a goods receipt. "
+     "Post the receipt on the date the goods arrive, not the date the paperwork is cleared; receipt date drives supplier on-time receipt."),
+    ("Recording a delivery exception", "Every exception event needs a note naming the cause, the hub and whether the customer will notice. "
+     "Notes are searchable by the agent and quoted, never turned into metrics."),
+    ("Cycle counting in distribution centres", "Count in eaches where the label shows eaches and in cases where it shows cases. "
+     "The conformed model converts cases with the material master's pack factor."),
+    ("Changing a committed date", "A committed date may move only with the customer's written agreement. "
+     "The original commitment stays on the line; on-time delivery is measured against the latest agreed date."),
+    ("Cancelling an order line", "Set the rejection reason rather than deleting the line. Cancelled lines are excluded from both "
+     "the numerator and the denominator of every delivery and fill metric."),
+    ("Booking cross-region freight", "Book ocean or air through a contracted carrier; the carrier's ETA is their estimate, "
+     "not our commitment, and is measured separately as carrier on-time."),
+    ("Handling a tariff change", "When a duty rate changes, the new rate applies to goods that leave the supplier on or after "
+     "the effective date. Update the material tariff table; landed cost follows automatically."),
+    ("Escalating a stockout", "A location-part-day with demand allocated and nothing on hand is a stockout. "
+     "Escalate to the planner for the plant within one working day."),
+]
+
+
+def build_documents(rng, events, shipments, agreements, suppliers):
+    rows = []
+    eta = dict(zip(shipments.shipment_id, shipments.carrier_eta))
+    pod = dict(zip(shipments.shipment_id, shipments.actual_delivery))
+    exceptions = events[events.event_type == "exception"].reset_index(drop=True)
+    for i, e in exceptions.iterrows():
+        cause, text, visible = EXCEPTION_CAUSES[int(rng.integers(0, len(EXCEPTION_CAUSES)))]
+        late = pod[e.shipment_id] is not None and pod[e.shipment_id] > eta[e.shipment_id]
+        rows.append({
+            "doc_id": f"EXC-{i + 1:06d}", "kind": "exception_note", "related_id": e.shipment_id,
+            "title": f"Exception on {e.shipment_id}, {e.event_time_utc:%d %b %Y}",
+            "body": text.format(hub=HUBS[int(rng.integers(0, len(HUBS)))]),
+            "category": cause, "is_customer_impacting": bool(visible and late), "source_system": "portal",
+        })
+    names = dict(zip(suppliers.supplier_id, suppliers.supplier_name))
+    for a in agreements.itertuples():
+        for key, heading, text in CLAUSES:
+            rows.append({
+                "doc_id": f"CLS-{a.agreement_id}-{key[:4].upper()}", "kind": "contract_clause",
+                "related_id": a.agreement_id, "title": f"{heading}, {names[a.supplier_id]}",
+                "body": text.format(lead=a.quoted_lead_days, incoterm=a.incoterm, ccy=a.currency),
+                "category": key, "is_customer_impacting": False, "source_system": "erp",
+            })
+    for j, (title, body) in enumerate(PROCEDURES, 1):
+        rows.append({"doc_id": f"SOP-{j:03d}", "kind": "operating_procedure", "related_id": None, "title": title,
+                     "body": body, "category": "procedure", "is_customer_impacting": False, "source_system": "content"})
+    return pd.DataFrame(rows)
+
+
 def month_of(series: pd.Series) -> pd.Series:
     return pd.to_datetime(series).dt.to_period("M").dt.to_timestamp().dt.date
 
@@ -605,30 +681,21 @@ def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, 
 
 
 def inventory_months(inventory: pd.DataFrame) -> pd.DataFrame:
-    inv = inventory.copy()
+    keys = ["storage_location_id", "plant_id", "part_id"]
+    inv = inventory.sort_values(keys + ["snapshot_date"]).reset_index(drop=True)
     inv["month"] = month_of(inv.snapshot_date)
     inv["stockout"] = ((inv.on_hand_qty == 0) & (inv.allocated_qty > 0)).astype(int)
-    keys = ["storage_location_id", "plant_id", "part_id"]
-    out = []
-    for _, combo in inv.groupby(keys, sort=True):
-        combo = combo.sort_values("snapshot_date").reset_index(drop=True)
-        cogs90 = combo.cogs_usd.rolling(90, min_periods=1).sum()
-        units90 = combo.shipped_qty.rolling(90, min_periods=1).sum()
-        combo = combo.assign(cogs_90d=cogs90, units_90d=units90)
-        last = combo.groupby("month").tail(1).set_index("month")
-        agg = combo.groupby("month").agg(
-            avg_value_month=("on_hand_value_std", "mean"), cogs_month=("cogs_usd", "sum"),
-            days_in_month=("snapshot_date", "count"), stockout_days=("stockout", "sum"),
-            obs_days=("snapshot_date", "count"))
-        agg["on_hand_value_end"] = last.on_hand_value_std
-        agg["on_hand_qty_end"] = last.on_hand_qty
-        agg["cogs_90d"] = last.cogs_90d
-        agg["units_90d"] = last.units_90d
-        agg = agg.reset_index()
-        for k, v in zip(keys, combo.loc[0, keys]):
-            agg[k] = v
-        out.append(agg)
-    return pd.concat(out, ignore_index=True)
+    rolling = (inv.groupby(keys, sort=False)[["cogs_usd", "shipped_qty"]].rolling(90, min_periods=1).sum()
+               .reset_index(level=list(range(len(keys))), drop=True))
+    inv["cogs_90d"] = rolling["cogs_usd"]
+    inv["units_90d"] = rolling["shipped_qty"]
+    by_month = inv.groupby(keys + ["month"], sort=True)
+    agg = by_month.agg(
+        avg_value_month=("on_hand_value_std", "mean"), cogs_month=("cogs_usd", "sum"),
+        days_in_month=("snapshot_date", "count"), stockout_days=("stockout", "sum"), obs_days=("snapshot_date", "count"),
+        on_hand_value_end=("on_hand_value_std", "last"), on_hand_qty_end=("on_hand_qty", "last"),
+        cogs_90d=("cogs_90d", "last"), units_90d=("units_90d", "last"))
+    return agg.reset_index()
 
 
 def write(frame: pd.DataFrame, rel: str) -> None:
@@ -774,6 +841,7 @@ def main() -> int:
                  tariffs=tariffs, fx=fx, agreements=agreements, po_lines=po_lines, inbound=inbound,
                  lines=lines, shipments=shipments, ship_lines=ship_lines, events=events, inventory=inventory)
     emit_sources(rng, world)
+    write(build_documents(rng, events, shipments, agreements, suppliers), "content/documents.parquet")
     write(truth, "truth_metrics.parquet")
 
     monthly = truth[truth.grouping == "month"]

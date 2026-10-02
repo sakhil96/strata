@@ -35,3 +35,8 @@ sources:
     meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/iot/{name}.parquet"}
     tables:
       - {name: inventory_snapshots}
+  - name: content
+    schema: RAW
+    meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/content/{name}.parquet"}
+    tables:
+      - {name: documents}

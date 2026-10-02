@@ -21,3 +21,18 @@
 {% macro generate_schema_name(custom_schema_name, node) %}
 {{ (custom_schema_name or target.schema) | trim | upper }}
 {% endmacro %}
+
+{# Exception notes are tagged by Cortex on Snowflake. Locally the simulator's own tags stand in,
+   which is also what the accuracy check compares AI_CLASSIFY against. #}
+{% macro note_category(body, fallback) %}{{ return(adapter.dispatch('note_category')(body, fallback)) }}{% endmacro %}
+{% macro default__note_category(body, fallback) %}{{ fallback }}{% endmacro %}
+{% macro snowflake__note_category(body, fallback) %}
+AI_CLASSIFY({{ body }}, ['carrier_delay', 'customs_hold', 'damage_in_transit', 'address_issue', 'weather', 'documentation'],
+    {'task_description': 'Classify the root cause of a freight delivery exception note'}):labels[0]::string
+{% endmacro %}
+
+{% macro note_is_customer_impacting(body, fallback) %}{{ return(adapter.dispatch('note_is_customer_impacting')(body, fallback)) }}{% endmacro %}
+{% macro default__note_is_customer_impacting(body, fallback) %}{{ fallback }}{% endmacro %}
+{% macro snowflake__note_is_customer_impacting(body, fallback) %}
+AI_FILTER(PROMPT('This freight exception would make the delivery reach the customer late or not at all: {0}', {{ body }}))
+{% endmacro %}
