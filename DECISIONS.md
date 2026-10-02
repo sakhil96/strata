@@ -45,3 +45,17 @@ This is mathematically correct and avoids Simpson's paradox.
 Developers and CI run the full pipeline without Snowflake credentials. The same ontology
 and registry produce dbt models targeting DuckDB and Cube views. `make local-demo`
 stands up the entire stack on a laptop.
+
+## 2026-10-02: Rebuild history before publishing
+
+The first two commits bundled 164 files, which hid the order we built things in and broke our
+own one-change-per-commit rule. Before the repository goes public we replayed the same tree as
+61 commits by area in build order. The tree at the new head is byte-identical to the old one
+(`git diff pre-rebuild` is empty). The old history stays on the local `pre-rebuild` branch until
+the first public push, then we delete it. No team author identity is configured on this machine,
+so commits carry the local default; we re-author before pushing.
+
+## 2026-10-02: Audit before closing gaps
+
+docs/GAPS.md records each specification item as present, partial or absent with the command that
+proved it. We close gaps in priority order, one commit per gap.
