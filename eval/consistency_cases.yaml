@@ -1,0 +1,143 @@
+# Persona consistency test cases.
+# 20 questions x 3 role phrasings -> must produce identical hash and number.
+
+cases:
+  - id: pc01
+    question_base: "What is on-time delivery for FY2026?"
+    phrasings:
+      PLANNING_ROLE: "What is our delivery rate for FY2026?"
+      PROCUREMENT_ROLE: "What is supplier delivery performance for FY2026?"
+      LOGISTICS_ROLE: "What is carrier on-time for FY2026?"
+
+  - id: pc02
+    question_base: "What is OTIF by plant?"
+    phrasings:
+      PLANNING_ROLE: "What is perfect delivery by plant?"
+      PROCUREMENT_ROLE: "What is OTIF by plant?"
+      LOGISTICS_ROLE: "What is complete and on-time by plant?"
+
+  - id: pc03
+    question_base: "What is fill rate?"
+    phrasings:
+      PLANNING_ROLE: "What is availability?"
+      PROCUREMENT_ROLE: "What is supplier fill?"
+      LOGISTICS_ROLE: "What is shipment completeness?"
+
+  - id: pc04
+    question_base: "What is DOI?"
+    phrasings:
+      PLANNING_ROLE: "What is days of supply?"
+      PROCUREMENT_ROLE: "What are stock days?"
+      LOGISTICS_ROLE: "What is warehouse days cover?"
+
+  - id: pc05
+    question_base: "What is landed cost per unit?"
+    phrasings:
+      PLANNING_ROLE: "What is cost per unit?"
+      PROCUREMENT_ROLE: "What is all-in cost?"
+      LOGISTICS_ROLE: "What is delivered cost?"
+
+  - id: pc06
+    question_base: "What is inventory turnover?"
+    phrasings:
+      PLANNING_ROLE: "What is stock velocity?"
+      PROCUREMENT_ROLE: "What are inventory turns?"
+      LOGISTICS_ROLE: "What are warehouse turns?"
+
+  - id: pc07
+    question_base: "What is lead time?"
+    phrasings:
+      PLANNING_ROLE: "What is lead time?"
+      PROCUREMENT_ROLE: "What is supplier lead time?"
+      LOGISTICS_ROLE: "What is inbound lead time?"
+
+  - id: pc08
+    question_base: "What is stockout rate?"
+    phrasings:
+      PLANNING_ROLE: "What is OOS rate?"
+      PROCUREMENT_ROLE: "What is material shortage rate?"
+      LOGISTICS_ROLE: "What is stockout rate?"
+
+  - id: pc09
+    question_base: "What is freight cost per unit?"
+    phrasings:
+      PLANNING_ROLE: "What is freight cost?"
+      PROCUREMENT_ROLE: "What is transport cost?"
+      LOGISTICS_ROLE: "What is shipping cost per unit?"
+
+  - id: pc10
+    question_base: "What is cycle time?"
+    phrasings:
+      PLANNING_ROLE: "What is cycle time?"
+      PROCUREMENT_ROLE: "What is fulfilment cycle?"
+      LOGISTICS_ROLE: "What is order cycle?"
+
+  - id: pc11
+    question_base: "What is OTD by region?"
+    phrasings:
+      PLANNING_ROLE: "What is delivery rate by region?"
+      PROCUREMENT_ROLE: "What is supplier delivery by region?"
+      LOGISTICS_ROLE: "What is transit reliability by region?"
+
+  - id: pc12
+    question_base: "What is OTD for electronics?"
+    phrasings:
+      PLANNING_ROLE: "Delivery rate for electronics?"
+      PROCUREMENT_ROLE: "Supplier delivery performance for electronics?"
+      LOGISTICS_ROLE: "On-time for electronics?"
+
+  - id: pc13
+    question_base: "DOI for APAC"
+    phrasings:
+      PLANNING_ROLE: "Days of supply for APAC?"
+      PROCUREMENT_ROLE: "Stock days for APAC?"
+      LOGISTICS_ROLE: "Warehouse days cover for APAC?"
+
+  - id: pc14
+    question_base: "Fill rate Q3"
+    phrasings:
+      PLANNING_ROLE: "Availability Q3?"
+      PROCUREMENT_ROLE: "Supplier fill Q3?"
+      LOGISTICS_ROLE: "Shipment completeness Q3?"
+
+  - id: pc15
+    question_base: "Landed cost by category"
+    phrasings:
+      PLANNING_ROLE: "Cost per unit by category?"
+      PROCUREMENT_ROLE: "All-in cost by category?"
+      LOGISTICS_ROLE: "Delivered cost by category?"
+
+  - id: pc16
+    question_base: "OTIF for industrial"
+    phrasings:
+      PLANNING_ROLE: "Perfect delivery for industrial?"
+      PROCUREMENT_ROLE: "OTIF for industrial?"
+      LOGISTICS_ROLE: "Complete and on-time for industrial?"
+
+  - id: pc17
+    question_base: "Inventory turns by plant"
+    phrasings:
+      PLANNING_ROLE: "Stock velocity by plant?"
+      PROCUREMENT_ROLE: "Inventory turns by plant?"
+      LOGISTICS_ROLE: "Warehouse turns by plant?"
+
+  - id: pc18
+    question_base: "Transit time for EMEA"
+    phrasings:
+      PLANNING_ROLE: "Transit time for EMEA?"
+      PROCUREMENT_ROLE: "Shipping duration for EMEA?"
+      LOGISTICS_ROLE: "Transit hours for EMEA?"
+
+  - id: pc19
+    question_base: "Freight cost by carrier"
+    phrasings:
+      PLANNING_ROLE: "Freight cost by carrier?"
+      PROCUREMENT_ROLE: "Transport cost by carrier?"
+      LOGISTICS_ROLE: "Shipping cost by carrier?"
+
+  - id: pc20
+    question_base: "OTD trend by month"
+    phrasings:
+      PLANNING_ROLE: "Delivery rate trend by month?"
+      PROCUREMENT_ROLE: "Supplier delivery trend by month?"
+      LOGISTICS_ROLE: "On-time trend by month?"
