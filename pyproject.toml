@@ -1,0 +1,51 @@
+[project]
+name = "scm-ontology"
+version = "0.1.0"
+description = "Supply chain ontology compiler and governed semantic views on Snowflake"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "linkml>=1.7",
+    "linkml-runtime>=1.7",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "jinja2>=3.1",
+    "click>=8.1",
+    "snowflake-connector-python>=3.6",
+    "snowflake-snowpark-python>=1.17",
+    "fastapi>=0.111",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+    "pyarrow>=15.0",
+    "duckdb>=0.10",
+    "numpy>=1.26",
+    "pandas>=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "pip-audit>=2.7",
+    "coverage>=7.4",
+]
+dbt = [
+    "dbt-snowflake>=1.8",
+    "dbt-duckdb>=1.8",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["ontology/tests", "api/tests", "eval"]
+python_files = ["test_*.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

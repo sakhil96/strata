@@ -1,0 +1,5 @@
+{
+  "name": "scm-ontology",
+  "description": "Supply chain ontology compiler, governed semantic views and STRATA front end on Snowflake",
+  "version": "0.1.0"
+}
