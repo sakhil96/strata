@@ -1,16 +1,21 @@
-# CHANGELOG.md
+# Changelog
 
-All notable changes to this project are documented here.
-
-## [Unreleased]
+## [1.0.0] - 2026-10-02
 
 ### Added
-- Repository initialised with full directory structure
-- AGENTS.md with operating rules, design bans and authorship conventions
-- DECISIONS.md with initial architecture decisions
-- Apache 2.0 licence
-- Cortex Code plugin with skills, commands, subagents and hooks
-- Snowflake environment definitions (dev, test, prod)
-- Account setup SQL: roles, databases, schemas, stages, policies, monitors, event table, alerts, secrets
-- LinkML ontology with 16 entities, hierarchies and sensitivity annotations
-- Metric registry with 5 governed metrics and 8 variants
+- LinkML ontology and a metric registry of 11 metrics and 8 variants, compiled to Snowflake semantic
+  views (governed plus four personas) with verified queries, dbt schema, glossary, Ossie, Cube,
+  Databricks metric views, LinkML artefacts and an ER diagram.
+- Deterministic synthetic world with independent truth, four messy sources and content documents.
+- dbt project portable between DuckDB and Snowflake, including AI_CLASSIFY and AI_FILTER note models.
+- GOVERNED_QUERY, DESCRIBE_METRIC and EXPLAIN_LINEAGE procedures; SCM_AGENT and a Steward agent;
+  Cortex Search over notes; MCP server; operational task loop; dynamic table for delivery events.
+- FastAPI service with query, ask, compare, before-after, meta, glossary, lineage, audit, status and
+  operations; strict CSP with per-page hashes.
+- STRATA front end: ten pages, design tokens, degraded and empty states, public mirror build.
+- Seven evaluation suites with a report; Playwright and axe at three widths.
+- Hash-locked dependencies, SBOMs, image scan, release gate, SPCS deploy and rollback.
+- Cortex Code plugin: skills, commands, subagents, guard hooks, MCP config.
+
+### Security
+- Lifted the cryptography pin; locks resolved for the image platform (see DECISIONS.md).

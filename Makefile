@@ -7,7 +7,7 @@ export SCM_ENV := $(ENV)
 export SCM_VERSION := $(VERSION)
 
 .PHONY: help setup data compile reproducible dbt-local web lint test eval governance-snapshot e2e screenshots \
-	lighthouse load deploy release promote rollback smoke eval-account agent loop local-demo demo-mirror \
+	lighthouse load deploy release promote rollback smoke eval-account loop local-demo demo-mirror \
 	spcs-build spcs-deploy spcs-rollback spcs-logs clean
 
 help:

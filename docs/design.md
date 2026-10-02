@@ -41,3 +41,18 @@ AuditStream · StatusBar. Each in `web/components/` with a fixture at /styleguid
 - Hover: colour or underline weight, never scale.
 - Large numerals count up once (600ms).
 - prefers-reduced-motion: all motion disabled.
+
+## QA checklist
+
+Run before merging any change under `web/`. Items marked (auto) fail CI.
+
+- [ ] (auto) `npm run lint`: authorship lint and Prettier
+- [ ] (auto) Playwright at 390, 1024 and 1440: no console errors, no CSP violations, axe clean (WCAG 2.1 AA)
+- [ ] (auto) Security headers on every page
+- [ ] Colours come from `styles/tokens.css` only; ore is the single accent
+- [ ] Numerals in Fraunces, labels and hashes in JetBrains Mono with tabular figures
+- [ ] Asymmetric 7/5 or 8/4 layout; no centred stacks of equal cards
+- [ ] No shadows, gradients, glass, glow, pill buttons or icon decoration from the bans list
+- [ ] Hover changes colour or underline only; motion respects reduced motion
+- [ ] Loading, empty, degraded and error states shown for every resource
+- [ ] Screenshots refreshed with `make screenshots` when a page changes
