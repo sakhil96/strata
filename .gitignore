@@ -21,3 +21,5 @@ dbt/dbt_packages/
 *.duckdb.wal
 web/test-results/
 web/playwright-report/
+.strata/
+.venv/
