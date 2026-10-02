@@ -1,0 +1,336 @@
+{
+  "columns": [
+    {
+      "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "days_of_inventory"
+          ],
+          "time": {
+            "end": "2026-09-01",
+            "start": "2026-09-01"
+          }
+        },
+        "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+        "engine": "duckdb",
+        "latency_ms": 3,
+        "lineage": {
+          "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+          "metric": "days_of_inventory",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/material_master",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "iot/inventory_snapshots",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_inventory_snapshots",
+                "stg_parts",
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_inventory_month",
+                "fct_inventory_snapshot",
+                "fct_shipment_line"
+              ]
+            },
+            {
+              "columns": [
+                "cogs_daily_90d",
+                "on_hand_value_end"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "inventory.days_of_inventory"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "days_of_inventory",
+        "metrics": [
+          {
+            "date_basis": "snapshot_date",
+            "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+            "denominator": "Trailing 90-day cost of goods shipped, divided by 90.",
+            "formula_text": "SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.",
+            "grain": "storage_location_part",
+            "name": "days_of_inventory",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Inventory Manager",
+            "title": "Days of inventory",
+            "unit": "days",
+            "version": 1,
+            "window": "point_in_time"
+          }
+        ],
+        "notes": [],
+        "request_id": "e2aa09027171",
+        "result_checksum": "c1ed609e1d00fbbd",
+        "role": "PLANNING_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "days_of_inventory": 18.510123705819236
+          }
+        ],
+        "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "PLANNING_SV_V1"
+      },
+      "metric_name": "days_of_inventory",
+      "phrasing": "What are our days of supply?",
+      "role": "PLANNING_ROLE",
+      "rows": [
+        {
+          "days_of_inventory": 18.510123705819236
+        }
+      ],
+      "unit": "days",
+      "value": 18.510123705819236
+    },
+    {
+      "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "days_of_inventory"
+          ],
+          "time": {
+            "end": "2026-09-01",
+            "start": "2026-09-01"
+          }
+        },
+        "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+        "engine": "duckdb",
+        "latency_ms": 2,
+        "lineage": {
+          "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+          "metric": "days_of_inventory",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/material_master",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "iot/inventory_snapshots",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_inventory_snapshots",
+                "stg_parts",
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_inventory_month",
+                "fct_inventory_snapshot",
+                "fct_shipment_line"
+              ]
+            },
+            {
+              "columns": [
+                "cogs_daily_90d",
+                "on_hand_value_end"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "inventory.days_of_inventory"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "days_of_inventory",
+        "metrics": [
+          {
+            "date_basis": "snapshot_date",
+            "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+            "denominator": "Trailing 90-day cost of goods shipped, divided by 90.",
+            "formula_text": "SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.",
+            "grain": "storage_location_part",
+            "name": "days_of_inventory",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Inventory Manager",
+            "title": "Days of inventory",
+            "unit": "days",
+            "version": 1,
+            "window": "point_in_time"
+          }
+        ],
+        "notes": [],
+        "request_id": "e2aa09027171",
+        "result_checksum": "c1ed609e1d00fbbd",
+        "role": "PROCUREMENT_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "days_of_inventory": 18.510123705819236
+          }
+        ],
+        "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "PROCUREMENT_SV_V1"
+      },
+      "metric_name": "days_of_inventory",
+      "phrasing": "How many stock days do we hold?",
+      "role": "PROCUREMENT_ROLE",
+      "rows": [
+        {
+          "days_of_inventory": 18.510123705819236
+        }
+      ],
+      "unit": "days",
+      "value": 18.510123705819236
+    },
+    {
+      "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "days_of_inventory"
+          ],
+          "time": {
+            "end": "2026-09-01",
+            "start": "2026-09-01"
+          }
+        },
+        "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+        "engine": "duckdb",
+        "latency_ms": 2,
+        "lineage": {
+          "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+          "metric": "days_of_inventory",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/material_master",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "iot/inventory_snapshots",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_inventory_snapshots",
+                "stg_parts",
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_inventory_month",
+                "fct_inventory_snapshot",
+                "fct_shipment_line"
+              ]
+            },
+            {
+              "columns": [
+                "cogs_daily_90d",
+                "on_hand_value_end"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "inventory.days_of_inventory"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "days_of_inventory",
+        "metrics": [
+          {
+            "date_basis": "snapshot_date",
+            "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+            "denominator": "Trailing 90-day cost of goods shipped, divided by 90.",
+            "formula_text": "SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.",
+            "grain": "storage_location_part",
+            "name": "days_of_inventory",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Inventory Manager",
+            "title": "Days of inventory",
+            "unit": "days",
+            "version": 1,
+            "window": "point_in_time"
+          }
+        ],
+        "notes": [],
+        "request_id": "e2aa09027171",
+        "result_checksum": "c1ed609e1d00fbbd",
+        "role": "LOGISTICS_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "days_of_inventory": 18.510123705819236
+          }
+        ],
+        "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "LOGISTICS_SV_V1"
+      },
+      "metric_name": "days_of_inventory",
+      "phrasing": "What is warehouse days cover?",
+      "role": "LOGISTICS_ROLE",
+      "rows": [
+        {
+          "days_of_inventory": 18.510123705819236
+        }
+      ],
+      "unit": "days",
+      "value": 18.510123705819236
+    }
+  ],
+  "converged": true,
+  "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5"
+}

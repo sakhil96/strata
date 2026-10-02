@@ -1,0 +1,44 @@
+{
+  "expression": "SUM(shipment_lines.freight_alloc_usd) / NULLIF(SUM(shipment_lines.shipped_qty), 0)",
+  "metric": "freight_cost_per_unit",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/material_master",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_parts",
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_shipment_line"
+      ]
+    },
+    {
+      "columns": [
+        "freight_alloc_usd",
+        "shipped_qty"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "shipment_lines.freight_cost_per_unit"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

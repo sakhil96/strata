@@ -1,0 +1,48 @@
+{
+  "expression": "SUM(inventory.avg_value_x_days) / NULLIF(SUM(inventory.cogs_month), 0)",
+  "metric": "dio_financial",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/material_master",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "iot/inventory_snapshots",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_inventory_snapshots",
+        "stg_parts",
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_inventory_month",
+        "fct_inventory_snapshot",
+        "fct_shipment_line"
+      ]
+    },
+    {
+      "columns": [
+        "avg_value_x_days",
+        "cogs_month"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "inventory.dio_financial"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

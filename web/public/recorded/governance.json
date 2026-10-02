@@ -1,0 +1,308 @@
+{
+  "agent": {
+    "model": "claude-4-sonnet",
+    "name": "SCM_PROD.AGENT.SCM_AGENT",
+    "tools": [
+      {
+        "description": "Run a governed metric query through the caller's semantic view and return the full answer contract.",
+        "name": "GOVERNED_QUERY",
+        "type": "generic"
+      },
+      {
+        "description": "Return the governed definition, owner, steward, version and variants of one metric.",
+        "name": "DESCRIBE_METRIC",
+        "type": "generic"
+      },
+      {
+        "description": "Return the path from source files through staging and conformed models to the semantic-view metric.",
+        "name": "EXPLAIN_LINEAGE",
+        "type": "generic"
+      },
+      {
+        "description": "Explore which dimensions and values exist in the governed view. Never a source of reported numbers.",
+        "name": "EXPLORE_BREAKDOWNS",
+        "type": "cortex_analyst_text_to_sql"
+      },
+      {
+        "description": "Search delivery-exception notes, supplier contract clauses and operating procedures.",
+        "name": "SEARCH_NOTES",
+        "type": "cortex_search"
+      }
+    ]
+  },
+  "grants": [
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "EXECUTIVE_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW SCM_DEV.SEMANTIC.EXECUTIVE_SV_V1",
+      "privilege": "SELECT",
+      "role": "EXECUTIVE_ROLE"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_AGENT",
+      "privilege": "USAGE",
+      "role": "EXECUTIVE_ROLE"
+    },
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "JUDGE_ROLE"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_AGENT",
+      "privilege": "USAGE",
+      "role": "JUDGE_ROLE"
+    },
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "LOGISTICS_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW SCM_DEV.SEMANTIC.LOGISTICS_SV_V1",
+      "privilege": "SELECT",
+      "role": "LOGISTICS_ROLE"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_AGENT",
+      "privilege": "USAGE",
+      "role": "LOGISTICS_ROLE"
+    },
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "PLANNING_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW SCM_DEV.SEMANTIC.PLANNING_SV_V1",
+      "privilege": "SELECT",
+      "role": "PLANNING_ROLE"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_AGENT",
+      "privilege": "USAGE",
+      "role": "PLANNING_ROLE"
+    },
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "PROCUREMENT_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW SCM_DEV.SEMANTIC.PROCUREMENT_SV_V1",
+      "privilege": "SELECT",
+      "role": "PROCUREMENT_ROLE"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_AGENT",
+      "privilege": "USAGE",
+      "role": "PROCUREMENT_ROLE"
+    },
+    {
+      "object": "SCM_DEPLOY",
+      "privilege": "ROLE",
+      "role": "SCM_ADMIN"
+    },
+    {
+      "object": "ALL SCHEMAS IN DATABASE SCM_PROD",
+      "privilege": "ALL PRIVILEGES",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "FUTURE TABLES IN DATABASE SCM_PROD",
+      "privilege": "ALL PRIVILEGES",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "FUTURE VIEWS IN DATABASE SCM_PROD",
+      "privilege": "ALL PRIVILEGES",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "GIT REPOSITORY SCM_PROD.OPS.SCM_REPO",
+      "privilege": "READ",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "EXECUTIVE_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "JUDGE_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "LOGISTICS_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "PLANNING_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "PROCUREMENT_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "TABLE SCM_PROD.OPS.SCM_EVENTS",
+      "privilege": "SELECT",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "AGENT SCM_PROD.AGENT.SCM_STEWARD",
+      "privilege": "USAGE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "COMPUTE POOL SCM_POOL_PROD",
+      "privilege": "USAGE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "DATABASE SCM_PROD",
+      "privilege": "USAGE",
+      "role": "SCM_DEPLOY"
+    },
+    {
+      "object": "TABLE SCM_PROD.AUDIT.ANSWERS",
+      "privilege": "INSERT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "FUTURE TABLES IN SCHEMA SCM_PROD.AUDIT",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "FUTURE TABLES IN SCHEMA SCM_PROD.CONFORMED",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "FUTURE TABLES IN SCHEMA SCM_PROD.SEMANTIC",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "FUTURE VIEWS IN SCHEMA SCM_PROD.CONFORMED",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "FUTURE VIEWS IN SCHEMA SCM_PROD.SEMANTIC",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SEMANTIC VIEW SCM_DEV.SEMANTIC.SCM_GOVERNED_V1",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "TABLE SCM_PROD.EVAL.EVAL_RUNS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "TABLE SCM_PROD.OPS.DBT_RUNS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "TABLE SCM_PROD.OPS.FRESHNESS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "TABLE SCM_PROD.OPS.SCM_EVENTS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "TABLE SCM_PROD.OPS.WEEKLY_COST",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "VIEW SCM_PROD.OPS.ALERT_STATUS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "VIEW SCM_PROD.OPS.SLO_STATUS",
+      "privilege": "SELECT",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "ALL SCHEMAS IN DATABASE SCM_PROD",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "CORTEX SEARCH SERVICE SCM_PROD.SEMANTIC.SCM_NOTES_SEARCH",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "DATABASE SCM_PROD",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "PROCEDURE SCM_PROD.AGENT.DESCRIBE_METRIC(STRING)",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "PROCEDURE SCM_PROD.AGENT.EXPLAIN_LINEAGE(STRING)",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "PROCEDURE SCM_PROD.AGENT.GOVERNED_QUERY(STRING, ARRAY, ARRAY, OBJECT, ARRAY, STRING)",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "PROCEDURE SCM_PROD.AGENT.RECORD_REFUSAL(STRING, STRING)",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCM_READER",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_USER"
+    },
+    {
+      "object": "SCM_ADMIN",
+      "privilege": "ROLE",
+      "role": "SYSADMIN"
+    }
+  ],
+  "policies": [
+    {
+      "applies_to": "columns tagged CONFIDENTIAL or RESTRICTED through the SENSITIVITY tag",
+      "kind": "masking policy",
+      "name": "MASK_BY_SENSITIVITY_STRING"
+    },
+    {
+      "applies_to": "columns tagged CONFIDENTIAL or RESTRICTED through the SENSITIVITY tag",
+      "kind": "masking policy",
+      "name": "MASK_BY_SENSITIVITY_NUMBER"
+    },
+    {
+      "applies_to": "plant_id on the five conformed facts, scoped by USER_PLANT_SCOPE",
+      "kind": "row access policy",
+      "name": "PLANT_ACCESS"
+    }
+  ],
+  "source": "committed SQL in snowflake/"
+}

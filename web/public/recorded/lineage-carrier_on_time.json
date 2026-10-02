@@ -1,0 +1,39 @@
+{
+  "expression": "SUM(shipments.is_on_eta) / NULLIF(SUM(shipments.is_delivered), 0)",
+  "metric": "carrier_on_time",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "portal/delivery_events",
+        "tms/carriers",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_delivery_events",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_shipment"
+      ]
+    },
+    {
+      "columns": [
+        "is_delivered",
+        "is_on_eta"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "shipments.carrier_on_time"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

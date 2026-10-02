@@ -1,0 +1,47 @@
+{
+  "expression": "STDDEV_SAMP(po_lines.lead_days)",
+  "metric": "lead_time_variability",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/goods_receipts",
+        "erp/material_master",
+        "erp/material_tariffs",
+        "erp/plants",
+        "erp/purchase_order_lines",
+        "erp/supplier_master",
+        "portal/supplier_profiles",
+        "tms/inbound_shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_goods_receipts",
+        "stg_parts",
+        "stg_purchase_order_lines",
+        "stg_supplier_crosswalk",
+        "stg_suppliers"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "dim_tariff_code",
+        "fct_po_line"
+      ]
+    },
+    {
+      "columns": [
+        "lead_days"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "po_lines.lead_time_variability"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

@@ -1,0 +1,48 @@
+{
+  "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+  "metric": "days_of_inventory",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/material_master",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "iot/inventory_snapshots",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_inventory_snapshots",
+        "stg_parts",
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_inventory_month",
+        "fct_inventory_snapshot",
+        "fct_shipment_line"
+      ]
+    },
+    {
+      "columns": [
+        "cogs_daily_90d",
+        "on_hand_value_end"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "inventory.days_of_inventory"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

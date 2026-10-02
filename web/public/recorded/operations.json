@@ -1,0 +1,69 @@
+{
+  "alerts": [
+    {
+      "last_fired": null,
+      "name": "STALE_SOURCE_ALERT",
+      "schedule": "hourly, any source older than 6 h",
+      "state": "defined, runs on the account"
+    },
+    {
+      "last_fired": null,
+      "name": "DBT_TEST_FAILURE_ALERT",
+      "schedule": "hourly, failures in the last 2 h",
+      "state": "defined, runs on the account"
+    },
+    {
+      "last_fired": null,
+      "name": "EVAL_REGRESSION_ALERT",
+      "schedule": "daily 03:00 UTC, pass rate under 90%",
+      "state": "defined, runs on the account"
+    },
+    {
+      "last_fired": null,
+      "name": "SLO_BREACH_ALERT",
+      "schedule": "every 15 min, p95 over target",
+      "state": "defined, runs on the account"
+    },
+    {
+      "last_fired": null,
+      "name": "SCM_PROD_MONITOR",
+      "schedule": "resource monitor, 50/75/90/100%",
+      "state": "defined, runs on the account"
+    }
+  ],
+  "cost": {
+    "credits": null,
+    "note": "Locally nothing is spent. On the account this reads the weekly cost task's output.",
+    "week": "this week"
+  },
+  "slo": [
+    {
+      "measured": "6 ms",
+      "name": "p95 answer latency through /query",
+      "source": "local audit trail, 23 answers",
+      "status": "met",
+      "target": "\u2264 1500 ms"
+    },
+    {
+      "measured": null,
+      "name": "p95 answer latency through the agent",
+      "source": "AUDIT.ANSWERS where path = agent",
+      "status": "needs_account",
+      "target": "\u2264 6 s"
+    },
+    {
+      "measured": null,
+      "name": "Service availability",
+      "source": "SPCS readiness probe history in the event table",
+      "status": "needs_account",
+      "target": "99.5% a month"
+    },
+    {
+      "measured": "97.7 %",
+      "name": "Evaluation pass rate",
+      "source": "eval/report.json",
+      "status": "met",
+      "target": "\u2265 90%"
+    }
+  ]
+}

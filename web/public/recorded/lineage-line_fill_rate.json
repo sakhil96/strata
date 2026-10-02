@@ -1,0 +1,42 @@
+{
+  "expression": "SUM(requested_lines.is_line_filled) / NULLIF(SUM(requested_lines.is_live), 0)",
+  "metric": "line_fill_rate",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_sales_order_line"
+      ]
+    },
+    {
+      "columns": [
+        "is_line_filled",
+        "is_live"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "requested_lines.line_fill_rate"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

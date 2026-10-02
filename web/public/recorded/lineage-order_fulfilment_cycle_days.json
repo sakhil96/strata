@@ -1,0 +1,41 @@
+{
+  "expression": "MEDIAN(delivered_lines.cycle_days)",
+  "metric": "order_fulfilment_cycle_days",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_sales_order_line"
+      ]
+    },
+    {
+      "columns": [
+        "cycle_days"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "delivered_lines.order_fulfilment_cycle_days"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

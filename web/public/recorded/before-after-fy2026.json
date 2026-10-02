@@ -1,0 +1,124 @@
+{
+  "governed": {
+    "basis": "SUM(is_on_time) / SUM(is_delivered), lines dated by actual_delivery_date, cancelled lines excluded from both.",
+    "ledger": {
+      "canonical_query": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
+      "engine": "duckdb",
+      "latency_ms": 784,
+      "lineage": {
+        "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
+        "metric": "on_time_delivery",
+        "path": [
+          {
+            "layer": "source",
+            "objects": [
+              "erp/fx_rates",
+              "erp/sales_order_lines",
+              "erp/storage_locations",
+              "tms/carriers",
+              "tms/shipment_lines",
+              "tms/shipments"
+            ]
+          },
+          {
+            "layer": "staging",
+            "objects": [
+              "stg_sales_order_lines",
+              "stg_shipment_lines",
+              "stg_shipments"
+            ]
+          },
+          {
+            "layer": "conformed",
+            "objects": [
+              "fct_sales_order_line"
+            ]
+          },
+          {
+            "columns": [
+              "is_delivered",
+              "is_on_time"
+            ],
+            "layer": "semantic",
+            "objects": [
+              "delivered_lines.on_time_delivery"
+            ]
+          }
+        ],
+        "source": "dbt manifest"
+      },
+      "metric_name": "on_time_delivery",
+      "metrics": [
+        {
+          "date_basis": "actual_delivery_date",
+          "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
+          "denominator": "Delivered, non-cancelled lines with actual_delivery_date in the period.",
+          "formula_text": "SUM(is_on_time) / SUM(is_delivered), lines dated by actual_delivery_date, cancelled lines excluded from both.",
+          "grain": "sales_order_line",
+          "name": "on_time_delivery",
+          "owner": "VP Supply Chain",
+          "parent": null,
+          "status": "approved",
+          "steward": "Supply Chain Analytics Lead",
+          "title": "On-time delivery",
+          "unit": "ratio",
+          "version": 1,
+          "window": "period"
+        }
+      ],
+      "notes": [],
+      "request_id": "860d6c3e3b24",
+      "result_checksum": "d3995cc070be1c2e",
+      "role": "EXECUTIVE_ROLE",
+      "row_count": 1,
+      "rows": [
+        {
+          "on_time_delivery": 0.8375534950071327
+        }
+      ],
+      "semantic_query_hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+      "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
+      "user": "LOCAL_DEVELOPER",
+      "view": "EXECUTIVE_SV_V1"
+    },
+    "value": 0.8375534950071327
+  },
+  "legacy": [
+    {
+      "basis": "Proof of delivery on or before the customer's requested date; cancelled lines dropped.",
+      "key": "planning_requested_date",
+      "label": "Planning workbook",
+      "team": "Planning",
+      "value": 0.5591476462196862
+    },
+    {
+      "basis": "Shipments delivered on or before the carrier's ETA, counted per shipment, not per line.",
+      "key": "logistics_carrier_eta",
+      "label": "Carrier scorecard",
+      "team": "Logistics",
+      "value": 0.9233720736250903
+    },
+    {
+      "basis": "Committed date, cancelled lines left in the denominator, then the five plant rates averaged.",
+      "key": "executive_plant_average",
+      "label": "Board dashboard",
+      "team": "Executive",
+      "value": 0.8027320533121918
+    }
+  ],
+  "window": {
+    "end": "2026-09-01",
+    "start": "2025-10-01"
+  }
+}

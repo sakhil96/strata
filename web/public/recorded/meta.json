@@ -1,0 +1,471 @@
+{
+  "dimensions": {
+    "account_name": {
+      "synonyms": [
+        "account"
+      ],
+      "table": "customers"
+    },
+    "carrier_name": {
+      "synonyms": [
+        "haulier",
+        "forwarder"
+      ],
+      "table": "carriers"
+    },
+    "carrier_type": {
+      "synonyms": [
+        "mode"
+      ],
+      "table": "carriers"
+    },
+    "category": {
+      "synonyms": [
+        "product category"
+      ],
+      "table": "parts"
+    },
+    "part_family": {
+      "synonyms": [
+        "family",
+        "product family"
+      ],
+      "table": "parts"
+    },
+    "plant_id": {
+      "synonyms": [
+        "plant",
+        "site",
+        "facility"
+      ],
+      "table": "plants"
+    },
+    "plant_name": {
+      "synonyms": [],
+      "table": "plants"
+    },
+    "region": {
+      "synonyms": [
+        "geography",
+        "theatre"
+      ],
+      "table": "plants"
+    },
+    "segment": {
+      "synonyms": [
+        "market segment",
+        "customer segment"
+      ],
+      "table": "customers"
+    },
+    "supplier_country": {
+      "synonyms": [
+        "supplier country"
+      ],
+      "table": "suppliers"
+    },
+    "supplier_name": {
+      "synonyms": [
+        "vendor"
+      ],
+      "table": "suppliers"
+    }
+  },
+  "metrics": [
+    {
+      "date_basis": "actual_delivery",
+      "dimensions": [
+        "account_name",
+        "carrier_name",
+        "carrier_type",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "carrier_on_time",
+      "parent": "on_time_delivery",
+      "title": "Carrier on-time",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "snapshot_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region"
+      ],
+      "name": "days_of_inventory",
+      "parent": null,
+      "title": "Days of inventory",
+      "type": "ratio",
+      "unit": "days"
+    },
+    {
+      "date_basis": "snapshot_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region"
+      ],
+      "name": "dio_financial",
+      "parent": "days_of_inventory",
+      "title": "Days inventory outstanding (finance)",
+      "type": "ratio",
+      "unit": "days"
+    },
+    {
+      "date_basis": "snapshot_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region"
+      ],
+      "name": "doi_units",
+      "parent": "days_of_inventory",
+      "title": "Days of inventory in units",
+      "type": "ratio",
+      "unit": "days"
+    },
+    {
+      "date_basis": "ship_date",
+      "dimensions": [
+        "account_name",
+        "carrier_name",
+        "carrier_type",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "freight_cost_per_unit",
+      "parent": null,
+      "title": "Freight cost per unit",
+      "type": "weighted_average",
+      "unit": "usd_per_unit"
+    },
+    {
+      "date_basis": "snapshot_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region"
+      ],
+      "name": "inventory_turns",
+      "parent": null,
+      "title": "Inventory turns",
+      "type": "ratio",
+      "unit": "turns_per_year"
+    },
+    {
+      "date_basis": "receipt_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "supplier_country",
+        "supplier_name"
+      ],
+      "name": "landed_cost_per_unit",
+      "parent": null,
+      "title": "Landed cost per unit",
+      "type": "weighted_average",
+      "unit": "usd_per_unit"
+    },
+    {
+      "date_basis": "receipt_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "supplier_country",
+        "supplier_name"
+      ],
+      "name": "lead_time_variability",
+      "parent": null,
+      "title": "Lead time variability",
+      "type": "percentile",
+      "unit": "days"
+    },
+    {
+      "date_basis": "requested_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "line_fill_rate",
+      "parent": "unit_fill_rate",
+      "title": "Line fill rate",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "actual_delivery_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "on_time_delivery",
+      "parent": null,
+      "title": "On-time delivery",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "actual_delivery_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "on_time_to_request",
+      "parent": "on_time_delivery",
+      "title": "On-time to request",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "requested_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "order_fill_rate",
+      "parent": "unit_fill_rate",
+      "title": "Order fill rate",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "actual_delivery_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "order_fulfilment_cycle_days",
+      "parent": null,
+      "title": "Order fulfilment cycle time",
+      "type": "percentile",
+      "unit": "days"
+    },
+    {
+      "date_basis": "actual_delivery_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "otif",
+      "parent": null,
+      "title": "On-time in-full",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "snapshot_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region"
+      ],
+      "name": "stockout_rate",
+      "parent": null,
+      "title": "Stockout rate",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "receipt_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "supplier_country",
+        "supplier_name"
+      ],
+      "name": "supplier_lead_time_days",
+      "parent": null,
+      "title": "Supplier lead time",
+      "type": "percentile",
+      "unit": "days"
+    },
+    {
+      "date_basis": "receipt_date",
+      "dimensions": [
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "supplier_country",
+        "supplier_name"
+      ],
+      "name": "supplier_on_time_receipt",
+      "parent": "on_time_delivery",
+      "title": "Supplier on-time receipt",
+      "type": "ratio",
+      "unit": "ratio"
+    },
+    {
+      "date_basis": "actual_delivery",
+      "dimensions": [
+        "account_name",
+        "carrier_name",
+        "carrier_type",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "transit_hours",
+      "parent": null,
+      "title": "Transit time",
+      "type": "percentile",
+      "unit": "hours"
+    },
+    {
+      "date_basis": "requested_date",
+      "dimensions": [
+        "account_name",
+        "category",
+        "part_family",
+        "period_month",
+        "plant_id",
+        "plant_name",
+        "region",
+        "segment"
+      ],
+      "name": "unit_fill_rate",
+      "parent": null,
+      "title": "Unit fill rate",
+      "type": "ratio",
+      "unit": "ratio"
+    }
+  ],
+  "values": {
+    "carrier_type": [
+      "AIR",
+      "OCEAN",
+      "PARCEL",
+      "ROAD"
+    ],
+    "category": [
+      "Electrical",
+      "Materials",
+      "Mechanical"
+    ],
+    "part_family": [
+      "Control electronics",
+      "Engineering polymers",
+      "Fasteners and fittings",
+      "Motion components",
+      "Packaging",
+      "Power electronics"
+    ],
+    "plant_id": [
+      "DC-NL01",
+      "DC-US01",
+      "PLT-DE01",
+      "PLT-SG01",
+      "PLT-US01"
+    ],
+    "region": [
+      "APAC",
+      "EMEA",
+      "US"
+    ],
+    "segment": [
+      "Government",
+      "Healthcare",
+      "Industrial",
+      "Retail"
+    ],
+    "supplier_country": [
+      "CN",
+      "DE",
+      "GB",
+      "IN",
+      "JP",
+      "MX",
+      "SG",
+      "US"
+    ]
+  },
+  "version": 1,
+  "windows": [
+    "fy2026",
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "last_quarter",
+    "last_month",
+    "pre_tariff_step",
+    "post_tariff_step"
+  ]
+}

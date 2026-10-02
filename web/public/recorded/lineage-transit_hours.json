@@ -1,0 +1,38 @@
+{
+  "expression": "MEDIAN(shipments.transit_hours)",
+  "metric": "transit_hours",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "portal/delivery_events",
+        "tms/carriers",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_delivery_events",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_shipment"
+      ]
+    },
+    {
+      "columns": [
+        "transit_hours"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "shipments.transit_hours"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

@@ -1,0 +1,318 @@
+{
+  "columns": [
+    {
+      "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "unit_fill_rate"
+          ],
+          "time": {
+            "end": "2026-06-01",
+            "start": "2026-04-01"
+          }
+        },
+        "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+        "engine": "duckdb",
+        "latency_ms": 1,
+        "lineage": {
+          "expression": "SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)",
+          "metric": "unit_fill_rate",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_sales_order_line"
+              ]
+            },
+            {
+              "columns": [
+                "live_first_qty",
+                "live_ordered_qty"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "requested_lines.unit_fill_rate"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "unit_fill_rate",
+        "metrics": [
+          {
+            "date_basis": "requested_date",
+            "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+            "denominator": "Units ordered on non-cancelled lines requested in the period.",
+            "formula_text": "SUM(first_shipment_qty) / SUM(ordered_qty), lines dated by requested_date, cancelled excluded.",
+            "grain": "sales_order_line",
+            "name": "unit_fill_rate",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Demand Planning Manager",
+            "title": "Unit fill rate",
+            "unit": "ratio",
+            "version": 1,
+            "window": "period"
+          }
+        ],
+        "notes": [],
+        "request_id": "ccf069e5ccbe",
+        "result_checksum": "77696c77771f6c71",
+        "role": "PLANNING_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "unit_fill_rate": 0.9792274755525135
+          }
+        ],
+        "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE requested_lines.period_month BETWEEN '2026-04-01' AND '2026-06-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "PLANNING_SV_V1"
+      },
+      "metric_name": "unit_fill_rate",
+      "phrasing": "What was availability in Q3?",
+      "role": "PLANNING_ROLE",
+      "rows": [
+        {
+          "unit_fill_rate": 0.9792274755525135
+        }
+      ],
+      "unit": "ratio",
+      "value": 0.9792274755525135
+    },
+    {
+      "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "unit_fill_rate"
+          ],
+          "time": {
+            "end": "2026-06-01",
+            "start": "2026-04-01"
+          }
+        },
+        "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+        "engine": "duckdb",
+        "latency_ms": 1,
+        "lineage": {
+          "expression": "SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)",
+          "metric": "unit_fill_rate",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_sales_order_line"
+              ]
+            },
+            {
+              "columns": [
+                "live_first_qty",
+                "live_ordered_qty"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "requested_lines.unit_fill_rate"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "unit_fill_rate",
+        "metrics": [
+          {
+            "date_basis": "requested_date",
+            "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+            "denominator": "Units ordered on non-cancelled lines requested in the period.",
+            "formula_text": "SUM(first_shipment_qty) / SUM(ordered_qty), lines dated by requested_date, cancelled excluded.",
+            "grain": "sales_order_line",
+            "name": "unit_fill_rate",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Demand Planning Manager",
+            "title": "Unit fill rate",
+            "unit": "ratio",
+            "version": 1,
+            "window": "period"
+          }
+        ],
+        "notes": [],
+        "request_id": "ccf069e5ccbe",
+        "result_checksum": "77696c77771f6c71",
+        "role": "PROCUREMENT_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "unit_fill_rate": 0.9792274755525135
+          }
+        ],
+        "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE requested_lines.period_month BETWEEN '2026-04-01' AND '2026-06-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "PROCUREMENT_SV_V1"
+      },
+      "metric_name": "unit_fill_rate",
+      "phrasing": "What was unit fill in Q3?",
+      "role": "PROCUREMENT_ROLE",
+      "rows": [
+        {
+          "unit_fill_rate": 0.9792274755525135
+        }
+      ],
+      "unit": "ratio",
+      "value": 0.9792274755525135
+    },
+    {
+      "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+      "ledger": {
+        "canonical_query": {
+          "dimensions": [],
+          "filters": [],
+          "metrics": [
+            "unit_fill_rate"
+          ],
+          "time": {
+            "end": "2026-06-01",
+            "start": "2026-04-01"
+          }
+        },
+        "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+        "engine": "duckdb",
+        "latency_ms": 1,
+        "lineage": {
+          "expression": "SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)",
+          "metric": "unit_fill_rate",
+          "path": [
+            {
+              "layer": "source",
+              "objects": [
+                "erp/fx_rates",
+                "erp/sales_order_lines",
+                "erp/storage_locations",
+                "tms/carriers",
+                "tms/shipment_lines",
+                "tms/shipments"
+              ]
+            },
+            {
+              "layer": "staging",
+              "objects": [
+                "stg_sales_order_lines",
+                "stg_shipment_lines",
+                "stg_shipments"
+              ]
+            },
+            {
+              "layer": "conformed",
+              "objects": [
+                "fct_sales_order_line"
+              ]
+            },
+            {
+              "columns": [
+                "live_first_qty",
+                "live_ordered_qty"
+              ],
+              "layer": "semantic",
+              "objects": [
+                "requested_lines.unit_fill_rate"
+              ]
+            }
+          ],
+          "source": "dbt manifest"
+        },
+        "metric_name": "unit_fill_rate",
+        "metrics": [
+          {
+            "date_basis": "requested_date",
+            "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
+            "denominator": "Units ordered on non-cancelled lines requested in the period.",
+            "formula_text": "SUM(first_shipment_qty) / SUM(ordered_qty), lines dated by requested_date, cancelled excluded.",
+            "grain": "sales_order_line",
+            "name": "unit_fill_rate",
+            "owner": "VP Supply Chain",
+            "parent": null,
+            "status": "approved",
+            "steward": "Demand Planning Manager",
+            "title": "Unit fill rate",
+            "unit": "ratio",
+            "version": 1,
+            "window": "period"
+          }
+        ],
+        "notes": [],
+        "request_id": "ccf069e5ccbe",
+        "result_checksum": "77696c77771f6c71",
+        "role": "LOGISTICS_ROLE",
+        "row_count": 1,
+        "rows": [
+          {
+            "unit_fill_rate": 0.9792274755525135
+          }
+        ],
+        "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+        "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE requested_lines.period_month BETWEEN '2026-04-01' AND '2026-06-01'\n)",
+        "user": "LOCAL_DEVELOPER",
+        "view": "LOGISTICS_SV_V1"
+      },
+      "metric_name": "unit_fill_rate",
+      "phrasing": "What was shipment completeness in Q3?",
+      "role": "LOGISTICS_ROLE",
+      "rows": [
+        {
+          "unit_fill_rate": 0.9792274755525135
+        }
+      ],
+      "unit": "ratio",
+      "value": 0.9792274755525135
+    }
+  ],
+  "converged": true,
+  "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619"
+}

@@ -1,0 +1,83 @@
+{
+  "as_of": "2026-09-30",
+  "data_card": {
+    "as_of": "2026-09-30",
+    "fiscal_year": "2025-10-01 to 2026-09-30",
+    "fy_headline": {
+      "carrier_on_time": 0.9234,
+      "days_of_inventory": 20.3549,
+      "dio_financial": 19.47,
+      "doi_units": 20.5896,
+      "freight_cost_per_unit": 7.7029,
+      "inventory_turns": 17.9318,
+      "landed_cost_per_unit": 153.505,
+      "lead_time_variability": 7.1343,
+      "line_fill_rate": 0.9295,
+      "on_time_delivery": 0.8376,
+      "on_time_to_request": 0.5591,
+      "order_fill_rate": 0.7578,
+      "order_fulfilment_cycle_days": 14.0,
+      "otif": 0.7776,
+      "stockout_rate": 0.04,
+      "supplier_lead_time_days": 47.5,
+      "supplier_on_time_receipt": 0.8797,
+      "transit_hours": 53.75,
+      "unit_fill_rate": 0.9802
+    },
+    "rows": {
+      "agreements": 354,
+      "customers": 120,
+      "events": 119971,
+      "fx": 1095,
+      "inbound": 2583,
+      "inventory": 219000,
+      "lines": 60149,
+      "locations": 15,
+      "parts": 300,
+      "po_lines": 8001,
+      "ship_lines": 60353,
+      "shipments": 18122,
+      "suppliers": 40,
+      "tariffs": 600,
+      "truth_metrics": 17580
+    },
+    "seed": 20261002,
+    "tariff_step": "2026-07-24"
+  },
+  "dbt": {
+    "failed": 0,
+    "finished_at": "2026-10-02T21:21:35.202831Z",
+    "passed": 78
+  },
+  "eval": {
+    "generated_at": "2026-10-02T21:57:02+00:00",
+    "pass_rate": 0.9765
+  },
+  "freshness": [
+    {
+      "files": 11,
+      "loaded_at": "2026-10-02T21:21+00:00",
+      "source": "erp",
+      "stale": false
+    },
+    {
+      "files": 4,
+      "loaded_at": "2026-10-02T21:56+00:00",
+      "source": "tms",
+      "stale": false
+    },
+    {
+      "files": 2,
+      "loaded_at": "2026-10-02T21:21+00:00",
+      "source": "portal",
+      "stale": false
+    },
+    {
+      "files": 1,
+      "loaded_at": "2026-10-02T21:21+00:00",
+      "source": "iot",
+      "stale": false
+    }
+  ],
+  "mode": "local"
+}

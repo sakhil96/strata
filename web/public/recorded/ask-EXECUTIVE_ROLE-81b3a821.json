@@ -1,0 +1,121 @@
+{
+  "canonical_query": {
+    "dimensions": [
+      "plant_id"
+    ],
+    "filters": [],
+    "metrics": [
+      "days_of_inventory"
+    ],
+    "time": {
+      "end": "2026-09-01",
+      "start": "2026-09-01"
+    }
+  },
+  "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+  "degraded": true,
+  "degraded_reason": "the agent is switched off in this environment",
+  "engine": "duckdb",
+  "latency_ms": 4,
+  "lineage": {
+    "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
+    "metric": "days_of_inventory",
+    "path": [
+      {
+        "layer": "source",
+        "objects": [
+          "erp/fx_rates",
+          "erp/material_master",
+          "erp/sales_order_lines",
+          "erp/storage_locations",
+          "iot/inventory_snapshots",
+          "tms/carriers",
+          "tms/shipment_lines",
+          "tms/shipments"
+        ]
+      },
+      {
+        "layer": "staging",
+        "objects": [
+          "stg_inventory_snapshots",
+          "stg_parts",
+          "stg_sales_order_lines",
+          "stg_shipment_lines",
+          "stg_shipments"
+        ]
+      },
+      {
+        "layer": "conformed",
+        "objects": [
+          "fct_inventory_month",
+          "fct_inventory_snapshot",
+          "fct_shipment_line"
+        ]
+      },
+      {
+        "columns": [
+          "cogs_daily_90d",
+          "on_hand_value_end"
+        ],
+        "layer": "semantic",
+        "objects": [
+          "inventory.days_of_inventory"
+        ]
+      }
+    ],
+    "source": "dbt manifest"
+  },
+  "metric_name": "days_of_inventory",
+  "metrics": [
+    {
+      "date_basis": "snapshot_date",
+      "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
+      "denominator": "Trailing 90-day cost of goods shipped, divided by 90.",
+      "formula_text": "SUM(on_hand_value_end) / (SUM(cogs_90d) / 90), ratio of sums at the requested grouping.",
+      "grain": "storage_location_part",
+      "name": "days_of_inventory",
+      "owner": "VP Supply Chain",
+      "parent": null,
+      "status": "approved",
+      "steward": "Inventory Manager",
+      "title": "Days of inventory",
+      "unit": "days",
+      "version": 1,
+      "window": "point_in_time"
+    }
+  ],
+  "notes": [
+    "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
+  ],
+  "path": "resolver",
+  "request_id": "ce4dcc8720a5",
+  "result_checksum": "0e83ca6e3bf79cc8",
+  "role": "EXECUTIVE_ROLE",
+  "row_count": 5,
+  "rows": [
+    {
+      "days_of_inventory": 18.696531527999472,
+      "plant_id": "DC-NL01"
+    },
+    {
+      "days_of_inventory": 19.141389949566566,
+      "plant_id": "DC-US01"
+    },
+    {
+      "days_of_inventory": 19.643325878378167,
+      "plant_id": "PLT-DE01"
+    },
+    {
+      "days_of_inventory": 17.472248174595098,
+      "plant_id": "PLT-SG01"
+    },
+    {
+      "days_of_inventory": 18.43865265620181,
+      "plant_id": "PLT-US01"
+    }
+  ],
+  "semantic_query_hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY plant_id",
+  "user": "LOCAL_DEVELOPER",
+  "view": "EXECUTIVE_SV_V1"
+}

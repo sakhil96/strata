@@ -1,0 +1,43 @@
+{
+  "expression": "SUM(delivered_lines.is_on_time_to_request) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
+  "metric": "on_time_to_request",
+  "path": [
+    {
+      "layer": "source",
+      "objects": [
+        "erp/fx_rates",
+        "erp/sales_order_lines",
+        "erp/storage_locations",
+        "tms/carriers",
+        "tms/shipment_lines",
+        "tms/shipments"
+      ]
+    },
+    {
+      "layer": "staging",
+      "objects": [
+        "stg_sales_order_lines",
+        "stg_shipment_lines",
+        "stg_shipments"
+      ]
+    },
+    {
+      "layer": "conformed",
+      "objects": [
+        "fct_sales_order_line"
+      ]
+    },
+    {
+      "columns": [
+        "is_delivered",
+        "is_on_time",
+        "is_on_time_to_request"
+      ],
+      "layer": "semantic",
+      "objects": [
+        "delivered_lines.on_time_to_request"
+      ]
+    }
+  ],
+  "source": "dbt manifest"
+}

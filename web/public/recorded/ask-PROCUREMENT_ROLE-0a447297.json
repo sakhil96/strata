@@ -1,0 +1,147 @@
+{
+  "canonical_query": {
+    "dimensions": [
+      "period_month"
+    ],
+    "filters": [],
+    "metrics": [
+      "landed_cost_per_unit"
+    ],
+    "time": {
+      "end": "2026-09-01",
+      "start": "2025-10-01"
+    }
+  },
+  "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+  "degraded": true,
+  "degraded_reason": "the agent is switched off in this environment",
+  "engine": "duckdb",
+  "latency_ms": 3,
+  "lineage": {
+    "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
+    "metric": "landed_cost_per_unit",
+    "path": [
+      {
+        "layer": "source",
+        "objects": [
+          "erp/fx_rates",
+          "erp/goods_receipts",
+          "erp/material_master",
+          "erp/material_tariffs",
+          "erp/plants",
+          "erp/purchase_order_lines",
+          "erp/supplier_master",
+          "portal/supplier_profiles",
+          "tms/inbound_shipments"
+        ]
+      },
+      {
+        "layer": "staging",
+        "objects": [
+          "stg_goods_receipts",
+          "stg_parts",
+          "stg_purchase_order_lines",
+          "stg_supplier_crosswalk",
+          "stg_suppliers"
+        ]
+      },
+      {
+        "layer": "conformed",
+        "objects": [
+          "dim_tariff_code",
+          "fct_po_line"
+        ]
+      },
+      {
+        "columns": [
+          "landed_usd",
+          "received_qty"
+        ],
+        "layer": "semantic",
+        "objects": [
+          "po_lines.landed_cost_per_unit"
+        ]
+      }
+    ],
+    "source": "dbt manifest"
+  },
+  "metric_name": "landed_cost_per_unit",
+  "metrics": [
+    {
+      "date_basis": "receipt_date",
+      "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+      "denominator": "Units received in the period.",
+      "formula_text": "SUM(material + freight + duty + insurance + handling) / SUM(received_qty), dated by receipt_date.",
+      "grain": "purchase_order_line",
+      "name": "landed_cost_per_unit",
+      "owner": "VP Procurement",
+      "parent": null,
+      "status": "approved",
+      "steward": "Procurement Analytics Lead",
+      "title": "Landed cost per unit",
+      "unit": "usd_per_unit",
+      "version": 1,
+      "window": "period"
+    }
+  ],
+  "notes": [],
+  "path": "resolver",
+  "request_id": "86e9e636c3bf",
+  "result_checksum": "015d97e8f518e79b",
+  "role": "PROCUREMENT_ROLE",
+  "row_count": 12,
+  "rows": [
+    {
+      "landed_cost_per_unit": 128.72844176689836,
+      "period_month": "2025-10-01"
+    },
+    {
+      "landed_cost_per_unit": 147.00411072758095,
+      "period_month": "2025-11-01"
+    },
+    {
+      "landed_cost_per_unit": 154.9151502550082,
+      "period_month": "2025-12-01"
+    },
+    {
+      "landed_cost_per_unit": 155.60902195630038,
+      "period_month": "2026-01-01"
+    },
+    {
+      "landed_cost_per_unit": 152.4089108272477,
+      "period_month": "2026-02-01"
+    },
+    {
+      "landed_cost_per_unit": 148.56171805395158,
+      "period_month": "2026-03-01"
+    },
+    {
+      "landed_cost_per_unit": 156.31189413472535,
+      "period_month": "2026-04-01"
+    },
+    {
+      "landed_cost_per_unit": 149.1980605561788,
+      "period_month": "2026-05-01"
+    },
+    {
+      "landed_cost_per_unit": 153.76310812053538,
+      "period_month": "2026-06-01"
+    },
+    {
+      "landed_cost_per_unit": 148.46000190557322,
+      "period_month": "2026-07-01"
+    },
+    {
+      "landed_cost_per_unit": 155.9969357153989,
+      "period_month": "2026-08-01"
+    },
+    {
+      "landed_cost_per_unit": 162.31299351388284,
+      "period_month": "2026-09-01"
+    }
+  ],
+  "semantic_query_hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
+  "user": "LOCAL_DEVELOPER",
+  "view": "PROCUREMENT_SV_V1"
+}

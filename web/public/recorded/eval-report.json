@@ -1,0 +1,75 @@
+{
+  "environment": "local DuckDB build",
+  "generated_at": "2026-10-02T21:57:02+00:00",
+  "pass_rate": 0.9765,
+  "suites": [
+    {
+      "detail": "all checks ran",
+      "name": "metric_identity",
+      "needs_account": [],
+      "passed": 20,
+      "status": "passed",
+      "title": "1 \u00b7 Metric identity against truth",
+      "total": 20
+    },
+    {
+      "detail": "1 check(s) need the account",
+      "name": "nl_accuracy",
+      "needs_account": [
+        "test_agent_meets_the_same_floors_through_agent_run"
+      ],
+      "passed": 5,
+      "status": "passed",
+      "title": "2 \u00b7 Words to governed query",
+      "total": 5
+    },
+    {
+      "detail": "all checks ran",
+      "name": "persona_consistency",
+      "needs_account": [],
+      "passed": 22,
+      "status": "passed",
+      "title": "3 \u00b7 One question, three roles, one hash",
+      "total": 22
+    },
+    {
+      "detail": "all checks ran",
+      "name": "governance",
+      "needs_account": [],
+      "passed": 19,
+      "status": "passed",
+      "title": "4 \u00b7 Governance rules",
+      "total": 19
+    },
+    {
+      "detail": "1 check(s) need the account",
+      "name": "resilience",
+      "needs_account": [
+        "test_restore_from_a_time_travel_clone_matches_the_original"
+      ],
+      "passed": 8,
+      "status": "passed",
+      "title": "5 \u00b7 Resilience and operations",
+      "total": 8
+    },
+    {
+      "detail": "1 skipped locally",
+      "name": "frontend",
+      "needs_account": [],
+      "passed": 6,
+      "status": "passed",
+      "title": "6 \u00b7 Front end",
+      "total": 6
+    },
+    {
+      "detail": "failing: test_python_dependencies_have_no_known_high_severity_vulnerabilities, test_web_dependencies_have_no_high_severity_advisories",
+      "name": "supply_chain",
+      "needs_account": [],
+      "passed": 3,
+      "status": "failed",
+      "title": "7 \u00b7 Software supply chain",
+      "total": 5
+    }
+  ],
+  "summary": "83 of 85 checks passed across 7 suites; 2 checks need the account."
+}
