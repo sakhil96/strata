@@ -1,4 +1,3 @@
-# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
 id: https://scm-ontology.example.com/schema
 name: scm_ontology
 title: Supply Chain Ontology
@@ -250,10 +249,6 @@ classes:
       quality_status:
         range: string
         description: ACCEPTED, REJECTED, QUARANTINE.
-      inspector_name:
-        range: string
-        annotations:
-          sensitivity: CONFIDENTIAL
 
   SalesOrderLine:
     class_uri: iof_scro:SalesOrderLine
@@ -403,9 +398,6 @@ classes:
     class_uri: iof_scro:InventoryPosition
     description: A daily snapshot of inventory at a storage location for a part.
     attributes:
-      snapshot_id:
-        identifier: true
-        range: string
       storage_location_id:
         range: StorageLocation
       part_id:
@@ -446,7 +438,7 @@ classes:
         description: The part classified under this tariff code.
 
   FxRate:
-    description: A daily foreign exchange rate to USD.
+    description: A daily foreign exchange rate to USD; keyed by date and source currency.
     attributes:
       fx_date:
         range: date
