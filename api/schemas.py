@@ -1,44 +1,53 @@
-"""Pydantic schemas for the STRATA API."""
-
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+Persona = Literal["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "JUDGE_ROLE"]
+Name = Field(pattern=r"^[a-z][a-z0-9_]{1,63}$")
 
 
-class AskRequest(BaseModel):
-    question: str = Field(..., min_length=1, max_length=2000)
-    persona: str = Field(default="EXECUTIVE_ROLE")
+class Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
-class QueryRequest(BaseModel):
-    view: str = Field(default="SCM_GOVERNED_V1")
-    metrics: list[str] = Field(..., min_length=1)
-    dimensions: list[str] = Field(default_factory=list)
-    time: dict = Field(default_factory=dict)
-    filters: list[dict] = Field(default_factory=list)
+class TimeWindow(Strict):
+    range: str | None = Field(default=None, pattern=r"^[a-z0-9_]{2,24}$")
+    start: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    end: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
-class CompareRequest(BaseModel):
-    question: str = Field(..., min_length=1, max_length=2000)
-    personas: list[str] = Field(default=["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE"])
+class Filter(Strict):
+    dimension: str = Name
+    operator: Literal["=", "!=", "in"] = "="
+    value: str | list[str] = Field(max_length=40)
 
 
-class BeforeAfterRequest(BaseModel):
-    metric: str
-    dimensions: list[str] = Field(default_factory=list)
-    before_time: dict = Field(...)
-    after_time: dict = Field(...)
+class SemanticQuery(Strict):
+    metrics: list[str] = Field(min_length=1, max_length=4)
+    dimensions: list[str] = Field(default_factory=list, max_length=4)
+    time: TimeWindow = Field(default_factory=TimeWindow)
+    filters: list[Filter] = Field(default_factory=list, max_length=6)
 
 
-class AnswerContract(BaseModel):
-    metric_name: str | None = None
-    definition: str | None = None
-    canonical_query: dict | None = None
-    semantic_query_hash: str | None = None
-    sql: str | None = None
-    lineage: dict | None = None
-    role: str | None = None
-    latency_ms: int | None = None
-    rows: list[dict] = Field(default_factory=list)
-    row_count: int = 0
-    error: str | None = None
+class AskRequest(Strict):
+    question: str = Field(min_length=3, max_length=500)
+    persona: Persona | None = None
+    thread_id: int | None = Field(default=None, ge=0)
+    parent_message_id: int | None = Field(default=None, ge=0)
+
+
+class QueryRequest(Strict):
+    query: SemanticQuery
+    persona: Persona | None = None
+
+
+class CompareRequest(Strict):
+    question: str | None = Field(default=None, min_length=3, max_length=500)
+    phrasings: dict[Persona, str] | None = None
+    query: SemanticQuery | None = None
+
+
+class BeforeAfterRequest(Strict):
+    window: str = Field(default="fy2026", pattern=r"^[a-z0-9_]{2,24}$")
