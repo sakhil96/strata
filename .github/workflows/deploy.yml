@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - test
+          - prod
+      version:
+        description: "Semantic view version"
+        required: true
+        default: "1"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'prod'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pytest pyyaml
+      - run: pytest eval/ -v --tb=short
+      - name: Fail if eval did not pass
+        if: failure()
+        run: |
+          echo "Evaluation suite did not pass. Refusing PROD deployment."
+          exit 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [gate]
+    if: always() && (needs.gate.result == 'success' || github.event.inputs.environment == 'test')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml click
+      - run: python ontology/compile.py --env ${{ github.event.inputs.environment }} --version ${{ github.event.inputs.version }}
+      - name: Deploy semantic views
+        run: |
+          echo "Deploying to SCM_${{ github.event.inputs.environment }} v${{ github.event.inputs.version }}"
+          echo "In production, this would run:"
+          echo "  snow sql -f snowflake/semantic/deploy.sql"
+          echo "  snow sql -f snowflake/semantic/versioning.sql"
