@@ -14,3 +14,10 @@ venv/
 coverage/
 .coverage
 htmlcov/
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+*.duckdb
+*.duckdb.wal
+web/test-results/
+web/playwright-report/

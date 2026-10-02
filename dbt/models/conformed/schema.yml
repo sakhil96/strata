@@ -1,0 +1,203 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: 2
+models:
+- name: dim_supplier
+  description: An organisation that supplies parts under contractual agreements.
+  columns:
+  - name: supplier_id
+    description: Golden key for the supplier, resolved from crosswalk.
+    data_tests:
+    - unique
+    - not_null
+- name: dim_part
+  description: A stock-keeping unit that can be purchased, stored, and sold.
+  columns:
+  - name: part_id
+    description: Golden key for the part.
+    data_tests:
+    - unique
+    - not_null
+- name: dim_plant
+  description: A manufacturing or distribution facility.
+  columns:
+  - name: plant_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: region
+    data_tests:
+    - accepted_values:
+        values:
+        - US
+        - EMEA
+        - APAC
+- name: dim_storage_location
+  description: A named location within a plant where inventory is held.
+  columns:
+  - name: storage_location_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+- name: dim_customer
+  description: An organisation that purchases finished goods.
+  columns:
+  - name: customer_id
+    description: Golden key for the customer.
+    data_tests:
+    - unique
+    - not_null
+  - name: segment
+    data_tests:
+    - accepted_values:
+        values:
+        - Industrial
+        - Retail
+        - Government
+        - Healthcare
+- name: dim_carrier
+  description: A freight carrier or logistics service provider.
+  columns:
+  - name: carrier_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+- name: dim_tariff_code
+  description: An HTS tariff classification with duty rates and effective dates.
+  columns:
+  - name: tariff_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+- name: fct_po_line
+  description: A line on a purchase order placed with a supplier.
+  columns:
+  - name: po_line_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: supplier_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_supplier')
+        field: supplier_id
+  - name: part_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_part')
+        field: part_id
+- name: fct_receipt
+  description: A record of parts received against a purchase order line.
+  columns:
+  - name: receipt_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: po_line_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('fct_po_line')
+        field: po_line_id
+- name: fct_sales_order_line
+  description: A line on a customer sales order.
+  columns:
+  - name: so_line_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: customer_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_customer')
+        field: customer_id
+  - name: part_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_part')
+        field: part_id
+  - name: plant_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_plant')
+        field: plant_id
+- name: fct_shipment
+  description: A transport movement from origin to destination.
+  columns:
+  - name: shipment_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: carrier_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('dim_carrier')
+        field: carrier_id
+- name: fct_shipment_line
+  description: Links a sales order line to a shipment with the shipped quantity.
+  columns:
+  - name: shipment_line_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: shipment_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('fct_shipment')
+        field: shipment_id
+- name: fct_delivery_event
+  description: A timestamped event in the lifecycle of a shipment.
+  columns:
+  - name: event_id
+    description: ''
+    data_tests:
+    - unique
+    - not_null
+  - name: shipment_id
+    data_tests:
+    - not_null
+    - relationships:
+        to: ref('fct_shipment')
+        field: shipment_id
+  - name: event_type
+    data_tests:
+    - accepted_values:
+        values:
+        - picked_up
+        - departed
+        - arrived
+        - delivered
+        - exception
+- name: fct_inventory_snapshot
+  description: A daily snapshot of inventory at a storage location for a part.
+  columns: []
+- name: fct_fx_rate
+  description: A daily foreign exchange rate to USD; keyed by date and source currency.
+  columns: []
+- name: fct_inventory_month
+  description: Month-end inventory position per storage location and part.
+  columns:
+  - name: snapshot_month
+    data_tests:
+    - not_null
+  - name: plant_id
+    data_tests:
+    - not_null
+  - name: on_hand_value_end
+    data_tests:
+    - not_null

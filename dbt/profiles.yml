@@ -5,7 +5,8 @@ scm_ontology:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       user: "{{ env_var('SNOWFLAKE_USER') }}"
-      authenticator: externalbrowser
+      authenticator: SNOWFLAKE_JWT
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
       role: SCM_DEPLOY
       warehouse: SCM_WH_DEV
       database: SCM_DEV
@@ -15,7 +16,8 @@ scm_ontology:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       user: "{{ env_var('SNOWFLAKE_USER') }}"
-      authenticator: externalbrowser
+      authenticator: SNOWFLAKE_JWT
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
       role: SCM_DEPLOY
       warehouse: SCM_WH_TEST
       database: SCM_TEST
@@ -25,14 +27,15 @@ scm_ontology:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       user: "{{ env_var('SNOWFLAKE_USER') }}"
-      authenticator: externalbrowser
+      authenticator: SNOWFLAKE_JWT
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
       role: SCM_DEPLOY
       warehouse: SCM_WH_PROD
       database: SCM_PROD
       schema: STAGING
       threads: 4
-    duckdb:
+    local:
       type: duckdb
-      path: target/scm.duckdb
-      schema: main
+      path: "{{ env_var('SCM_DUCKDB', 'target/scm.duckdb') }}"
+      schema: conformed
       threads: 4

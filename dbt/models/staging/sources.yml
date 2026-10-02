@@ -1,0 +1,37 @@
+version: 2
+
+sources:
+  - name: erp
+    schema: RAW
+    meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/erp/{name}.parquet"}
+    tables:
+      - {name: supplier_master}
+      - {name: material_master}
+      - {name: material_tariffs}
+      - {name: customer_master}
+      - {name: storage_locations}
+      - {name: plants}
+      - {name: fx_rates}
+      - {name: purchasing_info_records}
+      - {name: purchase_order_lines}
+      - {name: goods_receipts}
+      - {name: sales_order_lines}
+  - name: tms
+    schema: RAW
+    meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/tms/{name}.parquet"}
+    tables:
+      - {name: shipments}
+      - {name: shipment_lines}
+      - {name: inbound_shipments}
+      - {name: carriers}
+  - name: portal
+    schema: RAW
+    meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/portal/{name}.parquet"}
+    tables:
+      - {name: supplier_profiles}
+      - {name: delivery_events}
+  - name: iot
+    schema: RAW
+    meta: {external_location: "{{ env_var('SCM_DATA_DIR', '../data/out') }}/iot/{name}.parquet"}
+    tables:
+      - {name: inventory_snapshots}

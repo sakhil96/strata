@@ -1,22 +1,23 @@
 name: scm_ontology
-version: '1.0.0'
+version: "1.0.0"
 config-version: 2
-
 profile: scm_ontology
 
 model-paths: ["models"]
+macro-paths: ["macros"]
 test-paths: ["tests"]
 target-path: "target"
-clean-targets: ["target", "dbt_packages"]
+clean-targets: ["target"]
 
 vars:
-  fiscal_year_start_month: 10
+  insurance_rate: 0.004
+  handling_usd_per_unit: 0.12
 
 models:
   scm_ontology:
     staging:
       +materialized: view
-      +schema: STAGING
+      +schema: staging
     conformed:
       +materialized: table
-      +schema: CONFORMED
+      +schema: conformed
