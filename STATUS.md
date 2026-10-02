@@ -1,81 +1,56 @@
-# STATUS.md — Current state of the STRATA project
+# Status
 
-Last updated: 2026-10-02
+Last updated 2026-10-02. "Done" means proven by a command run on the local build; "needs account"
+means written and checked locally (compiles, renders, lints) but only provable on Snowflake.
 
-## What passes
+## Finish checks (all run on this commit's tree)
 
-### Compilation
-- `python ontology/compile.py` compiles all 10 metrics to all targets without errors.
-- All metrics have required fields and `status: approved`.
-- Generated files carry the single-line header comment.
+| Check | Result |
+|---|---|
+| `scripts/reproducible.sh` (`make data` and `make compile` twice) | 184 files byte-identical |
+| `dbt build --target local` | 78 of 78 pass |
+| `pytest ontology/tests api/tests eval` | 121 passed, 3 skipped (need account); coverage 83% |
+| `eval/report.py` | 85 of 85 runnable checks pass across 7 suites; 2 need the account |
+| `ruff check .` | clean |
+| `npm run build`, `npm run build:demo`, `npm run lint` | pass |
+| Playwright at 390, 1024, 1440 with axe and CSP checks | 78 of 78 pass |
+| `pip-audit` on requirements.lock, `npm audit --omit=dev` | no known vulnerabilities |
+| `cortex plugin validate .` | valid |
 
-### Evaluation (local, without Snowflake)
-- **Metric identity**: all 10 metrics present, all required fields validated, persona synonyms cover all 4 roles, ratio metrics have numerator/denominator.
-- **Governance**: agent SQL has exactly 3 tools, no SQL tool, instructions forbid raw SQL, refusal and resolution policies present, answer contract fields present, no table names in instructions.
+## Spec sections
 
-### CI
-- Lint (ruff check), format (ruff format), and compile jobs defined in `.github/workflows/ci.yml`.
-- Data generation and eval jobs defined and chained.
-- Deploy workflow with evaluation gate for PROD.
+| Section | Status | Evidence |
+|---|---|---|
+| Ontology (LinkML) and metric registry | done | `ontology/`, `ontology/tests` |
+| Compiler targets: semantic views, VQRs, policies, dbt, glossary, Ossie, Cube, Databricks, LinkML, ER | done | `make compile`, golden tests |
+| Synthetic sources, truth by month × plant × region × segment × family | done | `eval/test_metric_identity.py` |
+| dbt on DuckDB and Snowflake | done locally; Snowflake target needs account | `dbt/` |
+| Semantic views deployed, round-trip YAML | needs account | `snowflake/semantic/deploy.sql` |
+| Masking, row access, grants | written; needs account | `snowflake/setup/04_policies.sql` |
+| Procedures GOVERNED_QUERY, DESCRIBE_METRIC, EXPLAIN_LINEAGE | logic tested locally; deployment needs account | `snowflake/procs/` |
+| Agent with Analyst and Search, Steward agent, MCP server | written; needs account | `snowflake/agent/` |
+| Unstructured notes, AI_CLASSIFY, AI_FILTER, Cortex Search | generated and modelled; AI functions need account | `dbt/macros/portable.sql`, `snowflake/search/` |
+| Dynamic table, task loop, ops views, alerts | written; needs account | `snowflake/dynamic_tables/`, `snowflake/tasks/` |
+| API: query, ask, compare, before-after, meta, glossary, lineage, audit, status, operations | done | `api/tests` |
+| Front end: ten pages, design system, states, footer status | done | Playwright, `docs/design.md` QA checklist |
+| Public mirror (demo mode) | done; hosting not done | `make demo-mirror` |
+| Seven evaluation suites | done locally; account variants pending | `eval/report.md` |
+| CI: locks, pip-audit, npm audit, SBOM, image scan | written; runs on first push | `.github/workflows/ci.yml` |
+| SPCS service, smoke, release gate, rollback | written; needs account | `scripts/spcs.py`, `scripts/release_gate.py` |
+| Cortex Code plugin: skills, commands, subagents, hooks, MCP, tasks | done | `docs/built-with-coco.md` |
+| Documents and runbooks | done | `docs/`, root markdown |
+| Databricks metric views | compiled; not run on Databricks | `ontology/generated/databricks/` |
+| Marketplace join, CoWork publication | notes only | `docs/marketplace.md`, `docs/cowork.md` |
+| History of 40 to 80 commits | done: 80 | `git rev-list --count HEAD` |
 
-### Front end
-- Tokens, typography and layout defined in `tokens.css` and `tailwind.config.ts`.
-- Components: PersonaDial, Ledger, Builder, Convergence, Strata, AuditStream, StatusBar.
-- Pages: / (landing), /ask, /compare, /before-after, /glossary, /governance, /operations, /about.
-- All pages follow the STRATA design system: dark ground, --ore accent, asymmetric layout, Fraunces display, JetBrains Mono for data.
+## Needs the account
 
-## What does not pass yet
-
-### Snowflake deployment
-- Semantic views not yet deployed (requires Snowflake connection and `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`).
-- Procedures not yet created as Snowflake objects.
-- Agent not yet created (requires procedures as tools).
-- SPCS service not yet deployed.
-
-### End-to-end integration
-- /ask and /query routes require a live Snowflake connection.
-- NL accuracy and persona consistency suites require the agent to be deployed.
-- Resilience suite requires SPCS probes.
-
-### Data
-- Reference data CSVs (hts_2026.csv, gscpi.csv) are placeholders; generate.py creates synthetic data.
-- Truth metrics are computed but not yet loaded into EVAL.TRUTH_METRICS.
-
-### Design QA
-- Playwright screenshots not yet committed.
-- Lighthouse scores not yet measured.
-- Font files not yet self-hosted (font-face declarations point to expected locations).
-
-## How to run
-
-```bash
-# Local development (no Snowflake)
-make data                    # Generate test data
-make compile ENV=dev         # Compile ontology to all targets
-pytest eval/ -v              # Run local evaluation suite
-cd web && npm install && npm run dev   # Start front end
-
-# With Snowflake
-make setup ENV=dev           # Run setup SQL
-make load ENV=dev            # Load data into Snowflake
-make deploy ENV=dev          # Deploy semantic views
-cd api && uvicorn main:app   # Start API
-```
-
-## Open gaps
-
-See `docs/hardening-backlog.md` for the full list with owners.
-
-Key gaps:
-1. Network policy CIDRs are placeholder (0.0.0.0/0).
-2. Container image scanning and SBOM not yet automated.
-3. Row access policy uses role-based check, not user-to-region mapping table.
-4. Failover group for DR not yet configured (requires Business Critical Edition).
-5. Font files need to be downloaded and committed (SIL OFL).
-6. Ossie and Databricks targets generate structure but are not validated against real runtimes.
-7. Cube fallback starts DuckDB but Cube server is not packaged.
-8. Demo video placeholder — not yet recorded.
-
-## Commit history
-
-See `git log --oneline` for the full history. Target: 40-80 coherent commits.
+1. `make setup ENV=dev`: roles (including JUDGE_ROLE and the service user), schemas, policies, monitors, event table, alerts, ops views.
+2. `make load`, then `dbt build --target dev` on Snowflake, including the AI_CLASSIFY and AI_FILTER models and the delivery-event dynamic table.
+3. `make release ENV=dev`: semantic views, procedures, agents, Cortex Search; YAML round-trip check.
+4. `make smoke` and `make eval-account`: the agent:run accuracy floor and the Time Travel restore check (the two pending checks), GET_LINEAGE parity (Enterprise edition).
+5. SPCS image push, `scripts/spcs.py deploy`, rollback drill.
+6. snowflake-connector-python 4.x paths (moved from 3.x for the security fix) against a live connection.
+7. First CI run on GitHub: SBOM upload and the trivy image scan.
+8. Re-author the history with the team identity before pushing; no team identity is configured on this machine.
+9. Hosting the public mirror, Marketplace listing choice, CoWork publication.

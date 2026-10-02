@@ -27,3 +27,23 @@ means the artefact can be written and validated locally but only proven on Snowf
 - `GOVERNED_QUERY._build_where` interpolated filter values into SQL without validation.
 - STATUS.md and the previous turn's summary marked Days 10 to 14 complete; they were not.
 - No Node toolchain on this machine; we used a portable Node 22 in /tmp for builds.
+
+## Closure
+
+| # | Closed | Notes |
+|---|---|---|
+| 1 | yes | verified queries compiled from eval/questions.yaml into every view |
+| 2 | yes | truth for every metric and variant at every grouping, compared in suite 1 |
+| 3 | yes | routes and pages wired; recorded for the mirror |
+| 4 | yes | ten pages, components, contour field, states, footer status line |
+| 5 | yes | plugin validated; 8 skills, 7 commands, 4 subagents, guard hooks, .mcp.json, tasks/day01-14 |
+| 6 | written, needs account | agent, steward agent, task loop, MCP server |
+| 7 | written, needs account for AI functions and search | documents generated and modelled |
+| 8 | yes | 80 commits; pre-rebuild and pre-squash branches kept locally |
+| 9 | yes, except gscpi.csv | fetched, not committed (terms unconfirmed) |
+| 10 | yes; dynamic table needs account | |
+| 11 | yes; service user and JUDGE_ROLE need account | demo build verified |
+| 12 | yes | |
+| 13 | yes; Lighthouse script written, not run (no Chrome for Lighthouse here) | |
+| 14 | yes; runs on first push | the audit also found and fixed cryptography, pyOpenSSL and PostCSS advisories |
+| 15 | Databricks compiled; Marketplace and CoWork as notes | |
