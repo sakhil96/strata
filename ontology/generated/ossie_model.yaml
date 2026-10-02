@@ -1,0 +1,524 @@
+# Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+version: '1.0'
+name: scm_ontology
+description: "Supply chain ontology \u2014 Apache Ossie interchange model."
+datasets:
+- name: supplier
+  description: An organisation that supplies parts under contractual agreements.
+  fields:
+  - name: supplier_id
+    description: Golden key for the supplier, resolved from crosswalk.
+    type: dimension
+  - name: supplier_name
+    description: Legal name of the supplier entity.
+    type: dimension
+  - name: supplier_site
+    description: Physical site identifier within the supplier organisation.
+    type: dimension
+  - name: parent_supplier_id
+    description: Parent supplier in the supplier hierarchy (site > parent).
+    type: dimension
+  - name: country_code
+    description: ISO 3166-1 alpha-2 country code of the supplier site.
+    type: dimension
+  - name: contact_name
+    description: Primary contact name.
+    type: dimension
+  - name: contact_email
+    description: Primary contact email.
+    type: dimension
+  - name: bank_account
+    description: Bank account number for payments.
+    type: dimension
+  - name: source_systems
+    description: Systems of record (erp, portal).
+    type: dimension
+  - name: synonyms
+    description: Alternative names (vendor, seller).
+    type: dimension
+- name: part
+  description: A stock-keeping unit that can be purchased, stored, and sold.
+  fields:
+  - name: part_id
+    description: Golden key for the part.
+    type: dimension
+  - name: part_name
+    description: ''
+    type: dimension
+  - name: part_family
+    description: Product family in the Part > ProductFamily > Category hierarchy.
+    type: dimension
+  - name: category
+    description: Top-level category.
+    type: dimension
+  - name: base_uom
+    description: Base unit of measure (each, kg, litre).
+    type: dimension
+  - name: pack_factor
+    description: Units per case.
+    type: dimension
+  - name: pallet_factor
+    description: Cases per pallet.
+    type: dimension
+  - name: weight_kg
+    description: Unit weight in kilograms.
+    type: dimension
+  - name: source_systems
+    description: ''
+    type: dimension
+- name: supplierpartagreement
+  description: A contractual agreement for a supplier to supply a specific part.
+  fields:
+  - name: agreement_id
+    description: ''
+    type: dimension
+  - name: supplier_id
+    description: The supplying party.
+    type: dimension
+  - name: part_id
+    description: The supplied part.
+    type: dimension
+  - name: unit_cost
+    description: Agreed unit cost in the transaction currency.
+    type: measure
+  - name: currency
+    description: ISO 4217 currency code.
+    type: dimension
+  - name: incoterm
+    description: Incoterms 2020 rule (EXW, FOB, CIF, DDP).
+    type: dimension
+  - name: quoted_lead_days
+    description: Supplier-quoted lead time in calendar days.
+    type: measure
+  - name: effective_from
+    description: ''
+    type: dimension
+  - name: effective_to
+    description: ''
+    type: dimension
+- name: plant
+  description: A manufacturing or distribution facility.
+  fields:
+  - name: plant_id
+    description: ''
+    type: dimension
+  - name: plant_name
+    description: ''
+    type: dimension
+  - name: plant_type
+    description: MANUFACTURING or DISTRIBUTION.
+    type: dimension
+  - name: region
+    description: Geographic region (US, EMEA, APAC).
+    type: dimension
+  - name: country_code
+    description: ''
+    type: dimension
+  - name: timezone
+    description: IANA timezone identifier (e.g. America/Chicago).
+    type: dimension
+- name: storagelocation
+  description: A named location within a plant where inventory is held.
+  fields:
+  - name: storage_location_id
+    description: ''
+    type: dimension
+  - name: storage_location_name
+    description: ''
+    type: dimension
+  - name: plant_id
+    description: The containing plant.
+    type: dimension
+  - name: location_type
+    description: RACK, BULK, COLD, YARD.
+    type: dimension
+- name: customer
+  description: An organisation that purchases finished goods.
+  fields:
+  - name: customer_id
+    description: Golden key for the customer.
+    type: dimension
+  - name: customer_name
+    description: ''
+    type: dimension
+  - name: ship_to_id
+    description: Ship-to location in the Customer hierarchy.
+    type: dimension
+  - name: sold_to_id
+    description: Sold-to party.
+    type: dimension
+  - name: account_id
+    description: Account in the hierarchy.
+    type: dimension
+  - name: segment
+    description: Market segment (Industrial, Retail, Government, Healthcare).
+    type: dimension
+  - name: country_code
+    description: ''
+    type: dimension
+  - name: contact_name
+    description: ''
+    type: dimension
+  - name: contact_email
+    description: ''
+    type: dimension
+- name: purchaseorderline
+  description: A line on a purchase order placed with a supplier.
+  fields:
+  - name: po_line_id
+    description: ''
+    type: dimension
+  - name: po_number
+    description: ''
+    type: dimension
+  - name: line_number
+    description: ''
+    type: dimension
+  - name: supplier_id
+    description: ''
+    type: dimension
+  - name: part_id
+    description: ''
+    type: dimension
+  - name: deliver_to_plant_id
+    description: ''
+    type: dimension
+  - name: ordered_qty
+    description: ''
+    type: measure
+  - name: unit_cost
+    description: ''
+    type: measure
+  - name: currency
+    description: ''
+    type: dimension
+  - name: order_date
+    description: ''
+    type: dimension
+  - name: promised_date
+    description: Supplier-promised delivery date.
+    type: dimension
+  - name: confirmed_date
+    description: Supplier-confirmed delivery date (may differ from promised).
+    type: dimension
+  - name: status
+    description: OPEN, RECEIVED, PARTIAL, CANCELLED.
+    type: dimension
+- name: goodsreceipt
+  description: A record of parts received against a purchase order line.
+  fields:
+  - name: receipt_id
+    description: ''
+    type: dimension
+  - name: po_line_id
+    description: ''
+    type: dimension
+  - name: receipt_date
+    description: ''
+    type: dimension
+  - name: received_qty
+    description: ''
+    type: measure
+  - name: quality_status
+    description: ACCEPTED, REJECTED, QUARANTINE.
+    type: dimension
+  - name: inspector_name
+    description: ''
+    type: dimension
+- name: salesorderline
+  description: A line on a customer sales order.
+  fields:
+  - name: so_line_id
+    description: ''
+    type: dimension
+  - name: so_number
+    description: ''
+    type: dimension
+  - name: line_number
+    description: ''
+    type: dimension
+  - name: customer_id
+    description: ''
+    type: dimension
+  - name: part_id
+    description: ''
+    type: dimension
+  - name: fulfilled_from_location_id
+    description: ''
+    type: dimension
+  - name: ordered_qty
+    description: ''
+    type: measure
+  - name: unit_price
+    description: ''
+    type: dimension
+  - name: currency
+    description: ''
+    type: dimension
+  - name: requested_date
+    description: Customer-requested delivery date.
+    type: dimension
+  - name: committed_date
+    description: Date committed to the customer.
+    type: dimension
+  - name: actual_ship_date
+    description: Date the shipment left the warehouse.
+    type: dimension
+  - name: actual_delivery_date
+    description: Date confirmed delivered to the customer.
+    type: dimension
+  - name: status
+    description: OPEN, SHIPPED, DELIVERED, CANCELLED.
+    type: dimension
+- name: shipment
+  description: A transport movement from origin to destination.
+  fields:
+  - name: shipment_id
+    description: ''
+    type: dimension
+  - name: carrier_id
+    description: ''
+    type: dimension
+  - name: lane_id
+    description: ''
+    type: dimension
+  - name: origin_plant_id
+    description: ''
+    type: dimension
+  - name: destination_id
+    description: Customer ship-to or inter-plant destination.
+    type: dimension
+  - name: ship_date
+    description: ''
+    type: dimension
+  - name: carrier_eta
+    description: Carrier-estimated arrival date.
+    type: dimension
+  - name: actual_delivery
+    description: Actual delivery date from carrier confirmation.
+    type: dimension
+  - name: chargeable_weight_kg
+    description: ''
+    type: dimension
+  - name: freight_charge
+    description: ''
+    type: measure
+  - name: freight_currency
+    description: ''
+    type: dimension
+  - name: status
+    description: IN_TRANSIT, DELIVERED, EXCEPTION.
+    type: dimension
+- name: shipmentline
+  description: Links a sales order line to a shipment with the shipped quantity.
+  fields:
+  - name: shipment_line_id
+    description: ''
+    type: dimension
+  - name: shipment_id
+    description: ''
+    type: dimension
+  - name: so_line_id
+    description: ''
+    type: dimension
+  - name: shipped_qty
+    description: ''
+    type: measure
+  - name: is_first_shipment
+    description: True if this is the first shipment against the sales order line.
+    type: dimension
+- name: carrier
+  description: A freight carrier or logistics service provider.
+  fields:
+  - name: carrier_id
+    description: ''
+    type: dimension
+  - name: carrier_name
+    description: ''
+    type: dimension
+  - name: carrier_type
+    description: OCEAN, AIR, ROAD, RAIL, PARCEL.
+    type: dimension
+  - name: scac_code
+    description: Standard Carrier Alpha Code.
+    type: dimension
+- name: lane
+  description: A defined transportation route between an origin and destination.
+  fields:
+  - name: lane_id
+    description: ''
+    type: dimension
+  - name: origin_region
+    description: ''
+    type: dimension
+  - name: destination_region
+    description: ''
+    type: dimension
+  - name: mode
+    description: Primary transport mode.
+    type: dimension
+  - name: transit_days_typical
+    description: ''
+    type: dimension
+- name: deliveryevent
+  description: A timestamped event in the lifecycle of a shipment.
+  fields:
+  - name: event_id
+    description: ''
+    type: dimension
+  - name: shipment_id
+    description: ''
+    type: dimension
+  - name: event_type
+    description: picked_up, departed, arrived, delivered, exception.
+    type: dimension
+  - name: event_time_utc
+    description: Event timestamp in UTC.
+    type: dimension
+  - name: site_tz
+    description: IANA timezone of the event location.
+    type: dimension
+  - name: location_id
+    description: Identifier of the event location.
+    type: dimension
+- name: inventorysnapshot
+  description: A daily snapshot of inventory at a storage location for a part.
+  fields:
+  - name: snapshot_id
+    description: ''
+    type: dimension
+  - name: storage_location_id
+    description: ''
+    type: dimension
+  - name: part_id
+    description: ''
+    type: dimension
+  - name: snapshot_date
+    description: ''
+    type: dimension
+  - name: on_hand_qty
+    description: Quantity on hand in base UOM.
+    type: measure
+  - name: on_hand_value_std
+    description: On-hand value in standard cost (USD).
+    type: dimension
+  - name: in_transit_qty
+    description: ''
+    type: measure
+  - name: allocated_qty
+    description: ''
+    type: measure
+- name: tariffcode
+  description: An HTS tariff classification with duty rates and effective dates.
+  fields:
+  - name: tariff_id
+    description: ''
+    type: dimension
+  - name: hts_code
+    description: Harmonized Tariff Schedule code (6 or 10 digit).
+    type: dimension
+  - name: description
+    description: ''
+    type: dimension
+  - name: duty_rate
+    description: Ad valorem duty rate as a decimal (0.05 = 5%).
+    type: measure
+  - name: effective_from
+    description: ''
+    type: dimension
+  - name: effective_to
+    description: ''
+    type: dimension
+  - name: part_id
+    description: The part classified under this tariff code.
+    type: dimension
+- name: fxrate
+  description: A daily foreign exchange rate to USD.
+  fields:
+  - name: fx_date
+    description: ''
+    type: dimension
+  - name: from_currency
+    description: ISO 4217 source currency.
+    type: dimension
+  - name: to_currency
+    description: Always USD.
+    type: dimension
+  - name: rate
+    description: Units of to_currency per unit of from_currency.
+    type: dimension
+metrics:
+- name: on_time_delivery
+  title: On-Time Delivery
+  definition: The fraction of delivered sales order lines that arrived on or before
+    the committed date, excluding cancelled lines.
+  formula: SUM(CASE WHEN actual_delivery_date <= committed_date THEN 1 ELSE 0 END)
+    / COUNT(*) WHERE actual_delivery_date IN period AND status != 'CANCELLED'
+  type: ratio
+- name: otif
+  title: On-Time In-Full
+  definition: The fraction of delivered sales order lines that were both on time (actual
+    <= committed) and in full (first shipment qty >= ordered qty), excluding cancelled
+    lines.
+  formula: "SUM(CASE WHEN actual_delivery_date <= committed_date\n          AND first_shipment_qty\
+    \ >= ordered_qty THEN 1 ELSE 0 END)\n/ COUNT(*) WHERE actual_delivery_date IN\
+    \ period AND status != 'CANCELLED'"
+  type: ratio
+- name: unit_fill_rate
+  title: Unit Fill Rate
+  definition: The ratio of units shipped on first shipment to units ordered, measured
+    at the requested date, excluding cancelled lines. A measure of immediate availability.
+  formula: SUM(first_shipment_qty) / SUM(ordered_qty) WHERE requested_date IN period
+    AND status != 'CANCELLED'
+  type: ratio
+- name: days_of_inventory
+  title: Days of Inventory
+  definition: The number of days current on-hand inventory would last at the trailing
+    90-day consumption rate. Measured as a ratio of sums at the requested grouping.
+  formula: SUM(on_hand_value_std at period_end) / (SUM(cogs_shipped over trailing_90_days)
+    / 90)
+  type: ratio
+- name: landed_cost_per_unit
+  title: Landed Cost Per Unit
+  definition: The fully loaded cost per unit of received goods, including material,
+    freight, duty, insurance and handling, weighted by received quantity.
+  formula: SUM(material_cost + freight_allocation + duty_cost + insurance + handling)
+    / SUM(received_qty) WHERE receipt_date IN period
+  type: weighted_average
+- name: supplier_lead_time_days
+  title: Supplier Lead Time
+  definition: Median and 90th percentile calendar days from PO order date to goods
+    receipt date.
+  formula: PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(DAY, order_date, receipt_date))
+    and PERCENTILE_CONT(0.9) ...
+  type: percentile
+- name: order_fulfilment_cycle_days
+  title: Order Fulfilment Cycle Time
+  definition: Median calendar days from sales order placement to customer delivery.
+  formula: PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(DAY, order_date, actual_delivery_date))
+  type: percentile
+- name: transit_hours
+  title: Transit Time
+  definition: Median and 90th percentile hours from shipment departure to delivery.
+  formula: PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(HOUR, ship_date, actual_delivery))
+  type: percentile
+- name: inventory_turns
+  title: Inventory Turns
+  definition: 'The number of times inventory turns over per year, based on trailing
+    90-day consumption and average inventory. Invariant: inventory_turns * days_of_inventory
+    = 365.'
+  formula: (SUM(cogs_shipped_90d) / 90 * 365) / AVG(on_hand_value_std_90d)
+  type: ratio
+- name: stockout_rate
+  title: Stockout Rate
+  definition: Fraction of location-part-day observations where demand exists but on-hand
+    inventory is zero.
+  formula: SUM(CASE WHEN on_hand_qty = 0 AND allocated_qty > 0 THEN 1 ELSE 0 END)
+    / COUNT(*)
+  type: ratio
+- name: freight_cost_per_unit
+  title: Freight Cost Per Unit
+  definition: Freight cost per unit shipped, allocated by chargeable weight share,
+    weighted by shipped quantity.
+  formula: SUM(freight_allocation) / SUM(shipped_qty) WHERE ship_date IN period
+  type: weighted_average
