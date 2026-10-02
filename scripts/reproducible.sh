@@ -2,6 +2,7 @@
 # make data and make compile twice; every output must be byte-identical between the runs.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+[ -d .venv/bin ] && export PATH="$PWD/.venv/bin:$PATH"
 PY="${PY:-$( [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3 )}"
 outputs="data/out ontology/generated snowflake/semantic dbt/models/conformed/schema.yml cube/model docs/er_diagram.svg"
 digest() { find $outputs -type f ! -name '*.pyc' -print0 | sort -z | xargs -0 shasum -a 256; }

@@ -70,3 +70,32 @@ def test_prod_refuses_draft_metrics(registry):
     assert any("cannot ship to SCM_PROD" in p for p in compiler.check_registry(drafted, "prod"))
     assert compiler.check_registry(drafted, "test") == []
 
+
+
+def test_cli_rewrites_committed_outputs_unchanged():
+    from click.testing import CliRunner
+
+    targets = ["snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks"]
+    watched = sorted(p for d in (compiler.SEMANTIC_DIR, compiler.CUBE_DIR, compiler.DATABRICKS_DIR) for p in d.rglob("*")
+                     if p.is_file())
+    before = {p: p.read_bytes() for p in watched}
+    args = [a for t in targets for a in ("--target", t)]
+    result = CliRunner().invoke(compiler.main, args)
+    assert result.exit_code == 0, result.output
+    assert {p: p.read_bytes() for p in watched} == before
+
+
+def test_cli_refuses_prod_when_a_metric_is_not_approved(monkeypatch):
+    from click.testing import CliRunner
+
+    real = semantic.load_registry
+
+    def drafted():
+        registry = real()
+        registry.metrics["unit_fill_rate"]["status"] = "draft"
+        return registry
+
+    monkeypatch.setattr(compiler.semantic, "load_registry", drafted)
+    result = CliRunner().invoke(compiler.main, ["--env", "prod", "--target", "glossary"])
+    assert result.exit_code != 0
+    assert "cannot ship to SCM_PROD" in result.output

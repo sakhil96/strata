@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +12,7 @@ import click
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import semantic  # noqa: E402
+import semantic
 
 ROOT = Path(__file__).resolve().parent.parent
 ONTOLOGY_PATH = ROOT / "ontology" / "ontology.yaml"
@@ -26,7 +26,7 @@ QUESTIONS = ROOT / "eval" / "questions.yaml"
 HEADER = "Generated from ontology/*.yaml by compile.py; edit the registry, not this file."
 TARGETS = ("snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks", "linkml", "er")
 LINKML = (("gen-pydantic", "scm_ontology_pydantic.py"), ("gen-json-schema", "scm_ontology.schema.json"),
-          ("gen-owl", "scm_ontology.owl.ttl"), ("gen-erdiagram", "er_diagram.md"))
+          ("gen-owl", "scm_ontology.owl.nt"), ("gen-erdiagram", "er_diagram.md"))
 ER_ROWS = (("Supplier", "SupplierPartAgreement", "Part", "TariffCode"),
            ("PurchaseOrderLine", "GoodsReceipt", "Plant", "StorageLocation", "InventorySnapshot"),
            ("Customer", "SalesOrderLine", "ShipmentLine", "Shipment", "Carrier"),
@@ -84,7 +84,7 @@ def write(path: Path, text: str) -> None:
 
 
 def approved_epoch(metric: dict[str, Any]) -> int:
-    day = datetime.strptime(str(metric["approved_on"]), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    day = datetime.strptime(str(metric["approved_on"]), "%Y-%m-%d").replace(tzinfo=UTC)
     return int(day.timestamp())
 
 
@@ -318,8 +318,8 @@ def glossary_load_sql(env: str) -> str:
     return "\n".join([
         f"-- {HEADER}",
         f"CREATE TABLE IF NOT EXISTS {db}.SEMANTIC.GLOSSARY (metric_name STRING, entry VARIANT, loaded_at TIMESTAMP_NTZ);",
-        f"CREATE OR REPLACE TEMPORARY TABLE glossary_incoming AS",
-        f"  SELECT value:metric_name::STRING AS metric_name, value AS entry",
+        "CREATE OR REPLACE TEMPORARY TABLE glossary_incoming AS",
+        "  SELECT value:metric_name::STRING AS metric_name, value AS entry",
         f"  FROM @{db}.SEMANTIC.VIEW_YAML/glossary.json (FILE_FORMAT => '{db}.SEMANTIC.JSON_DOC'),",
         "  LATERAL FLATTEN(input => $1);",
         f"MERGE INTO {db}.SEMANTIC.GLOSSARY g USING glossary_incoming i ON g.metric_name = i.metric_name",
@@ -447,6 +447,15 @@ def er_svg(ontology: dict[str, Any]) -> str:
     return "\n".join(out) + "\n"
 
 
+def canonical_owl(turtle: str) -> str:
+    """Blank-node labels differ per run; canonicalise them and sort the triples."""
+    from rdflib import Graph
+    from rdflib.compare import to_canonical_graph
+
+    graph = to_canonical_graph(Graph().parse(data=turtle, format="turtle"))
+    return "\n".join(sorted(line for line in graph.serialize(format="nt").splitlines() if line)) + "\n"
+
+
 @click.command()
 @click.option("--target", "targets", multiple=True, type=click.Choice([*TARGETS, "all"]), default=["all"])
 @click.option("--env", default="dev", type=click.Choice(["dev", "test", "prod"]))
@@ -493,7 +502,7 @@ def main(targets: tuple[str, ...], env: str, version: int) -> None:
         target.mkdir(parents=True, exist_ok=True)
         for tool, name in LINKML:
             done = subprocess.run([tool, str(ONTOLOGY_PATH)], capture_output=True, text=True, check=True)
-            write(target / name, done.stdout)
+            write(target / name, canonical_owl(done.stdout) if tool == "gen-owl" else done.stdout)
         shutil.rmtree(target / "docs", ignore_errors=True)
         subprocess.run(["gen-doc", "-d", str(target / "docs"), str(ONTOLOGY_PATH)], capture_output=True, check=True)
         click.echo(f"  wrote {(target / 'docs').relative_to(ROOT)}/")
