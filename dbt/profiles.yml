@@ -1,0 +1,38 @@
+scm_ontology:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      authenticator: externalbrowser
+      role: SCM_DEPLOY
+      warehouse: SCM_WH_DEV
+      database: SCM_DEV
+      schema: STAGING
+      threads: 4
+    test:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      authenticator: externalbrowser
+      role: SCM_DEPLOY
+      warehouse: SCM_WH_TEST
+      database: SCM_TEST
+      schema: STAGING
+      threads: 4
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      authenticator: externalbrowser
+      role: SCM_DEPLOY
+      warehouse: SCM_WH_PROD
+      database: SCM_PROD
+      schema: STAGING
+      threads: 4
+    duckdb:
+      type: duckdb
+      path: target/scm.duckdb
+      schema: main
+      threads: 4

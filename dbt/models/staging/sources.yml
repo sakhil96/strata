@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: RAW
+    tables:
+      - name: SUPPLIERS
+      - name: PARTS
+      - name: SUPPLIER_PART_AGREEMENTS
+      - name: PURCHASE_ORDER_LINES
+      - name: GOODS_RECEIPTS
+      - name: SALES_ORDER_LINES
+      - name: INVENTORY_SNAPSHOTS
+      - name: CUSTOMERS
+      - name: STORAGE_LOCATIONS
+      - name: SHIPMENTS
+      - name: SHIPMENT_LINES
+      - name: CARRIERS
+      - name: LANES
+      - name: DELIVERY_EVENTS
+      - name: TARIFF_CODES
+      - name: FX_RATES
