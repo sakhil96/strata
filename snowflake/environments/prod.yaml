@@ -1,0 +1,15 @@
+environment: prod
+database: SCM_PROD
+warehouse: SCM_WH_PROD
+compute_pool: SCM_POOL_PROD
+role: SCM_DEPLOY
+schemas:
+  - RAW
+  - STAGING
+  - CONFORMED
+  - SEMANTIC
+  - AGENT
+  - AUDIT
+  - EVAL
+  - OPS
+semantic_view_version: 1

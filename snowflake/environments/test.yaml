@@ -1,0 +1,15 @@
+environment: test
+database: SCM_TEST
+warehouse: SCM_WH_TEST
+compute_pool: SCM_POOL_TEST
+role: SCM_DEPLOY
+schemas:
+  - RAW
+  - STAGING
+  - CONFORMED
+  - SEMANTIC
+  - AGENT
+  - AUDIT
+  - EVAL
+  - OPS
+semantic_view_version: 1

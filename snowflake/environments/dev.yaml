@@ -1,0 +1,15 @@
+environment: dev
+database: SCM_DEV
+warehouse: SCM_WH_DEV
+compute_pool: SCM_POOL_DEV
+role: SCM_ADMIN
+schemas:
+  - RAW
+  - STAGING
+  - CONFORMED
+  - SEMANTIC
+  - AGENT
+  - AUDIT
+  - EVAL
+  - OPS
+semantic_view_version: 1

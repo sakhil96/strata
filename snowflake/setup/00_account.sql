@@ -1,0 +1,12 @@
+-- Account-level settings for the SCM Ontology project.
+-- Run once by ACCOUNTADMIN before environment setup.
+
+USE ROLE ACCOUNTADMIN;
+
+-- Session defaults
+ALTER ACCOUNT SET TIMEZONE = 'UTC';
+ALTER ACCOUNT SET TIMESTAMP_INPUT_FORMAT = 'AUTO';
+ALTER ACCOUNT SET TIMESTAMP_OUTPUT_FORMAT = 'YYYY-MM-DD"T"HH24:MI:SS.FF3TZH:TZM';
+
+-- Enable change tracking for lineage
+ALTER ACCOUNT SET ENABLE_ACCOUNT_USAGE_FOR_PRIVILEGE_GRANTS = TRUE;
