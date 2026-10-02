@@ -1,0 +1,13 @@
+services:
+  strata:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SCM_ENV=dev
+      - SNOWFLAKE_CONNECTION_NAME=default
+    volumes:
+      - ./ontology:/app/ontology:ro
+      - ./eval:/app/eval:ro

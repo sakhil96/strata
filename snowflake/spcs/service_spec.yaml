@@ -1,0 +1,29 @@
+spec:
+  containers:
+    - name: strata
+      image: /{{DB}}/AGENT/IMAGE_REPO/strata:latest
+      env:
+        SCM_ENV: "{{ENV}}"
+        SNOWFLAKE_DATABASE: "{{DB}}"
+      readinessProbe:
+        port: 8000
+        path: /health
+      livenessProbe:
+        port: 8000
+        path: /live
+      resources:
+        requests:
+          cpu: "0.5"
+          memory: "1Gi"
+        limits:
+          cpu: "2"
+          memory: "4Gi"
+  endpoints:
+    - name: strata-api
+      port: 8000
+      public: true
+  logExporters:
+    eventTableConfig:
+      logLevel: INFO
+  platformMonitor:
+    enabled: true
