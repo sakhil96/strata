@@ -1,7 +1,7 @@
 # Every target runs from the repository root. ENV is dev, test or prod; VERSION is the semantic-view suffix.
 ENV ?= dev
 VERSION ?= 1
-PY ?= python
+PY ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 CONN ?= scm_$(ENV)
 export SCM_ENV := $(ENV)
 export SCM_VERSION := $(VERSION)

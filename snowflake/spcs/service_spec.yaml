@@ -1,23 +1,23 @@
+# Rendered by scripts/spcs.py: {{DB_LOWER}}, {{ENV}}, {{ENV_UPPER}} and {{TAG}} (short git sha) are substituted.
+# No secrets: the container authenticates with the SPCS session token at /snowflake/session/token.
 spec:
   containers:
     - name: strata
-      image: /{{DB}}/AGENT/IMAGE_REPO/strata:latest
+      image: /{{DB_LOWER}}/agent/image_repo/strata:{{TAG}}
       env:
         SCM_ENV: "{{ENV}}"
-        SNOWFLAKE_DATABASE: "{{DB}}"
+        SCM_BACKEND: snowflake
+        SNOWFLAKE_WAREHOUSE: "SCM_WH_{{ENV_UPPER}}"
       readinessProbe:
         port: 8000
         path: /health
-      livenessProbe:
-        port: 8000
-        path: /live
       resources:
         requests:
           cpu: "0.5"
-          memory: "1Gi"
+          memory: 1Gi
         limits:
-          cpu: "2"
-          memory: "4Gi"
+          cpu: "1"
+          memory: 2Gi
   endpoints:
     - name: strata-api
       port: 8000
@@ -26,4 +26,7 @@ spec:
     eventTableConfig:
       logLevel: INFO
   platformMonitor:
-    enabled: true
+    metricConfig:
+      groups:
+        - system
+        - network

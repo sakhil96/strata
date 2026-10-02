@@ -1,10 +1,7 @@
--- Create the compute pool for STRATA.
--- Smallest available; auto-suspend when idle.
-
+-- Compute pool and service for STRATA. Smallest instance family; suspends when idle.
 USE ROLE SYSADMIN;
 
-CREATE COMPUTE POOL IF NOT EXISTS SCM_POOL_{{ENV}}
-    FOR SERVICE
+CREATE COMPUTE POOL IF NOT EXISTS SCM_POOL_{{ENV_UPPER}}
     MIN_NODES = 1
     MAX_NODES = 1
     INSTANCE_FAMILY = CPU_X64_XS
@@ -12,4 +9,11 @@ CREATE COMPUTE POOL IF NOT EXISTS SCM_POOL_{{ENV}}
     AUTO_RESUME = TRUE
     COMMENT = 'STRATA service compute pool for {{ENV}}';
 
-GRANT USAGE ON COMPUTE POOL SCM_POOL_{{ENV}} TO ROLE SCM_DEPLOY;
+GRANT USAGE, MONITOR ON COMPUTE POOL SCM_POOL_{{ENV_UPPER}} TO ROLE SCM_DEPLOY;
+
+CREATE IMAGE REPOSITORY IF NOT EXISTS {{DB}}.AGENT.IMAGE_REPO;
+GRANT READ, WRITE ON IMAGE REPOSITORY {{DB}}.AGENT.IMAGE_REPO TO ROLE SCM_DEPLOY;
+
+CREATE TABLE IF NOT EXISTS {{DB}}.OPS.IMAGE_VERSIONS (tag STRING, deployed_at TIMESTAMP_LTZ DEFAULT CURRENT_TIMESTAMP());
+
+-- The service itself is created once by scripts/spcs.py deploy, then altered per release.

@@ -1,7 +1,7 @@
 """Refuse a production release unless the commit passed every suite on SCM_TEST.
 
 Reads EVAL.EVAL_RUNS for the commit: each of the seven suites must have a passing run, the
-overall pass rate must meet the floor, and the latest AI Observability batch evaluation must too.
+overall pass rate must meet the floor, and the latest agent-observability batch evaluation must too.
 """
 
 from __future__ import annotations
