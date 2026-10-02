@@ -123,7 +123,7 @@ metrics:
         denominator: Received PO lines with receipt_date in the period.
         definition: Share of received purchase order lines that arrived on or before the supplier's promised date.
         formula_text: SUM(is_on_time_receipt) / SUM(is_received), dated by receipt_date.
-        synonyms: [supplier on-time, supplier delivery performance, on-time receipt]
+        synonyms: [supplier on-time, supplier delivery performance, on-time receipt, promised dates, supplier promise]
         owner: VP Procurement
         steward: Procurement Analytics Lead
         scor_attribute: RS.3.x Deliver on time to supplier promise
@@ -210,7 +210,7 @@ metrics:
         denominator: Orders with at least one non-cancelled line requested in the period.
         definition: Share of orders where every line was filled completely on the first shipment.
         formula_text: SUM(is_order_filled) / SUM(is_order_head), counted once per order on its first live line.
-        synonyms: [order fill, complete orders]
+        synonyms: [order fill, complete orders, orders were completely filled, orders completely filled]
         semantic: {table: requested_lines, expr: "SUM(requested_lines.is_order_filled) / NULLIF(SUM(requested_lines.is_order_head), 0)"}
     owner: VP Supply Chain
     steward: Demand Planning Manager
