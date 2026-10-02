@@ -1,706 +1,794 @@
-"""Generate simulated supply chain data for the SCM Ontology project.
-
-Creates four source systems (erp/, tms/, portal/, iot/) as Parquet files with
-injected inconsistencies: three supplier key schemes, five date field names,
-mixed UOMs, timezone variations, currency mixing, and duplicate supplier names.
-
-Deterministic: seeded random state produces identical output on every run.
-"""
-
 from __future__ import annotations
 
-import hashlib
 import json
-from datetime import date, datetime, timedelta
+import sys
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import yaml
 
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "data" / "out"
 SEED = 20261002
-RNG = np.random.default_rng(SEED)
-OUT_DIR = Path(__file__).resolve().parent / "out"
+FY_START = date(2025, 10, 1)
+AS_OF = date(2026, 9, 30)
+TARIFF_STEP = date(2026, 7, 24)
+DAYS = pd.date_range(FY_START, AS_OF, freq="D")
 
-FISCAL_START = date(2025, 10, 1)
-FISCAL_END = date(2026, 9, 30)
-DAYS_IN_FY = (FISCAL_END - FISCAL_START).days + 1
+REGION_OF = {
+    "US": "US", "MX": "US", "CA": "US",
+    "DE": "EMEA", "GB": "EMEA", "NL": "EMEA", "FR": "EMEA",
+    "CN": "APAC", "JP": "APAC", "SG": "APAC", "IN": "APAC", "AU": "APAC",
+}
+TZ_OF = {
+    "US": "America/Chicago", "CA": "America/Toronto", "DE": "Europe/Berlin",
+    "GB": "Europe/London", "NL": "Europe/Amsterdam", "FR": "Europe/Paris",
+    "SG": "Asia/Singapore", "JP": "Asia/Tokyo", "AU": "Australia/Sydney",
+}
 
-PLANTS = [
-    {"plant_id": "PLT-US01", "name": "Chicago Manufacturing", "type": "MANUFACTURING", "region": "US", "country": "US", "tz": "America/Chicago"},
-    {"plant_id": "PLT-DE01", "name": "Stuttgart Manufacturing", "type": "MANUFACTURING", "region": "EMEA", "country": "DE", "tz": "Europe/Berlin"},
-    {"plant_id": "PLT-SG01", "name": "Singapore Manufacturing", "type": "MANUFACTURING", "region": "APAC", "country": "SG", "tz": "Asia/Singapore"},
-    {"plant_id": "DC-US01", "name": "Atlanta Distribution Center", "type": "DISTRIBUTION", "region": "US", "country": "US", "tz": "America/New_York"},
-    {"plant_id": "DC-DE01", "name": "Rotterdam Distribution Center", "type": "DISTRIBUTION", "region": "EMEA", "country": "NL", "tz": "Europe/Amsterdam"},
+PLANTS = pd.DataFrame(
+    [
+        ("PLT-US01", "Joliet Assembly", "MANUFACTURING", "US", "US", "America/Chicago"),
+        ("PLT-DE01", "Esslingen Werk", "MANUFACTURING", "EMEA", "DE", "Europe/Berlin"),
+        ("PLT-SG01", "Tuas Fabrication", "MANUFACTURING", "APAC", "SG", "Asia/Singapore"),
+        ("DC-US01", "McDonough Distribution Centre", "DISTRIBUTION", "US", "US", "America/New_York"),
+        ("DC-NL01", "Venlo Distribution Centre", "DISTRIBUTION", "EMEA", "NL", "Europe/Amsterdam"),
+    ],
+    columns=["plant_id", "plant_name", "plant_type", "region", "country_code", "timezone"],
+)
+
+SUPPLIER_NAMES = [
+    ("Hartmann Präzisionsteile GmbH", "DE"), ("Nordwerk Hydraulik GmbH", "DE"),
+    ("Rheinfels Kunststoffe GmbH", "DE"), ("Bauer & Söhne Antriebstechnik GmbH", "DE"),
+    ("Kessler Elektronik GmbH", "DE"), ("Halvorsen Fasteners Ltd", "GB"),
+    ("Pennine Polymers Ltd", "GB"), ("Thames Valley Controls Ltd", "GB"),
+    ("Corrugated Solutions of Kent Ltd", "GB"), ("Abbott Motion Systems Ltd", "GB"),
+    ("Lakeshore Components Inc", "US"), ("Great Plains Packaging Inc", "US"),
+    ("Cascade Power Electronics Inc", "US"), ("Redwood Bearing Co", "US"),
+    ("Tri-County Fastener Supply Inc", "US"), ("Industrias Metálicas del Bajío SA de CV", "MX"),
+    ("Grupo Plastimex SA de CV", "MX"), ("Ensambles Electrónicos de Monterrey SA de CV", "MX"),
+    ("Empaques del Norte SA de CV", "MX"), ("Transmisiones Querétaro SA de CV", "MX"),
+    ("Shenzhen Huaxin Electronics Co Ltd", "CN"), ("Ningbo Zhenhai Fastener Co Ltd", "CN"),
+    ("Suzhou Yongda Precision Motion Co Ltd", "CN"), ("Dongguan Lianfa Plastics Co Ltd", "CN"),
+    ("Xiamen Heng'an Packaging Co Ltd", "CN"), ("Sakura Seimitsu KK", "JP"),
+    ("Nagoya Drive Systems KK", "JP"), ("Kansai Denshi Kogyo KK", "JP"),
+    ("Hokuriku Resin KK", "JP"), ("Tohoku Fastening KK", "JP"),
+    ("Jurong Precision Engineering Pte Ltd", "SG"), ("Straits Polymer Pte Ltd", "SG"),
+    ("Tuas Power Modules Pte Ltd", "SG"), ("Marina Packaging Pte Ltd", "SG"),
+    ("Kallang Motion Pte Ltd", "SG"), ("Pune Forge & Fasteners Pvt Ltd", "IN"),
+    ("Chennai Circuit Works Pvt Ltd", "IN"), ("Gujarat Polychem Pvt Ltd", "IN"),
+    ("Bengaluru Drives Pvt Ltd", "IN"), ("Haryana Cartons Pvt Ltd", "IN"),
 ]
+CURRENCY_OF = {"DE": "EUR", "GB": "EUR", "SG": "SGD"}
 
-STORAGE_TYPES = ["RACK", "BULK", "COLD", "YARD"]
+FAMILIES = [
+    ("Fasteners and fittings", "Mechanical", "7318.15",
+     ["Hex flange bolt M{n}", "Socket cap screw M{n}", "Nyloc nut M{n}", "Compression fitting {n} mm"]),
+    ("Motion components", "Mechanical", "8483.10",
+     ["Deep groove bearing 6{n}", "Timing pulley T{n}", "Linear guide rail {n}0 mm", "Shaft coupling {n} mm"]),
+    ("Control electronics", "Electrical", "8537.10",
+     ["PLC I/O module {n}", "Proximity sensor M{n}", "Relay board {n}-ch", "HMI panel {n} in"]),
+    ("Power electronics", "Electrical", "8504.40",
+     ["DC power supply {n}0 W", "Variable frequency drive {n} kW", "Contactor {n} A", "Line reactor {n} A"]),
+    ("Engineering polymers", "Materials", "3907.40",
+     ["Polycarbonate sheet {n} mm", "PA66 pellets GF{n}", "POM rod {n} mm", "PTFE gasket {n} mm"]),
+    ("Packaging", "Materials", "4819.10",
+     ["Corrugated carton {n}00 mm", "Stretch film {n} um", "Foam insert {n}", "Pallet collar {n}00 mm"]),
+]
+STEPPED_FAMILIES = {"Control electronics", "Power electronics", "Engineering polymers"}
 
 SEGMENTS = ["Industrial", "Retail", "Government", "Healthcare"]
+CUSTOMER_COUNTRIES = ["US", "US", "CA", "DE", "FR", "GB", "NL", "SG", "JP", "AU"]
+CUSTOMER_STEMS = [
+    "Meridian", "Calder", "Ashford", "Brightwater", "Kestrel", "Northgate", "Halcyon",
+    "Linden", "Oakridge", "Pembroke", "Quayside", "Riverton", "Stanmore", "Thornbury",
+    "Vantage", "Westbrook", "Albion", "Beacon", "Corvid", "Dunmore",
+]
+CUSTOMER_KINDS = {
+    "Industrial": ["Machine Works", "Automation", "Fabrication"],
+    "Retail": ["Home Stores", "Trade Supply", "Outlets"],
+    "Government": ["Transit Authority", "Public Works", "Defence Logistics"],
+    "Healthcare": ["Medical Devices", "Hospital Supply", "Diagnostics"],
+}
 
-CATEGORIES = ["Electronics", "Mechanical", "Chemical", "Packaging", "Raw Material", "Consumable"]
-FAMILIES_PER_CATEGORY = 3
-
-CARRIER_TYPES = ["OCEAN", "AIR", "ROAD", "RAIL", "PARCEL"]
-
-INCOTERMS = ["EXW", "FOB", "CIF", "DDP"]
-CURRENCIES = ["USD", "EUR", "SGD"]
-
-EVENT_TYPES = ["picked_up", "departed", "arrived", "delivered", "exception"]
-
-COUNTRIES_8 = ["US", "DE", "CN", "JP", "KR", "MX", "IN", "GB"]
-
-
-def gen_id(prefix: str, n: int) -> str:
-    return f"{prefix}-{n:04d}"
-
-
-def random_date_in_range(start: date, end: date, size: int = 1) -> list[date]:
-    days = (end - start).days
-    offsets = RNG.integers(0, days, size=size)
-    return [start + timedelta(days=int(d)) for d in offsets]
+CARRIERS = pd.DataFrame(
+    [
+        ("CAR-01", "Lakeland Freight Lines", "ROAD", "LKFL", "US", "USD"),
+        ("CAR-02", "Prairie Express", "ROAD", "PRXP", "US", "USD"),
+        ("CAR-03", "Continental Parcel", "PARCEL", "CNPC", "US", "USD"),
+        ("CAR-04", "Atlas Air Cargo", "AIR", "ATAC", "US", "USD"),
+        ("CAR-05", "Rhein-Main Spedition", "ROAD", "RMSP", "EMEA", "EUR"),
+        ("CAR-06", "Nordsee Logistik", "ROAD", "NSLG", "EMEA", "EUR"),
+        ("CAR-07", "Benelux Pakket", "PARCEL", "BXPK", "EMEA", "EUR"),
+        ("CAR-08", "Euro Air Freight", "AIR", "EUAF", "EMEA", "EUR"),
+        ("CAR-09", "Lion City Haulage", "ROAD", "LCHL", "APAC", "SGD"),
+        ("CAR-10", "Pacific Rim Air", "AIR", "PRAR", "APAC", "SGD"),
+        ("CAR-11", "Straits Parcel", "PARCEL", "STPC", "APAC", "SGD"),
+        ("CAR-12", "Oceanic Forwarding", "OCEAN", "OCFW", "APAC", "SGD"),
+    ],
+    columns=["carrier_id", "carrier_name", "carrier_type", "scac_code", "home_region", "billing_currency"],
+)
 
 
-def generate_suppliers(n: int = 40) -> pd.DataFrame:
+def registry_constants() -> dict:
+    registry = yaml.safe_load((ROOT / "ontology" / "metrics.yaml").read_text())
+    return registry["constants"]
+
+
+def build_fx(rng: np.random.Generator) -> pd.DataFrame:
+    eur = 1.08 + np.cumsum(rng.normal(0, 0.0025, len(DAYS)))
+    sgd = 0.74 + np.cumsum(rng.normal(0, 0.0012, len(DAYS)))
+    frames = []
+    for ccy, path in (("EUR", eur), ("SGD", sgd), ("USD", np.ones(len(DAYS)))):
+        frames.append(pd.DataFrame({
+            "fx_date": DAYS.date, "from_currency": ccy, "to_currency": "USD",
+            "rate": np.round(path, 6),
+        }))
+    return pd.concat(frames, ignore_index=True)
+
+
+def build_suppliers(rng: np.random.Generator) -> pd.DataFrame:
     rows = []
-    for i in range(n):
-        country = COUNTRIES_8[i % len(COUNTRIES_8)]
-        currency = {"US": "USD", "DE": "EUR", "GB": "EUR", "CN": "USD", "JP": "USD",
-                     "KR": "USD", "MX": "USD", "IN": "USD", "SG": "SGD"}.get(country, "USD")
-
-        # Three supplier key schemes (injected inconsistency)
-        if i % 3 == 0:
-            sid = f"SUP{i + 1:04d}"
-        elif i % 3 == 1:
-            sid = f"V-{i + 1:06d}"
-        else:
-            sid = f"VENDOR_{i + 1}"
-
-        name = f"{'Global' if i < 10 else 'Regional'} {'Components' if i % 4 == 0 else 'Materials' if i % 4 == 1 else 'Assemblies' if i % 4 == 2 else 'Parts'} {'Inc' if country == 'US' else 'GmbH' if country == 'DE' else 'Ltd' if country in ('GB', 'IN', 'SG') else 'Co'} {chr(65 + i % 26)}"
-
-        # Duplicate name variant (injected inconsistency)
-        if i > 0 and i % 10 == 0:
-            name = rows[i - 1]["supplier_name"] + " (subsidiary)"
-
+    for i, (name, country) in enumerate(SUPPLIER_NAMES):
+        n = i + 1
+        group_head = (i // 4) * 4 + 1
         rows.append({
-            "supplier_id": sid,
+            "supplier_id": f"SUP-{n:04d}",
             "supplier_name": name,
-            "supplier_site": f"SITE-{country}-{i % 3 + 1}",
-            "parent_supplier_id": rows[max(0, i - (i % 5))]["supplier_id"] if i >= 5 else None,
+            "supplier_site": f"{country}-{['N', 'S', 'E', 'W'][i % 4]}{i % 3 + 1}",
+            "parent_supplier_id": f"SUP-{group_head:04d}",
             "country_code": country,
-            "contact_name": f"Contact Person {i + 1}",
-            "contact_email": f"contact{i + 1}@supplier{i + 1}.example.com",
-            "bank_account": f"BANK{RNG.integers(10000000, 99999999)}",
-            "currency": currency,
+            "currency": CURRENCY_OF.get(country, "USD"),
+            "contact_name": f"{['A.', 'M.', 'J.', 'S.', 'K.'][i % 5]} {name.split()[0]}",
+            "contact_email": f"orders@{name.split()[0].lower().replace('&', '')}.example",
+            "bank_account": f"XX{rng.integers(10, 99)}{rng.integers(10**11, 10**12 - 1)}",
         })
     return pd.DataFrame(rows)
 
 
-def generate_parts(n: int = 300) -> pd.DataFrame:
+def build_parts(rng: np.random.Generator) -> pd.DataFrame:
     rows = []
-    families = []
-    for cat in CATEGORIES:
-        for j in range(FAMILIES_PER_CATEGORY):
-            families.append({"category": cat, "family": f"{cat[:4]}-Family-{j + 1}"})
-
-    for i in range(n):
-        fam = families[i % len(families)]
-        uom_choice = RNG.choice(["each", "kg", "litre"])
+    for i in range(300):
+        family, category, hts, patterns = FAMILIES[i % len(FAMILIES)]
+        size = 4 + (i // len(FAMILIES)) % 47
+        pack = int(rng.choice([1, 6, 12, 24]))
         rows.append({
-            "part_id": gen_id("PRT", i + 1),
-            "part_name": f"{fam['family']} Part {i + 1}",
-            "part_family": fam["family"],
-            "category": fam["category"],
-            "base_uom": uom_choice,
-            "pack_factor": float(RNG.choice([1, 6, 12, 24])),
-            "pallet_factor": float(RNG.choice([10, 20, 40])),
-            "weight_kg": round(float(RNG.uniform(0.1, 50.0)), 2),
+            "part_id": f"PRT-{i + 1:05d}",
+            "part_name": patterns[(i // len(FAMILIES)) % len(patterns)].format(n=size),
+            "part_family": family,
+            "category": category,
+            "base_uom": "EA",
+            "pack_factor": pack,
+            "cases_per_pallet": int(rng.choice([20, 40, 60])),
+            "weight_kg": round(float(rng.uniform(0.05, 12.0)), 3),
+            "std_cost_usd": round(float(rng.uniform(2.0, 400.0)), 2),
+            "hts_code": f"{hts}.{(i % 9) + 1}0",
         })
     return pd.DataFrame(rows)
 
 
-def generate_customers(n: int = 120) -> pd.DataFrame:
+def build_customers(rng: np.random.Generator) -> pd.DataFrame:
     rows = []
-    for i in range(n):
-        segment = SEGMENTS[i % len(SEGMENTS)]
-        country = RNG.choice(["US", "DE", "GB", "SG", "JP", "AU"])
+    for i in range(120):
+        segment = SEGMENTS[i % 4]
+        account = i // 4
+        stem = CUSTOMER_STEMS[account % len(CUSTOMER_STEMS)]
+        kind = CUSTOMER_KINDS[segment][account % 3]
+        country = CUSTOMER_COUNTRIES[(i * 7) % len(CUSTOMER_COUNTRIES)]
         rows.append({
-            "customer_id": gen_id("CUST", i + 1),
-            "customer_name": f"{segment} Customer {i + 1}",
-            "ship_to_id": gen_id("SHIP", i + 1),
-            "sold_to_id": gen_id("SOLD", (i // 3) + 1),
-            "account_id": gen_id("ACCT", (i // 6) + 1),
+            "customer_id": f"SHP-{i + 1:05d}",
+            "customer_name": f"{stem} {kind} {['North', 'Central', 'South', 'Harbour', 'East', 'West'][i % 6]}",
+            "sold_to_id": f"SLD-{i // 2 + 1:04d}",
+            "account_id": f"ACC-{account + 1:03d}",
+            "account_name": f"{stem} {kind}",
             "segment": segment,
             "country_code": country,
-            "contact_name": f"Buyer {i + 1}",
-            "contact_email": f"buyer{i + 1}@customer{i + 1}.example.com",
+            "region": REGION_OF[country],
+            "contact_name": f"Buyer {i + 1:03d}",
+            "contact_email": f"purchasing{i + 1:03d}@{stem.lower()}.example",
         })
     return pd.DataFrame(rows)
 
 
-def generate_carriers(n: int = 12) -> pd.DataFrame:
+def build_locations() -> pd.DataFrame:
     rows = []
-    for i in range(n):
-        ctype = CARRIER_TYPES[i % len(CARRIER_TYPES)]
-        rows.append({
-            "carrier_id": gen_id("CAR", i + 1),
-            "carrier_name": f"{'Pacific' if i < 4 else 'Atlantic' if i < 8 else 'Express'} {ctype.title()} Lines {chr(65 + i)}",
-            "carrier_type": ctype,
-            "scac_code": f"SC{chr(65 + i)}{chr(65 + (i * 3) % 26)}",
-        })
-    return pd.DataFrame(rows)
-
-
-def generate_lanes(carriers: pd.DataFrame) -> pd.DataFrame:
-    regions = ["US", "EMEA", "APAC"]
-    rows = []
-    lane_id = 0
-    for orig in regions:
-        for dest in regions:
-            lane_id += 1
-            mode = "OCEAN" if orig != dest else "ROAD"
-            transit = 3 if orig == dest else (14 if mode == "OCEAN" else 7)
+    for _, plant in PLANTS.iterrows():
+        for j, kind in enumerate(["RACK", "BULK", "COLD"]):
             rows.append({
-                "lane_id": gen_id("LANE", lane_id),
-                "origin_region": orig,
-                "destination_region": dest,
-                "mode": mode,
-                "transit_days_typical": transit,
+                "storage_location_id": f"{plant.plant_id}-{kind[0]}{j + 1}",
+                "storage_location_name": f"{plant.plant_name} {kind.lower()} store",
+                "plant_id": plant.plant_id,
+                "location_type": kind,
             })
     return pd.DataFrame(rows)
 
 
-def generate_tariff_codes(parts: pd.DataFrame) -> pd.DataFrame:
+def build_tariffs(parts: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
     rows = []
-    tariff_id = 0
-    # Assign tariff codes to parts — some parts share codes
-    hts_codes = [f"8501.{10 + i:02d}.{j:02d}00" for i in range(20) for j in range(3)]
-    for i, part_row in parts.iterrows():
-        hts = hts_codes[i % len(hts_codes)]
-        base_rate = round(float(RNG.uniform(0.0, 0.15)), 4)
-
-        # Pre-step rate
-        tariff_id += 1
-        rows.append({
-            "tariff_id": gen_id("TAR", tariff_id),
-            "hts_code": hts,
-            "description": f"Tariff for {part_row['part_name'][:30]}",
-            "duty_rate": base_rate,
-            "effective_from": str(FISCAL_START),
-            "effective_to": "2026-07-23",
-            "part_id": part_row["part_id"],
-        })
-
-        # Post-step rate (2026-07-24 tariff increase)
-        tariff_id += 1
-        rows.append({
-            "tariff_id": gen_id("TAR", tariff_id),
-            "hts_code": hts,
-            "description": f"Tariff for {part_row['part_name'][:30]} (post-step)",
-            "duty_rate": round(base_rate + float(RNG.uniform(0.02, 0.08)), 4),
-            "effective_from": "2026-07-24",
-            "effective_to": str(FISCAL_END),
-            "part_id": part_row["part_id"],
-        })
-    return pd.DataFrame(rows)
+    for _, part in parts.iterrows():
+        base = round(float(rng.uniform(0.0, 0.06)), 4)
+        stepped = part.part_family in STEPPED_FAMILIES
+        post = round(base + float(rng.uniform(0.05, 0.15)), 4) if stepped else base
+        rows.append((part.part_id, part.hts_code, base, FY_START, TARIFF_STEP - timedelta(days=1)))
+        rows.append((part.part_id, part.hts_code, post, TARIFF_STEP, AS_OF))
+    return pd.DataFrame(rows, columns=["part_id", "hts_code", "duty_rate", "effective_from", "effective_to"])
 
 
-def generate_fx_rates() -> pd.DataFrame:
-    rows = []
-    current = FISCAL_START
-    eur_rate = 1.08
-    sgd_rate = 0.74
-    while current <= FISCAL_END:
-        eur_rate += float(RNG.normal(0, 0.002))
-        sgd_rate += float(RNG.normal(0, 0.001))
-        eur_rate = max(0.9, min(1.3, eur_rate))
-        sgd_rate = max(0.6, min(0.9, sgd_rate))
-
-        rows.append({"fx_date": str(current), "from_currency": "EUR", "to_currency": "USD", "rate": round(eur_rate, 6)})
-        rows.append({"fx_date": str(current), "from_currency": "SGD", "to_currency": "USD", "rate": round(sgd_rate, 6)})
-        rows.append({"fx_date": str(current), "from_currency": "USD", "to_currency": "USD", "rate": 1.0})
-        current += timedelta(days=1)
-    return pd.DataFrame(rows)
+def fx_lookup(fx: pd.DataFrame):
+    table = {(r.from_currency, r.fx_date): r.rate for r in fx.itertuples()}
+    return lambda ccy, d: table[(ccy, d)]
 
 
-def generate_storage_locations(plants: list[dict]) -> pd.DataFrame:
-    rows = []
-    loc_id = 0
-    for plant in plants:
-        for stype in STORAGE_TYPES[:3]:
-            loc_id += 1
-            rows.append({
-                "storage_location_id": gen_id("LOC", loc_id),
-                "storage_location_name": f"{plant['name']} {stype}",
-                "plant_id": plant["plant_id"],
-                "location_type": stype,
+def local_to_utc(d: date, hour: float, tz: str) -> datetime:
+    local = datetime.combine(d, time(0, 0)) + timedelta(minutes=round(hour * 60))
+    return local.replace(tzinfo=ZoneInfo(tz)).astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def build_sales(rng, customers, parts, locations, carriers):
+    combos = []
+    for loc in locations.itertuples():
+        picks = rng.choice(len(parts), size=40, replace=False)
+        combos.extend((loc.storage_location_id, loc.plant_id, parts.part_id.iloc[p]) for p in sorted(picks))
+    combos = pd.DataFrame(combos, columns=["storage_location_id", "plant_id", "part_id"])
+    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region))
+    pack = dict(zip(parts.part_id, parts.pack_factor))
+
+    order_rows, line_rows, ship_rows, ship_line_rows = [], [], [], []
+    n_orders = 15000
+    order_days = rng.integers(0, (AS_OF - FY_START).days - 3, size=n_orders)
+    ship_seq = 0
+    for o in range(n_orders):
+        cust = customers.iloc[int(rng.integers(0, len(customers)))]
+        home = PLANTS[PLANTS.region == cust.region].plant_id.tolist()
+        plant = rng.choice(home) if home and rng.random() < 0.85 else rng.choice(PLANTS.plant_id)
+        loc = rng.choice(locations[locations.plant_id == plant].storage_location_id)
+        loc_parts = combos[combos.storage_location_id == loc].part_id.to_numpy()
+        n_lines = int(rng.integers(3, 6))
+        chosen = rng.choice(loc_parts, size=n_lines, replace=False)
+
+        order_date = FY_START + timedelta(days=int(order_days[o]))
+        requested = order_date + timedelta(days=int(rng.integers(6, 22)))
+        committed = requested + timedelta(days=int(rng.choice([0, 0, 0, 1, 1, 2, 3])))
+        cross = plant_region[plant] != cust.region
+        transit = 4 if cross else 2
+        ship_date = committed - timedelta(days=transit) + timedelta(
+            days=int(rng.choice([-2, -1, -1, -1, -1, -1, -1, -1, 0, 0, 1])))
+        ship_date = max(ship_date, order_date + timedelta(days=1))
+        delivery = ship_date + timedelta(days=transit + int(rng.choice([-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2])))
+        eta = ship_date + timedelta(days=transit + 1)
+        home_carriers = carriers[carriers.home_region == plant_region[plant]]
+        carrier = home_carriers.iloc[int(rng.integers(0, len(home_carriers)))]
+        so = f"SO-{o + 1:07d}"
+
+        first_lines, backorder_lines = [], []
+        for k, part_id in enumerate(chosen):
+            qty = int(rng.integers(1, 41)) * pack[part_id]
+            cancelled = rng.random() < 0.04
+            first_qty = 0 if cancelled else qty
+            if not cancelled and rng.random() < 0.07:
+                first_qty = int(qty * float(rng.uniform(0.5, 0.95)))
+            line = {
+                "so_line_id": f"{so}-{(k + 1) * 10:03d}", "so_number": so, "line_number": (k + 1) * 10,
+                "customer_id": cust.customer_id, "part_id": part_id, "storage_location_id": loc,
+                "plant_id": plant, "ordered_qty": qty, "order_date": order_date,
+                "requested_date": requested, "committed_date": committed, "is_cancelled": cancelled,
+            }
+            line_rows.append(line)
+            if not cancelled:
+                first_lines.append((line["so_line_id"], part_id, first_qty))
+                if first_qty < qty:
+                    backorder_lines.append((line["so_line_id"], part_id, qty - first_qty))
+
+        legs = [(ship_date, delivery, eta, first_lines, 1)]
+        if backorder_lines:
+            later = timedelta(days=int(rng.integers(7, 15)))
+            legs.append((ship_date + later, delivery + later, eta + later, backorder_lines, 2))
+        for depart, pod, carrier_eta, legs_lines, seq in legs:
+            if not legs_lines or depart > AS_OF:
+                continue
+            ship_seq += 1
+            sid = f"SHP{ship_seq:07d}"
+            ship_rows.append({
+                "shipment_id": sid, "carrier_id": carrier.carrier_id, "origin_plant_id": plant,
+                "customer_id": cust.customer_id, "ship_date": depart, "carrier_eta": carrier_eta,
+                "actual_delivery": pod if pod <= AS_OF else None, "is_cross_region": cross,
+                "billing_currency": carrier.billing_currency,
             })
-    return pd.DataFrame(rows)
-
-
-def generate_agreements(suppliers: pd.DataFrame, parts: pd.DataFrame) -> pd.DataFrame:
-    rows = []
-    agr_id = 0
-    for i in range(len(suppliers)):
-        n_parts = RNG.integers(5, 20)
-        part_indices = RNG.choice(len(parts), size=min(n_parts, len(parts)), replace=False)
-        for pi in part_indices:
-            agr_id += 1
-            currency = suppliers.iloc[i]["currency"]
-            rows.append({
-                "agreement_id": gen_id("AGR", agr_id),
-                "supplier_id": suppliers.iloc[i]["supplier_id"],
-                "part_id": parts.iloc[pi]["part_id"],
-                "unit_cost": round(float(RNG.uniform(1.0, 500.0)), 2),
-                "currency": currency,
-                "incoterm": RNG.choice(INCOTERMS),
-                "quoted_lead_days": int(RNG.integers(7, 60)),
-                "effective_from": str(FISCAL_START),
-                "effective_to": str(FISCAL_END),
-            })
-    return pd.DataFrame(rows)
-
-
-def generate_purchase_orders(
-    suppliers: pd.DataFrame,
-    parts: pd.DataFrame,
-    agreements: pd.DataFrame,
-    n: int = 8000,
-) -> pd.DataFrame:
-    rows = []
-    for i in range(n):
-        agr_idx = RNG.integers(0, len(agreements))
-        agr = agreements.iloc[agr_idx]
-        order_date = random_date_in_range(FISCAL_START, FISCAL_END - timedelta(days=30))[0]
-        lead = int(RNG.integers(7, 45))
-        promised = order_date + timedelta(days=lead)
-        confirmed = promised + timedelta(days=int(RNG.integers(-3, 5)))
-
-        # Some cancelled
-        is_cancelled = RNG.random() < 0.03
-        status = "CANCELLED" if is_cancelled else "OPEN"
-
-        # Five differently named date fields (injected inconsistency)
-        date_field_name = RNG.choice(["promised_date", "promise_dt", "prom_date", "supplier_promise", "eta_date"])
-
-        qty = float(RNG.integers(10, 500))
-        plant_idx = RNG.integers(0, len(PLANTS))
-
-        rows.append({
-            "po_line_id": gen_id("POL", i + 1),
-            "po_number": f"PO-{(i // 3) + 1:06d}",
-            "line_number": (i % 3) + 1,
-            "supplier_id": agr["supplier_id"],
-            "part_id": agr["part_id"],
-            "deliver_to_plant_id": PLANTS[plant_idx]["plant_id"],
-            "ordered_qty": qty,
-            "unit_cost": agr["unit_cost"],
-            "currency": agr["currency"],
-            "order_date": str(order_date),
-            "promised_date": str(promised),
-            "confirmed_date": str(confirmed),
-            "status": status,
-            # UOM inconsistency
-            "uom": RNG.choice(["EA", "each", "EACH", "CS", "case"]),
-            # Extra field with alternative name
-            f"_{date_field_name}": str(promised),
-        })
-    return pd.DataFrame(rows)
-
-
-def generate_receipts(po_lines: pd.DataFrame) -> pd.DataFrame:
-    rows = []
-    receipt_id = 0
-    for _, po in po_lines.iterrows():
-        if po["status"] == "CANCELLED":
-            continue
-        receipt_id += 1
-        promised = datetime.strptime(po["promised_date"], "%Y-%m-%d").date()
-        # Receipt date: most on time, some early, some late
-        offset = int(RNG.normal(0, 3))
-        receipt_date = promised + timedelta(days=offset)
-        receipt_date = max(receipt_date, datetime.strptime(po["order_date"], "%Y-%m-%d").date() + timedelta(days=3))
-
-        received_qty = po["ordered_qty"]
-        # Some partial receipts
-        if RNG.random() < 0.08:
-            received_qty = round(received_qty * float(RNG.uniform(0.5, 0.95)), 0)
-            status = "PARTIAL"
-        else:
-            status = "RECEIVED"
-
-        rows.append({
-            "receipt_id": gen_id("RCV", receipt_id),
-            "po_line_id": po["po_line_id"],
-            "receipt_date": str(receipt_date),
-            "received_qty": float(received_qty),
-            "quality_status": RNG.choice(["ACCEPTED", "ACCEPTED", "ACCEPTED", "QUARANTINE", "REJECTED"]),
-            "inspector_name": f"Inspector {RNG.integers(1, 20)}",
-        })
-
-        # Update PO status
-        po_lines.loc[po_lines["po_line_id"] == po["po_line_id"], "status"] = status
-
-    return pd.DataFrame(rows)
-
-
-def generate_sales_orders(
-    customers: pd.DataFrame,
-    parts: pd.DataFrame,
-    storage_locs: pd.DataFrame,
-    n: int = 60000,
-) -> pd.DataFrame:
-    rows = []
-    for i in range(n):
-        cust_idx = RNG.integers(0, len(customers))
-        part_idx = RNG.integers(0, len(parts))
-        loc_idx = RNG.integers(0, len(storage_locs))
-
-        order_date = random_date_in_range(FISCAL_START, FISCAL_END - timedelta(days=14))[0]
-        requested = order_date + timedelta(days=int(RNG.integers(3, 21)))
-        committed = requested + timedelta(days=int(RNG.integers(-2, 3)))
-
-        is_cancelled = RNG.random() < 0.04
-        qty = float(RNG.integers(1, 200))
-
-        if is_cancelled:
-            status = "CANCELLED"
-            actual_ship = None
-            actual_delivery = None
-        else:
-            ship_offset = int(RNG.normal(-1, 2))
-            actual_ship_date = committed + timedelta(days=ship_offset)
-            delivery_offset = int(RNG.integers(1, 8))
-            actual_delivery_date = actual_ship_date + timedelta(days=delivery_offset)
-            actual_ship = str(actual_ship_date)
-            actual_delivery = str(actual_delivery_date)
-            status = "DELIVERED" if actual_delivery_date <= FISCAL_END else "SHIPPED"
-
-        rows.append({
-            "so_line_id": gen_id("SOL", i + 1),
-            "so_number": f"SO-{(i // 4) + 1:06d}",
-            "line_number": (i % 4) + 1,
-            "customer_id": customers.iloc[cust_idx]["customer_id"],
-            "part_id": parts.iloc[part_idx]["part_id"],
-            "fulfilled_from_location_id": storage_locs.iloc[loc_idx]["storage_location_id"],
-            "ordered_qty": qty,
-            "unit_price": round(float(RNG.uniform(5.0, 800.0)), 2),
-            "currency": RNG.choice(CURRENCIES),
-            "requested_date": str(requested),
-            "committed_date": str(committed),
-            "actual_ship_date": actual_ship,
-            "actual_delivery_date": actual_delivery,
-            "status": status,
-            "order_date": str(order_date),
-        })
-    return pd.DataFrame(rows)
-
-
-def generate_shipments_and_lines(
-    so_lines: pd.DataFrame,
-    carriers: pd.DataFrame,
-    lanes: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    shipped_lines = so_lines[so_lines["status"].isin(["SHIPPED", "DELIVERED"])].copy()
-    shipment_rows = []
-    line_rows = []
-    ship_id = 0
-
-    # Group SO lines into shipments (3-5 lines per shipment)
-    indices = list(shipped_lines.index)
-    RNG.shuffle(indices)
-
-    i = 0
-    while i < len(indices):
-        batch_size = min(int(RNG.integers(3, 6)), len(indices) - i)
-        batch_indices = indices[i:i + batch_size]
-        ship_id += 1
-
-        carrier_idx = RNG.integers(0, len(carriers))
-        lane_idx = RNG.integers(0, len(lanes))
-        carrier = carriers.iloc[carrier_idx]
-        lane = lanes.iloc[lane_idx]
-
-        first_line = shipped_lines.loc[batch_indices[0]]
-        ship_date_str = first_line["actual_ship_date"]
-        if ship_date_str is None:
-            i += batch_size
-            continue
-
-        ship_date = datetime.strptime(ship_date_str, "%Y-%m-%d").date()
-        eta = ship_date + timedelta(days=lane["transit_days_typical"] + int(RNG.integers(-1, 3)))
-
-        delivery_str = first_line["actual_delivery_date"]
-        actual_del = datetime.strptime(delivery_str, "%Y-%m-%d").date() if delivery_str else eta
-
-        total_weight = 0.0
-        for idx in batch_indices:
-            line = shipped_lines.loc[idx]
-            weight = float(RNG.uniform(10, 500))
-            total_weight += weight
-
-        freight = round(float(RNG.uniform(200, 5000)), 2)
-
-        shipment_rows.append({
-            "shipment_id": gen_id("SHP", ship_id),
-            "carrier_id": carrier["carrier_id"],
-            "lane_id": lane["lane_id"],
-            "origin_plant_id": PLANTS[RNG.integers(0, len(PLANTS))]["plant_id"],
-            "destination_id": first_line["customer_id"],
-            "ship_date": str(ship_date),
-            "carrier_eta": str(eta),
-            "actual_delivery": str(actual_del),
-            "chargeable_weight_kg": round(total_weight, 2),
-            "freight_charge": freight,
-            "freight_currency": "USD",
-            "status": "DELIVERED" if actual_del <= FISCAL_END else "IN_TRANSIT",
-        })
-
-        for j, idx in enumerate(batch_indices):
-            line = shipped_lines.loc[idx]
-            shipped_qty = line["ordered_qty"]
-            # Some partial shipments
-            is_partial = RNG.random() < 0.1
-            if is_partial:
-                shipped_qty = round(shipped_qty * float(RNG.uniform(0.6, 0.95)), 0)
-
-            line_rows.append({
-                "shipment_line_id": gen_id("SHL", len(line_rows) + 1),
-                "shipment_id": gen_id("SHP", ship_id),
-                "so_line_id": line["so_line_id"],
-                "shipped_qty": float(shipped_qty),
-                "is_first_shipment": j == 0 or not is_partial,
-            })
-
-        i += batch_size
-
-    return pd.DataFrame(shipment_rows), pd.DataFrame(line_rows)
-
-
-def generate_delivery_events(shipments: pd.DataFrame) -> pd.DataFrame:
-    rows = []
-    evt_id = 0
-    for _, shp in shipments.iterrows():
-        ship_date = datetime.strptime(shp["ship_date"], "%Y-%m-%d")
-        delivery_date = datetime.strptime(shp["actual_delivery"], "%Y-%m-%d")
-        n_events = int(RNG.integers(5, 9))
-        total_hours = (delivery_date - ship_date).total_seconds() / 3600
-
-        for j in range(n_events):
-            evt_id += 1
-            fraction = j / max(n_events - 1, 1)
-            evt_time = ship_date + timedelta(hours=total_hours * fraction + float(RNG.normal(0, 2)))
-
-            if j == 0:
-                etype = "picked_up"
-            elif j == n_events - 1:
-                etype = "delivered"
-            elif RNG.random() < 0.05:
-                etype = "exception"
-            elif j % 2 == 0:
-                etype = "departed"
-            else:
-                etype = "arrived"
-
-            # Timezone inconsistency: some events in site-local, some in UTC
-            tz = RNG.choice(["UTC", "America/Chicago", "Europe/Berlin", "Asia/Singapore"])
-
-            rows.append({
-                "event_id": gen_id("EVT", evt_id),
-                "shipment_id": shp["shipment_id"],
-                "event_type": etype,
-                "event_time_utc": evt_time.strftime("%Y-%m-%dT%H:%M:%S"),
-                "site_tz": tz,
-                "location_id": f"LOC-{RNG.integers(1, 50):03d}",
-            })
-
-            # Late-arriving events (injected inconsistency): some delivered events arrive 2 days late
-            if etype == "delivered" and RNG.random() < 0.15:
-                evt_id += 1
-                late_time = evt_time + timedelta(days=2)
-                rows.append({
-                    "event_id": gen_id("EVT", evt_id),
-                    "shipment_id": shp["shipment_id"],
-                    "event_type": "delivered",
-                    "event_time_utc": late_time.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "site_tz": tz,
-                    "location_id": f"LOC-{RNG.integers(1, 50):03d}",
+            for so_line_id, part_id, qty in legs_lines:
+                ship_line_rows.append({
+                    "shipment_line_id": f"{sid}-{len(ship_line_rows) % 1000:03d}", "shipment_id": sid,
+                    "so_line_id": so_line_id, "part_id": part_id, "shipped_qty": qty,
+                    "shipment_seq": seq,
                 })
 
-    return pd.DataFrame(rows)
+    lines = pd.DataFrame(line_rows)
+    shipments = pd.DataFrame(ship_rows)
+    ship_lines = pd.DataFrame(ship_line_rows)
+    ship_lines["shipment_line_id"] = [f"SL{i + 1:08d}" for i in range(len(ship_lines))]
+    return combos, lines, shipments, ship_lines
 
 
-def generate_inventory_snapshots(
-    storage_locs: pd.DataFrame,
-    parts: pd.DataFrame,
-) -> pd.DataFrame:
+def price_freight(shipments, ship_lines, parts, fx_of):
+    weight = dict(zip(parts.part_id, parts.weight_kg))
+    ship_lines = ship_lines.copy()
+    ship_lines["line_weight_kg"] = ship_lines.part_id.map(weight) * ship_lines.shipped_qty
+    totals = ship_lines.groupby("shipment_id").line_weight_kg.sum()
+    shipments = shipments.copy()
+    shipments["chargeable_weight_kg"] = shipments.shipment_id.map(totals).round(1)
+    usd = np.where(shipments.is_cross_region, 600 + 4.2 * shipments.chargeable_weight_kg,
+                   180 + 0.9 * shipments.chargeable_weight_kg)
+    rates = [fx_of(c, d) for c, d in zip(shipments.billing_currency, shipments.ship_date)]
+    shipments["freight_charge"] = np.round(usd / np.array(rates), 2)
+    shipments["freight_usd"] = shipments.freight_charge * np.array(rates)
+    share = ship_lines.line_weight_kg / ship_lines.shipment_id.map(totals)
+    ship_lines["freight_alloc_usd"] = share * ship_lines.shipment_id.map(
+        shipments.set_index("shipment_id").freight_usd)
+    return shipments, ship_lines
+
+
+def build_events(rng, shipments, customers, carriers):
+    tz_cust = dict(zip(customers.customer_id, customers.country_code.map(TZ_OF)))
+    tz_plant = dict(zip(PLANTS.plant_id, PLANTS.timezone))
+    rows, transit = [], {}
+    as_of_end = datetime.combine(AS_OF, time(23, 59))
+    for s in shipments.itertuples():
+        origin_tz, dest_tz = tz_plant[s.origin_plant_id], tz_cust[s.customer_id]
+        picked = local_to_utc(s.ship_date, 6 + float(rng.integers(0, 16)) / 4, origin_tz)
+        stamps = [("picked_up", picked, origin_tz)]
+        if s.actual_delivery is not None:
+            delivered = local_to_utc(s.actual_delivery, 9 + float(rng.integers(0, 32)) / 4, dest_tz)
+            delivered = max(delivered, picked + timedelta(hours=6))
+            transit[s.shipment_id] = (delivered - picked).total_seconds() / 3600
+            span = delivered - picked
+        else:
+            delivered, span = None, as_of_end - picked
+        n_mid = int(rng.integers(3, 7))
+        for j in range(n_mid):
+            when = picked + span * (j + 1) / (n_mid + 1)
+            kind = "exception" if rng.random() < 0.04 else ("departed" if j % 2 == 0 else "arrived")
+            stamps.append((kind, when.replace(second=0, microsecond=0), origin_tz if j < n_mid / 2 else dest_tz))
+        if delivered is not None:
+            stamps.append(("delivered", delivered, dest_tz))
+        for kind, when, tz in stamps:
+            if when > as_of_end:
+                continue
+            rows.append((s.shipment_id, kind, when, tz, when))
+            if kind == "delivered" and rng.random() < 0.12:
+                rows.append((s.shipment_id, kind, when + timedelta(days=2), tz, when + timedelta(days=2, hours=3)))
+    events = pd.DataFrame(rows, columns=["shipment_id", "event_type", "event_time_utc", "site_tz", "received_at"])
+    events.insert(0, "event_id", [f"EV{i + 1:08d}" for i in range(len(events))])
+    shipments = shipments.copy()
+    shipments["transit_hours"] = shipments.shipment_id.map(transit)
+    return events, shipments
+
+
+def build_inventory(rng, combos, ship_lines, lines, parts):
+    cost = dict(zip(parts.part_id, parts.std_cost_usd))
+    shipped = ship_lines.merge(lines[["so_line_id", "storage_location_id"]], on="so_line_id")
+    day_index = {d: i for i, d in enumerate(DAYS.date)}
     rows = []
-    snap_id = 0
-    # Daily snapshots for a subset of location-part combinations
-    n_combos = min(500, len(storage_locs) * len(parts))
-    loc_indices = RNG.choice(len(storage_locs), size=n_combos, replace=True)
-    part_indices = RNG.choice(len(parts), size=n_combos, replace=True)
+    for c in combos.itertuples():
+        demand = np.zeros(len(DAYS))
+        mine = shipped[(shipped.storage_location_id == c.storage_location_id) & (shipped.part_id == c.part_id)]
+        for d, q in zip(mine.ship_date, mine.shipped_qty):
+            demand[day_index[d]] += q
+        daily = max(demand.mean(), 1.0)
+        on_hand = round(daily * 30)
+        reorder, order_up_to = daily * 6, daily * 40
+        arrivals = {}
+        for i in range(len(DAYS)):
+            on_hand += arrivals.pop(i, 0)
+            on_hand = max(0, on_hand - int(demand[i]))
+            if on_hand < reorder and not arrivals:
+                arrivals[i + int(rng.integers(4, 11))] = int(round(order_up_to - on_hand))
+            allocated = int(demand[i + 1:i + 4].sum())
+            rows.append((c.storage_location_id, c.plant_id, c.part_id, DAYS[i].date(), on_hand,
+                         on_hand * cost[c.part_id], allocated, demand[i], demand[i] * cost[c.part_id]))
+    return pd.DataFrame(rows, columns=[
+        "storage_location_id", "plant_id", "part_id", "snapshot_date", "on_hand_qty",
+        "on_hand_value_std", "allocated_qty", "shipped_qty", "cogs_usd"])
 
-    current = FISCAL_START
-    while current <= FISCAL_END:
-        for combo_idx in range(n_combos):
-            snap_id += 1
-            on_hand = max(0.0, float(RNG.normal(100, 40)))
-            std_cost = round(float(RNG.uniform(5, 200)), 2)
-            rows.append({
-                "snapshot_id": gen_id("SNP", snap_id),
-                "storage_location_id": storage_locs.iloc[loc_indices[combo_idx]]["storage_location_id"],
-                "part_id": parts.iloc[part_indices[combo_idx]]["part_id"],
-                "snapshot_date": str(current),
-                "on_hand_qty": round(on_hand, 0),
-                "on_hand_value_std": round(on_hand * std_cost, 2),
-                "in_transit_qty": round(max(0.0, float(RNG.normal(20, 15))), 0),
-                "allocated_qty": round(max(0.0, float(RNG.normal(30, 20))), 0),
+
+def build_procurement(rng, suppliers, parts, fx_of, tariffs, constants):
+    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region))
+    plant_country = dict(zip(PLANTS.plant_id, PLANTS.country_code))
+    weight = dict(zip(parts.part_id, parts.weight_kg))
+    pack = dict(zip(parts.part_id, parts.pack_factor))
+    tariff_rows = tariffs.sort_values(["part_id", "effective_from"]).itertuples()
+    tariff_of = {}
+    for t in tariff_rows:
+        tariff_of.setdefault(t.part_id, []).append((t.effective_from, t.effective_to, t.duty_rate))
+
+    agreements = []
+    for s in suppliers.itertuples():
+        for p in sorted(rng.choice(len(parts), size=int(rng.integers(6, 14)), replace=False)):
+            part = parts.iloc[p]
+            agreements.append({
+                "agreement_id": f"AGR-{len(agreements) + 1:05d}", "supplier_id": s.supplier_id,
+                "part_id": part.part_id, "currency": s.currency,
+                "unit_cost": round(part.std_cost_usd * float(rng.uniform(0.55, 0.85))
+                                   / (1.08 if s.currency == "EUR" else 0.74 if s.currency == "SGD" else 1), 4),
+                "incoterm": str(rng.choice(["EXW", "FCA", "FOB", "CIF", "DAP"])),
+                "quoted_lead_days": int(rng.integers(21, 56)),
+                "effective_from": FY_START, "effective_to": AS_OF,
             })
-        current += timedelta(days=1)
+    agreements = pd.DataFrame(agreements)
+    by_supplier = {k: g for k, g in agreements.groupby("supplier_id")}
 
-    return pd.DataFrame(rows)
+    po_lines, inbound = [], []
+    po_no, n_lines = 0, 0
+    while n_lines < 8000:
+        po_no += 1
+        supplier = suppliers.iloc[int(rng.integers(0, len(suppliers)))]
+        plant = str(rng.choice(PLANTS.plant_id))
+        order_date = FY_START + timedelta(days=int(rng.integers(0, 330)))
+        offer = by_supplier[supplier.supplier_id]
+        k = min(int(rng.integers(1, 6)), len(offer))
+        picks = offer.iloc[sorted(rng.choice(len(offer), size=k, replace=False))]
+        lead = int(picks.quoted_lead_days.max())
+        promised = order_date + timedelta(days=lead)
+        confirmed = promised + timedelta(days=int(rng.choice([0, 0, 1, 2, -1])))
+        receipt = promised + timedelta(days=int(rng.choice([-4, -3, -2, -2, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 1, 3])))
+        cross = REGION_OF[supplier.country_code] != plant_region[plant]
+        transit = 18 if cross else 3
+        depart = max(order_date + timedelta(days=1), receipt - timedelta(days=transit))
+        received = receipt <= AS_OF
+        po = f"45{po_no:08d}"
+        fx_rate = fx_of(supplier.currency, order_date)
+        lines = []
+        for j, a in enumerate(picks.itertuples()):
+            qty = int(rng.integers(5, 120)) * pack[a.part_id]
+            cancelled = rng.random() < 0.03
+            got = 0 if cancelled or not received else qty
+            if got and rng.random() < 0.08:
+                got = int(qty * float(rng.uniform(0.5, 0.95)))
+            lines.append({
+                "po_line_id": f"{po}-{(j + 1) * 10:05d}", "po_number": po, "line_number": (j + 1) * 10,
+                "supplier_id": supplier.supplier_id, "part_id": a.part_id, "plant_id": plant,
+                "ordered_qty": qty, "unit_cost": a.unit_cost, "currency": supplier.currency,
+                "order_date": order_date, "promised_date": promised, "confirmed_date": confirmed,
+                "is_cancelled": cancelled, "receipt_date": receipt if got else None, "received_qty": got,
+                "ship_date": depart, "fx_rate": fx_rate,
+                "is_import": supplier.country_code != plant_country[plant],
+                "line_weight_kg": got * weight[a.part_id],
+            })
+        total_w = sum(line["line_weight_kg"] for line in lines)
+        if total_w > 0 and depart <= AS_OF:
+            usd = (250 + 3.1 * total_w) if cross else (90 + 0.6 * total_w)
+            depart_rate = fx_of(supplier.currency, depart)
+            charge = round(usd / depart_rate, 2)
+            inbound.append({"inbound_id": f"IN{po_no:07d}", "po_number": po, "ship_date": depart,
+                            "freight_charge": charge, "freight_currency": supplier.currency})
+            for line in lines:
+                line["freight_usd"] = charge * depart_rate * line["line_weight_kg"] / total_w
+        for line in lines:
+            line.setdefault("freight_usd", 0.0)
+            material = line["unit_cost"] * line["received_qty"] * fx_rate
+            rate = next(r for f, t, r in tariff_of[line["part_id"]] if f <= depart <= t) if depart <= AS_OF else 0.0
+            line["material_usd"] = material
+            line["duty_usd"] = rate * material if line["is_import"] else 0.0
+            line["insurance_usd"] = constants["insurance_rate"] * material
+            line["handling_usd"] = constants["handling_usd_per_unit"] * line["received_qty"]
+            line["landed_usd"] = (material + line["freight_usd"] + line["duty_usd"]
+                                  + line["insurance_usd"] + line["handling_usd"])
+            po_lines.append(line)
+            n_lines += 1
+    return agreements, pd.DataFrame(po_lines), pd.DataFrame(inbound)
 
 
-def compute_truth_metrics(
-    so_lines: pd.DataFrame,
-    shipment_lines: pd.DataFrame,
-    po_lines: pd.DataFrame,
-    receipts: pd.DataFrame,
-    inventory: pd.DataFrame,
-) -> pd.DataFrame:
-    """Compute ground-truth values for all governed metrics by month x plant x region x segment x family."""
-    # This is a simplified truth computation; the full version would join all tables
-    # and compute exact metric values at every grouping level.
-    truth_rows = []
-
-    delivered = so_lines[so_lines["status"] == "DELIVERED"].copy()
-    delivered["actual_delivery_date"] = pd.to_datetime(delivered["actual_delivery_date"])
-    delivered["committed_date"] = pd.to_datetime(delivered["committed_date"])
-    delivered["requested_date"] = pd.to_datetime(delivered["requested_date"])
-    delivered["month"] = delivered["actual_delivery_date"].dt.to_period("M").astype(str)
-
-    # Merge with shipment lines for fill rate
-    first_shipments = shipment_lines[shipment_lines["is_first_shipment"] == True].copy()
-    delivered_with_ship = delivered.merge(first_shipments[["so_line_id", "shipped_qty"]], on="so_line_id", how="left")
-
-    for month, grp in delivered_with_ship.groupby("month"):
-        total = len(grp)
-        if total == 0:
-            continue
-        on_time = (grp["actual_delivery_date"] <= grp["committed_date"]).sum()
-        on_time_request = (grp["actual_delivery_date"] <= grp["requested_date"]).sum()
-
-        # OTIF
-        otif_mask = (grp["actual_delivery_date"] <= grp["committed_date"]) & (grp["shipped_qty"].fillna(0) >= grp["ordered_qty"])
-        otif_count = otif_mask.sum()
-
-        # Fill rate
-        fill_num = grp["shipped_qty"].fillna(0).sum()
-        fill_den = grp["ordered_qty"].sum()
-
-        truth_rows.append({
-            "month": str(month),
-            "on_time_delivery": round(on_time / total, 4),
-            "on_time_to_request": round(on_time_request / total, 4),
-            "otif": round(otif_count / total, 4),
-            "unit_fill_rate": round(fill_num / fill_den, 4) if fill_den > 0 else None,
-        })
-
-    return pd.DataFrame(truth_rows)
+def month_of(series: pd.Series) -> pd.Series:
+    return pd.to_datetime(series).dt.to_period("M").dt.to_timestamp().dt.date
 
 
-def write_parquet(df: pd.DataFrame, path: Path) -> None:
+def grouped(frame, metric, dims, kind, num=None, den=None, value=None):
+    frame = frame[frame.month.notna() & (frame.month <= date(AS_OF.year, AS_OF.month, 1))]
+    sets = [[]] + [[d] for d in dims] + ([dims] if len(dims) > 1 else [])
+    out = []
+    for extra in sets:
+        keys = ["month"] + extra
+        g = frame.groupby(keys, dropna=False)
+        if kind == "ratio":
+            agg = g.agg(numerator=(num, "sum"), denominator=(den, "sum")).reset_index()
+            agg = agg[agg.denominator != 0]
+            agg["value"] = agg.numerator / agg.denominator
+        elif kind == "median":
+            agg = g[value].median().rename("value").reset_index()
+        else:
+            agg = g[value].std(ddof=1).rename("value").reset_index()
+        agg["metric"] = metric
+        agg["grouping"] = ",".join(keys)
+        out.append(agg)
+    return out
+
+
+def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, parts):
+    region = dict(zip(PLANTS.plant_id, PLANTS.region))
+    segment = dict(zip(customers.customer_id, customers.segment))
+    family = dict(zip(parts.part_id, parts.part_family))
+    first = ship_lines[ship_lines.shipment_seq == 1].merge(
+        shipments[["shipment_id", "ship_date", "actual_delivery"]], on="shipment_id")
+    sl = lines.merge(first[["so_line_id", "shipped_qty", "actual_delivery"]], on="so_line_id", how="left")
+    sl["first_qty"] = sl.shipped_qty.fillna(0)
+    sl["region"] = sl.plant_id.map(region)
+    sl["segment"] = sl.customer_id.map(segment)
+    sl["part_family"] = sl.part_id.map(family)
+    live = ~sl.is_cancelled
+    delivered = live & sl.actual_delivery.notna()
+    sl["delivered"] = delivered.astype(int)
+    sl["on_time"] = (delivered & (sl.actual_delivery <= sl.committed_date)).astype(int)
+    sl["on_time_req"] = (delivered & (sl.actual_delivery <= sl.requested_date)).astype(int)
+    sl["otif"] = (sl.on_time.astype(bool) & (sl.first_qty >= sl.ordered_qty)).astype(int)
+    sl["live_ordered"] = np.where(live, sl.ordered_qty, 0)
+    sl["live_first"] = np.where(live, sl.first_qty, 0)
+    sl["line_filled"] = (live & (sl.first_qty >= sl.ordered_qty)).astype(int)
+    sl["live_line"] = live.astype(int)
+    sl["cycle_days"] = [(a - o).days if d else np.nan
+                        for a, o, d in zip(sl.actual_delivery, sl.order_date, delivered)]
+
+    dims_so = ["plant_id", "region", "segment", "part_family"]
+    by_delivery = sl.assign(month=month_of(sl.actual_delivery.where(delivered)))
+    by_request = sl.assign(month=month_of(sl.requested_date))
+    orders = by_request[by_request.live_line == 1].groupby("so_number").agg(
+        month=("month", "first"), plant_id=("plant_id", "first"), region=("region", "first"),
+        segment=("segment", "first"), filled=("line_filled", "min")).reset_index()
+    orders["one"] = 1
+
+    parts_out = []
+    parts_out += grouped(by_delivery, "on_time_delivery", dims_so, "ratio", "on_time", "delivered")
+    parts_out += grouped(by_delivery, "on_time_to_request", dims_so, "ratio", "on_time_req", "delivered")
+    parts_out += grouped(by_delivery, "otif", dims_so, "ratio", "otif", "delivered")
+    parts_out += grouped(by_delivery[by_delivery.delivered == 1], "order_fulfilment_cycle_days",
+                         dims_so, "median", value="cycle_days")
+    parts_out += grouped(by_request, "unit_fill_rate", dims_so, "ratio", "live_first", "live_ordered")
+    parts_out += grouped(by_request, "line_fill_rate", dims_so, "ratio", "line_filled", "live_line")
+    parts_out += grouped(orders, "order_fill_rate", ["plant_id", "region", "segment"], "ratio", "filled", "one")
+
+    sh = shipments.copy()
+    sh["region"] = sh.origin_plant_id.map(region)
+    sh["plant_id"] = sh.origin_plant_id
+    sh["segment"] = sh.customer_id.map(segment)
+    sh["delivered"] = sh.actual_delivery.notna().astype(int)
+    sh["on_eta"] = (sh.actual_delivery.notna() & (sh.actual_delivery <= sh.carrier_eta)).astype(int)
+    sh["month"] = month_of(sh.actual_delivery)
+    dims_sh = ["plant_id", "region", "segment"]
+    parts_out += grouped(sh, "carrier_on_time", dims_sh, "ratio", "on_eta", "delivered")
+    parts_out += grouped(sh[sh.delivered == 1], "transit_hours", dims_sh, "median", value="transit_hours")
+
+    fl = ship_lines.merge(sh[["shipment_id", "ship_date", "plant_id", "region", "segment"]], on="shipment_id")
+    fl["part_family"] = fl.part_id.map(family)
+    fl["month"] = month_of(fl.ship_date)
+    parts_out += grouped(fl, "freight_cost_per_unit", dims_so, "ratio", "freight_alloc_usd", "shipped_qty")
+
+    po = po_lines.copy()
+    po["region"] = po.plant_id.map(region)
+    po["part_family"] = po.part_id.map(family)
+    received = po.received_qty > 0
+    po["month"] = month_of(po.receipt_date)
+    po["received_line"] = received.astype(int)
+    po["on_time_receipt"] = (received & (po.receipt_date <= po.promised_date)).astype(int)
+    po["lead_days"] = [(r - o).days if ok else np.nan for r, o, ok in zip(po.receipt_date, po.order_date, received)]
+    dims_po = ["plant_id", "region", "part_family"]
+    parts_out += grouped(po, "supplier_on_time_receipt", dims_po, "ratio", "on_time_receipt", "received_line")
+    parts_out += grouped(po, "landed_cost_per_unit", dims_po, "ratio", "landed_usd", "received_qty")
+    parts_out += grouped(po[received], "supplier_lead_time_days", dims_po, "median", value="lead_days")
+    parts_out += grouped(po[received], "lead_time_variability", dims_po, "std", value="lead_days")
+
+    inv = inventory_months(inventory)
+    inv["region"] = inv.plant_id.map(region)
+    inv["part_family"] = inv.part_id.map(family)
+    dims_inv = ["plant_id", "region", "part_family"]
+    inv["cogs_daily_90d"] = inv.cogs_90d / 90
+    inv["units_daily_90d"] = inv.units_90d / 90
+    inv["cogs_annual_90d"] = inv.cogs_90d / 90 * 365
+    parts_out += grouped(inv, "days_of_inventory", dims_inv, "ratio", "on_hand_value_end", "cogs_daily_90d")
+    parts_out += grouped(inv, "doi_units", dims_inv, "ratio", "on_hand_qty_end", "units_daily_90d")
+    parts_out += grouped(inv, "inventory_turns", dims_inv, "ratio", "cogs_annual_90d", "on_hand_value_end")
+    parts_out += grouped(inv, "stockout_rate", dims_inv, "ratio", "stockout_days", "obs_days")
+    inv["avg_value_x_days"] = inv.avg_value_month * inv.days_in_month
+    parts_out += grouped(inv, "dio_financial", dims_inv, "ratio", "avg_value_x_days", "cogs_month")
+
+    truth = pd.concat(parts_out, ignore_index=True)
+    cols = ["metric", "grouping", "month", "plant_id", "region", "segment", "part_family",
+            "numerator", "denominator", "value"]
+    for c in cols:
+        if c not in truth:
+            truth[c] = None
+    truth = truth[cols]
+    for c in ["plant_id", "region", "segment", "part_family"]:
+        truth[c] = truth[c].astype("string")
+    return truth.sort_values(cols[:7], na_position="first").reset_index(drop=True), sl, inv
+
+
+def inventory_months(inventory: pd.DataFrame) -> pd.DataFrame:
+    inv = inventory.copy()
+    inv["month"] = month_of(inv.snapshot_date)
+    inv["stockout"] = ((inv.on_hand_qty == 0) & (inv.allocated_qty > 0)).astype(int)
+    keys = ["storage_location_id", "plant_id", "part_id"]
+    out = []
+    for _, combo in inv.groupby(keys, sort=True):
+        combo = combo.sort_values("snapshot_date").reset_index(drop=True)
+        cogs90 = combo.cogs_usd.rolling(90, min_periods=1).sum()
+        units90 = combo.shipped_qty.rolling(90, min_periods=1).sum()
+        combo = combo.assign(cogs_90d=cogs90, units_90d=units90)
+        last = combo.groupby("month").tail(1).set_index("month")
+        agg = combo.groupby("month").agg(
+            avg_value_month=("on_hand_value_std", "mean"), cogs_month=("cogs_usd", "sum"),
+            days_in_month=("snapshot_date", "count"), stockout_days=("stockout", "sum"),
+            obs_days=("snapshot_date", "count"))
+        agg["on_hand_value_end"] = last.on_hand_value_std
+        agg["on_hand_qty_end"] = last.on_hand_qty
+        agg["cogs_90d"] = last.cogs_90d
+        agg["units_90d"] = last.units_90d
+        agg = agg.reset_index()
+        for k, v in zip(keys, combo.loc[0, keys]):
+            agg[k] = v
+        out.append(agg)
+    return pd.concat(out, ignore_index=True)
+
+
+def write(frame: pd.DataFrame, rel: str) -> None:
+    path = OUT / rel
     path.parent.mkdir(parents=True, exist_ok=True)
-    table = pa.Table.from_pandas(df)
-    pq.write_table(table, path)
+    pq.write_table(pa.Table.from_pandas(frame, preserve_index=False), path, compression="zstd")
 
 
-def write_data_card(stats: dict) -> None:
-    card_path = OUT_DIR / "DATA_CARD.json"
-    card_path.write_text(json.dumps(stats, indent=2))
+def emit_sources(rng, d):
+    s = d["suppliers"]
+    write(s.assign(SUPPLIER_KEY=s.supplier_id.str.replace("SUP-", "SUP"))[
+        ["SUPPLIER_KEY", "supplier_name", "supplier_site", "parent_supplier_id", "country_code",
+         "currency", "contact_name", "contact_email", "bank_account"]].rename(columns={
+            "supplier_name": "NAME1", "supplier_site": "SITE", "parent_supplier_id": "PARENT_KEY",
+            "country_code": "LAND1", "currency": "WAERS", "contact_name": "CONTACT",
+            "contact_email": "EMAIL", "bank_account": "IBAN"}).assign(
+        PARENT_KEY=lambda f: f.PARENT_KEY.str.replace("SUP-", "SUP")), "erp/supplier_master.parquet")
+
+    variants = []
+    for row in s.itertuples():
+        n = int(row.supplier_id[4:])
+        name = row.supplier_name
+        for suffix in ([""] if n % 3 else ["", "."]):
+            shown = (name.upper().replace("Ä", "AE").replace("Ö", "OE").replace("Ü", "UE")
+                     .replace("É", "E").replace("Á", "A") + suffix) if suffix else name
+            variants.append({"VENDOR_REF": f"V-{n:06d}", "VENDOR_NAME": shown,
+                             "PORTAL_CONTACT": row.contact_name, "PORTAL_EMAIL": row.contact_email})
+    write(pd.DataFrame(variants), "portal/supplier_profiles.parquet")
+
+    p = d["parts"]
+    write(p.rename(columns={"part_id": "MATNR", "part_name": "MAKTX", "part_family": "PRODH_FAMILY",
+                            "category": "PRODH_CATEGORY", "base_uom": "MEINS", "pack_factor": "EA_PER_CS",
+                            "cases_per_pallet": "CS_PER_PAL", "weight_kg": "NTGEW_KG",
+                            "std_cost_usd": "STPRS_USD", "hts_code": "STAWN"}), "erp/material_master.parquet")
+    write(d["tariffs"].rename(columns={"part_id": "MATNR", "hts_code": "STAWN", "duty_rate": "DUTY_RATE",
+                                       "effective_from": "VALID_FROM", "effective_to": "VALID_TO"}),
+          "erp/material_tariffs.parquet")
+    write(d["customers"], "erp/customer_master.parquet")
+    write(d["locations"], "erp/storage_locations.parquet")
+    write(PLANTS, "erp/plants.parquet")
+    write(d["fx"], "erp/fx_rates.parquet")
+    write(d["agreements"].assign(supplier_id=lambda f: f.supplier_id.str.replace("SUP-", "SUP")),
+          "erp/purchasing_info_records.parquet")
+
+    po = d["po_lines"]
+    pack = dict(zip(p.part_id, p.pack_factor))
+    pallet = dict(zip(p.part_id, p.cases_per_pallet))
+    uom, qty = [], []
+    for row in po.itertuples():
+        per_pal = pack[row.part_id] * pallet[row.part_id]
+        pick = rng.random()
+        if pick < 0.15 and row.ordered_qty % per_pal == 0:
+            uom.append("PAL"), qty.append(row.ordered_qty // per_pal)
+        elif pick < 0.5 and pack[row.part_id] > 1:
+            uom.append("CS"), qty.append(row.ordered_qty // pack[row.part_id])
+        else:
+            uom.append("EA"), qty.append(row.ordered_qty)
+    n = po.supplier_id.str[4:].astype(int)
+    legacy_key = np.where(po.index % 3 == 0, "SUP" + n.map("{:04d}".format),
+                          np.where(po.index % 3 == 1, "V-" + n.map("{:06d}".format), "VENDOR_" + n.astype(str)))
+    write(pd.DataFrame({
+        "EBELN": po.po_number, "EBELP": po.line_number, "LIFNR": legacy_key, "MATNR": po.part_id,
+        "WERKS": po.plant_id, "MENGE": qty, "MEINS": uom, "NETPR_PER_EA": po.unit_cost, "WAERS": po.currency,
+        "BEDAT": po.order_date, "VENDOR_PROMISE_DT": po.promised_date, "CONFIRMED_DT": po.confirmed_date,
+        "LOEKZ": np.where(po.is_cancelled, "L", ""),
+    }), "erp/purchase_order_lines.parquet")
+    gr = po[po.received_qty > 0]
+    write(pd.DataFrame({
+        "MBLNR": [f"50{i:08d}" for i in range(len(gr))], "EBELN": gr.po_number.values,
+        "EBELP": gr.line_number.values, "BUDAT": gr.receipt_date.values, "QTY_EA": gr.received_qty.values,
+        "QUALITY": np.where(np.arange(len(gr)) % 23 == 0, "QUARANTINE", "ACCEPTED"),
+    }), "erp/goods_receipts.parquet")
+    write(d["inbound"].rename(columns={"inbound_id": "INBOUND_NO", "po_number": "PO_NO",
+                                       "ship_date": "DEPART_DATE", "freight_charge": "FREIGHT_AMT",
+                                       "freight_currency": "FREIGHT_CCY"}), "tms/inbound_shipments.parquet")
+
+    so = d["lines"]
+    write(pd.DataFrame({
+        "VBELN": so.so_number, "POSNR": so.line_number, "KUNWE": so.customer_id, "MATNR": so.part_id,
+        "LGORT": so.storage_location_id, "KWMENG_EA": so.ordered_qty, "AUDAT": so.order_date,
+        "REQ_DLV_DATE": so.requested_date, "CONF_DLV_DATE": so.committed_date,
+        "ABGRU": np.where(so.is_cancelled, "Z1", ""),
+    }), "erp/sales_order_lines.parquet")
+
+    sh = d["shipments"]
+    write(pd.DataFrame({
+        "SHIPMENT_NO": sh.shipment_id, "CARRIER_SCAC": sh.carrier_id.map(dict(zip(CARRIERS.carrier_id, CARRIERS.scac_code))),
+        "ORIGIN_PLANT": sh.origin_plant_id, "SHIP_TO": sh.customer_id, "DEPART_DATE": sh.ship_date,
+        "CARRIER_ETA": sh.carrier_eta, "POD_DATE": sh.actual_delivery, "FREIGHT_AMT": sh.freight_charge,
+        "FREIGHT_CCY": sh.billing_currency, "CHG_WEIGHT_KG": sh.chargeable_weight_kg,
+    }), "tms/shipments.parquet")
+    sl = d["ship_lines"].merge(so[["so_line_id", "so_number", "line_number"]], on="so_line_id")
+    write(pd.DataFrame({
+        "SHIPMENT_NO": sl.shipment_id, "VBELN": sl.so_number, "POSNR": sl.line_number,
+        "SHIPPED_QTY_EA": sl.shipped_qty, "LEG": sl.shipment_seq,
+    }), "tms/shipment_lines.parquet")
+    write(CARRIERS.drop(columns=["billing_currency"]), "tms/carriers.parquet")
+
+    ev = d["events"]
+    local, basis = [], []
+    for when, tz in zip(ev.event_time_utc, ev.site_tz):
+        aware = when.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(tz))
+        naive = aware.replace(tzinfo=None)
+        roundtrip = naive.replace(tzinfo=ZoneInfo(tz)).astimezone(timezone.utc).replace(tzinfo=None)
+        if rng.random() < 0.4 and roundtrip == when:
+            local.append(naive), basis.append("LOCAL")
+        else:
+            local.append(when), basis.append("UTC")
+    code = {"picked_up": "PU", "departed": "DEP", "arrived": "ARR", "delivered": "POD", "exception": "EXC"}
+    write(pd.DataFrame({
+        "EVENT_ID": ev.event_id, "SHIPMENT_NO": ev.shipment_id, "EVENT_CODE": ev.event_type.map(code),
+        "EVENT_TS": local, "TS_BASIS": basis, "SITE_TZ": ev.site_tz, "RECEIVED_AT": ev.received_at,
+    }), "portal/delivery_events.parquet")
+
+    inv = d["inventory"]
+    pack_inv = inv.part_id.map(pack)
+    as_cases = (inv.storage_location_id.str.startswith("DC-")) & (inv.on_hand_qty % pack_inv == 0) & (pack_inv > 1)
+    write(pd.DataFrame({
+        "LGORT": inv.storage_location_id, "MATNR": inv.part_id, "SNAP_DATE": inv.snapshot_date,
+        "ON_HAND": np.where(as_cases, inv.on_hand_qty // pack_inv, inv.on_hand_qty),
+        "UOM": np.where(as_cases, "CS", "EA"), "ALLOCATED_EA": inv.allocated_qty,
+    }), "iot/inventory_snapshots.parquet")
 
 
-def main() -> None:
-    print("Generating supply chain data...")
-    print(f"  Fiscal year: {FISCAL_START} to {FISCAL_END}")
+def main() -> int:
+    rng = np.random.default_rng(SEED)
+    constants = registry_constants()
+    fx = build_fx(rng)
+    fx_of = fx_lookup(fx)
+    suppliers = build_suppliers(rng)
+    parts = build_parts(rng)
+    customers = build_customers(rng)
+    locations = build_locations()
+    tariffs = build_tariffs(parts, rng)
+    combos, lines, shipments, ship_lines = build_sales(rng, customers, parts, locations, CARRIERS)
+    shipments, ship_lines = price_freight(shipments, ship_lines, parts, fx_of)
+    events, shipments = build_events(rng, shipments, customers, CARRIERS)
+    inventory = build_inventory(rng, combos, ship_lines.merge(shipments[["shipment_id", "ship_date"]]), lines, parts)
+    agreements, po_lines, inbound = build_procurement(rng, suppliers, parts, fx_of, tariffs, constants)
+    truth, _, _ = compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, parts)
 
-    suppliers = generate_suppliers(40)
-    parts = generate_parts(300)
-    customers = generate_customers(120)
-    carriers = generate_carriers(12)
-    lanes = generate_lanes(carriers)
-    storage_locs = generate_storage_locations(PLANTS)
-    agreements = generate_agreements(suppliers, parts)
-    tariff_codes = generate_tariff_codes(parts)
-    fx_rates = generate_fx_rates()
-    po_lines = generate_purchase_orders(suppliers, parts, agreements, 8000)
-    receipts = generate_receipts(po_lines)
-    so_lines = generate_sales_orders(customers, parts, storage_locs, 60000)
-    shipments, shipment_lines = generate_shipments_and_lines(so_lines, carriers, lanes)
-    delivery_events = generate_delivery_events(shipments)
-    inventory = generate_inventory_snapshots(storage_locs, parts)
+    world = dict(suppliers=suppliers, parts=parts, customers=customers, locations=locations,
+                 tariffs=tariffs, fx=fx, agreements=agreements, po_lines=po_lines, inbound=inbound,
+                 lines=lines, shipments=shipments, ship_lines=ship_lines, events=events, inventory=inventory)
+    emit_sources(rng, world)
+    write(truth, "truth_metrics.parquet")
 
-    truth = compute_truth_metrics(so_lines, shipment_lines, po_lines, receipts, inventory)
-
-    # Write to four source systems with inconsistencies
-    # ERP system
-    write_parquet(suppliers, OUT_DIR / "erp" / "suppliers.parquet")
-    write_parquet(parts, OUT_DIR / "erp" / "parts.parquet")
-    write_parquet(agreements, OUT_DIR / "erp" / "agreements.parquet")
-    write_parquet(po_lines, OUT_DIR / "erp" / "purchase_orders.parquet")
-    write_parquet(receipts, OUT_DIR / "erp" / "goods_receipts.parquet")
-    write_parquet(so_lines, OUT_DIR / "erp" / "sales_orders.parquet")
-    write_parquet(inventory, OUT_DIR / "erp" / "inventory_snapshots.parquet")
-    write_parquet(customers, OUT_DIR / "erp" / "customers.parquet")
-    write_parquet(storage_locs, OUT_DIR / "erp" / "storage_locations.parquet")
-
-    # TMS (transport management system)
-    write_parquet(shipments, OUT_DIR / "tms" / "shipments.parquet")
-    write_parquet(shipment_lines, OUT_DIR / "tms" / "shipment_lines.parquet")
-    write_parquet(carriers, OUT_DIR / "tms" / "carriers.parquet")
-    write_parquet(lanes, OUT_DIR / "tms" / "lanes.parquet")
-
-    # Portal (supplier portal)
-    write_parquet(delivery_events, OUT_DIR / "portal" / "delivery_events.parquet")
-
-    # Reference data (iot-like)
-    write_parquet(tariff_codes, OUT_DIR / "iot" / "tariff_codes.parquet")
-    write_parquet(fx_rates, OUT_DIR / "iot" / "fx_rates.parquet")
-
-    # Truth metrics
-    write_parquet(truth, OUT_DIR / "truth_metrics.parquet")
-
-    stats = {
-        "fiscal_year": f"{FISCAL_START} to {FISCAL_END}",
-        "seed": SEED,
-        "suppliers": len(suppliers),
-        "parts": len(parts),
-        "customers": len(customers),
-        "carriers": len(carriers),
-        "lanes": len(lanes),
-        "storage_locations": len(storage_locs),
-        "agreements": len(agreements),
-        "purchase_order_lines": len(po_lines),
-        "goods_receipts": len(receipts),
-        "sales_order_lines": len(so_lines),
-        "shipments": len(shipments),
-        "shipment_lines": len(shipment_lines),
-        "delivery_events": len(delivery_events),
-        "inventory_snapshots": len(inventory),
-        "tariff_codes": len(tariff_codes),
-        "truth_metric_rows": len(truth),
-        "plants": len(PLANTS),
+    monthly = truth[truth.grouping == "month"]
+    headline = {metric: (g.numerator.sum() / g.denominator.sum() if g.numerator.notna().all() else g.value.median())
+                for metric, g in monthly.groupby("metric")}
+    card = {
+        "seed": SEED, "fiscal_year": f"{FY_START} to {AS_OF}", "as_of": str(AS_OF),
+        "tariff_step": str(TARIFF_STEP),
+        "rows": {k: int(len(v)) for k, v in world.items()} | {"truth_metrics": int(len(truth))},
+        "fy_headline": {k: round(float(v), 4) for k, v in headline.items()},
     }
-    write_data_card(stats)
-
-    print(f"\n  Data card:")
-    for k, v in stats.items():
-        print(f"    {k}: {v}")
-    print(f"\n  Output directory: {OUT_DIR}")
-    print("  Generation complete.")
+    (OUT / "DATA_CARD.json").write_text(json.dumps(card, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(card, indent=2, sort_keys=True))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
