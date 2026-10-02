@@ -1,143 +1,265 @@
-# Persona consistency test cases.
-# 20 questions x 3 role phrasings -> must produce identical hash and number.
-
+# Persona consistency: each case is one question asked three ways, each in its role's own words
+# from the registry's persona_synonyms. All three must resolve to this query, hash and number.
 cases:
-  - id: pc01
-    question_base: "What is on-time delivery for FY2026?"
-    phrasings:
-      PLANNING_ROLE: "What is our delivery rate for FY2026?"
-      PROCUREMENT_ROLE: "What is supplier delivery performance for FY2026?"
-      LOGISTICS_ROLE: "What is carrier on-time for FY2026?"
-
-  - id: pc02
-    question_base: "What is OTIF by plant?"
-    phrasings:
-      PLANNING_ROLE: "What is perfect delivery by plant?"
-      PROCUREMENT_ROLE: "What is OTIF by plant?"
-      LOGISTICS_ROLE: "What is complete and on-time by plant?"
-
-  - id: pc03
-    question_base: "What is fill rate?"
-    phrasings:
-      PLANNING_ROLE: "What is availability?"
-      PROCUREMENT_ROLE: "What is supplier fill?"
-      LOGISTICS_ROLE: "What is shipment completeness?"
-
-  - id: pc04
-    question_base: "What is DOI?"
-    phrasings:
-      PLANNING_ROLE: "What is days of supply?"
-      PROCUREMENT_ROLE: "What are stock days?"
-      LOGISTICS_ROLE: "What is warehouse days cover?"
-
-  - id: pc05
-    question_base: "What is landed cost per unit?"
-    phrasings:
-      PLANNING_ROLE: "What is cost per unit?"
-      PROCUREMENT_ROLE: "What is all-in cost?"
-      LOGISTICS_ROLE: "What is delivered cost?"
-
-  - id: pc06
-    question_base: "What is inventory turnover?"
-    phrasings:
-      PLANNING_ROLE: "What is stock velocity?"
-      PROCUREMENT_ROLE: "What are inventory turns?"
-      LOGISTICS_ROLE: "What are warehouse turns?"
-
-  - id: pc07
-    question_base: "What is lead time?"
-    phrasings:
-      PLANNING_ROLE: "What is lead time?"
-      PROCUREMENT_ROLE: "What is supplier lead time?"
-      LOGISTICS_ROLE: "What is inbound lead time?"
-
-  - id: pc08
-    question_base: "What is stockout rate?"
-    phrasings:
-      PLANNING_ROLE: "What is OOS rate?"
-      PROCUREMENT_ROLE: "What is material shortage rate?"
-      LOGISTICS_ROLE: "What is stockout rate?"
-
-  - id: pc09
-    question_base: "What is freight cost per unit?"
-    phrasings:
-      PLANNING_ROLE: "What is freight cost?"
-      PROCUREMENT_ROLE: "What is transport cost?"
-      LOGISTICS_ROLE: "What is shipping cost per unit?"
-
-  - id: pc10
-    question_base: "What is cycle time?"
-    phrasings:
-      PLANNING_ROLE: "What is cycle time?"
-      PROCUREMENT_ROLE: "What is fulfilment cycle?"
-      LOGISTICS_ROLE: "What is order cycle?"
-
-  - id: pc11
-    question_base: "What is OTD by region?"
-    phrasings:
-      PLANNING_ROLE: "What is delivery rate by region?"
-      PROCUREMENT_ROLE: "What is supplier delivery by region?"
-      LOGISTICS_ROLE: "What is transit reliability by region?"
-
-  - id: pc12
-    question_base: "What is OTD for electronics?"
-    phrasings:
-      PLANNING_ROLE: "Delivery rate for electronics?"
-      PROCUREMENT_ROLE: "Supplier delivery performance for electronics?"
-      LOGISTICS_ROLE: "On-time for electronics?"
-
-  - id: pc13
-    question_base: "DOI for APAC"
-    phrasings:
-      PLANNING_ROLE: "Days of supply for APAC?"
-      PROCUREMENT_ROLE: "Stock days for APAC?"
-      LOGISTICS_ROLE: "Warehouse days cover for APAC?"
-
-  - id: pc14
-    question_base: "Fill rate Q3"
-    phrasings:
-      PLANNING_ROLE: "Availability Q3?"
-      PROCUREMENT_ROLE: "Supplier fill Q3?"
-      LOGISTICS_ROLE: "Shipment completeness Q3?"
-
-  - id: pc15
-    question_base: "Landed cost by category"
-    phrasings:
-      PLANNING_ROLE: "Cost per unit by category?"
-      PROCUREMENT_ROLE: "All-in cost by category?"
-      LOGISTICS_ROLE: "Delivered cost by category?"
-
-  - id: pc16
-    question_base: "OTIF for industrial"
-    phrasings:
-      PLANNING_ROLE: "Perfect delivery for industrial?"
-      PROCUREMENT_ROLE: "OTIF for industrial?"
-      LOGISTICS_ROLE: "Complete and on-time for industrial?"
-
-  - id: pc17
-    question_base: "Inventory turns by plant"
-    phrasings:
-      PLANNING_ROLE: "Stock velocity by plant?"
-      PROCUREMENT_ROLE: "Inventory turns by plant?"
-      LOGISTICS_ROLE: "Warehouse turns by plant?"
-
-  - id: pc18
-    question_base: "Transit time for EMEA"
-    phrasings:
-      PLANNING_ROLE: "Transit time for EMEA?"
-      PROCUREMENT_ROLE: "Shipping duration for EMEA?"
-      LOGISTICS_ROLE: "Transit hours for EMEA?"
-
-  - id: pc19
-    question_base: "Freight cost by carrier"
-    phrasings:
-      PLANNING_ROLE: "Freight cost by carrier?"
-      PROCUREMENT_ROLE: "Transport cost by carrier?"
-      LOGISTICS_ROLE: "Shipping cost by carrier?"
-
-  - id: pc20
-    question_base: "OTD trend by month"
-    phrasings:
-      PLANNING_ROLE: "Delivery rate trend by month?"
-      PROCUREMENT_ROLE: "Supplier delivery trend by month?"
-      LOGISTICS_ROLE: "On-time trend by month?"
+- id: pc01
+  phrasings:
+    PLANNING_ROLE: What is our delivery rate for FY2026?
+    PROCUREMENT_ROLE: What is our customer delivery performance for FY2026?
+    LOGISTICS_ROLE: What is our delivery reliability for FY2026?
+  query:
+    metrics:
+    - on_time_delivery
+    dimensions: []
+    time:
+      range: fy2026
+    filters: []
+- id: pc02
+  phrasings:
+    PLANNING_ROLE: Delivery rate by region
+    PROCUREMENT_ROLE: Customer delivery performance by region
+    LOGISTICS_ROLE: Delivery reliability by region
+  query:
+    metrics:
+    - on_time_delivery
+    dimensions:
+    - region
+    time:
+      range: fy2026
+    filters: []
+- id: pc03
+  phrasings:
+    PLANNING_ROLE: Delivery rate for the Retail segment in Q4
+    PROCUREMENT_ROLE: Customer delivery performance for the Retail segment in Q4
+    LOGISTICS_ROLE: Delivery reliability for the Retail segment in Q4
+  query:
+    metrics:
+    - on_time_delivery
+    dimensions: []
+    time:
+      range: q4
+    filters:
+    - dimension: segment
+      operator: '='
+      value: Retail
+- id: pc04
+  phrasings:
+    PLANNING_ROLE: Perfect delivery by month
+    PROCUREMENT_ROLE: OTIF by month
+    LOGISTICS_ROLE: Complete and on-time by month
+  query:
+    metrics:
+    - otif
+    dimensions:
+    - period_month
+    time:
+      range: fy2026
+    filters: []
+- id: pc05
+  phrasings:
+    PLANNING_ROLE: Perfect delivery for the Industrial segment
+    PROCUREMENT_ROLE: OTIF for the Industrial segment
+    LOGISTICS_ROLE: Complete and on-time for the Industrial segment
+  query:
+    metrics:
+    - otif
+    dimensions: []
+    time:
+      range: fy2026
+    filters:
+    - dimension: segment
+      operator: '='
+      value: Industrial
+- id: pc06
+  phrasings:
+    PLANNING_ROLE: What was availability in Q3?
+    PROCUREMENT_ROLE: What was unit fill in Q3?
+    LOGISTICS_ROLE: What was shipment completeness in Q3?
+  query:
+    metrics:
+    - unit_fill_rate
+    dimensions: []
+    time:
+      range: q3
+    filters: []
+- id: pc07
+  phrasings:
+    PLANNING_ROLE: Availability by plant
+    PROCUREMENT_ROLE: Unit fill by plant
+    LOGISTICS_ROLE: Shipment completeness by plant
+  query:
+    metrics:
+    - unit_fill_rate
+    dimensions:
+    - plant_id
+    time:
+      range: fy2026
+    filters: []
+- id: pc08
+  phrasings:
+    PLANNING_ROLE: What are our days of supply?
+    PROCUREMENT_ROLE: What are our stock days?
+    LOGISTICS_ROLE: What are our warehouse days cover?
+  query:
+    metrics:
+    - days_of_inventory
+    dimensions: []
+    time:
+      range: last_month
+    filters: []
+- id: pc09
+  phrasings:
+    PLANNING_ROLE: Days of supply by plant
+    PROCUREMENT_ROLE: Stock days by plant
+    LOGISTICS_ROLE: Warehouse days cover by plant
+  query:
+    metrics:
+    - days_of_inventory
+    dimensions:
+    - plant_id
+    time:
+      range: last_month
+    filters: []
+- id: pc10
+  phrasings:
+    PLANNING_ROLE: Cost per unit this quarter
+    PROCUREMENT_ROLE: All-in cost this quarter
+    LOGISTICS_ROLE: Delivered cost this quarter
+  query:
+    metrics:
+    - landed_cost_per_unit
+    dimensions: []
+    time:
+      range: last_quarter
+    filters: []
+- id: pc11
+  phrasings:
+    PLANNING_ROLE: Cost per unit by month
+    PROCUREMENT_ROLE: All-in cost by month
+    LOGISTICS_ROLE: Delivered cost by month
+  query:
+    metrics:
+    - landed_cost_per_unit
+    dimensions:
+    - period_month
+    time:
+      range: fy2026
+    filters: []
+- id: pc12
+  phrasings:
+    PLANNING_ROLE: Stock velocity by category
+    PROCUREMENT_ROLE: Inventory turns by category
+    LOGISTICS_ROLE: Warehouse turns by category
+  query:
+    metrics:
+    - inventory_turns
+    dimensions:
+    - category
+    time:
+      range: last_month
+    filters: []
+- id: pc13
+  phrasings:
+    PLANNING_ROLE: Lead time by region
+    PROCUREMENT_ROLE: Supplier lead time by region
+    LOGISTICS_ROLE: Inbound lead time by region
+  query:
+    metrics:
+    - supplier_lead_time_days
+    dimensions:
+    - region
+    time:
+      range: fy2026
+    filters: []
+- id: pc14
+  phrasings:
+    PLANNING_ROLE: OOS rate for the US region
+    PROCUREMENT_ROLE: Material shortage rate for the US region
+    LOGISTICS_ROLE: Stockout rate for the US region
+  query:
+    metrics:
+    - stockout_rate
+    dimensions: []
+    time:
+      range: fy2026
+    filters:
+    - dimension: region
+      operator: '='
+      value: US
+- id: pc15
+  phrasings:
+    PLANNING_ROLE: OOS rate by month
+    PROCUREMENT_ROLE: Material shortage rate by month
+    LOGISTICS_ROLE: Stockout rate by month
+  query:
+    metrics:
+    - stockout_rate
+    dimensions:
+    - period_month
+    time:
+      range: fy2026
+    filters: []
+- id: pc16
+  phrasings:
+    PLANNING_ROLE: Freight cost by carrier type
+    PROCUREMENT_ROLE: Transport cost by carrier type
+    LOGISTICS_ROLE: Shipping cost per unit by carrier type
+  query:
+    metrics:
+    - freight_cost_per_unit
+    dimensions:
+    - carrier_type
+    time:
+      range: fy2026
+    filters: []
+- id: pc17
+  phrasings:
+    PLANNING_ROLE: Cycle time for Government customers
+    PROCUREMENT_ROLE: Fulfilment cycle for Government customers
+    LOGISTICS_ROLE: Order cycle for Government customers
+  query:
+    metrics:
+    - order_fulfilment_cycle_days
+    dimensions: []
+    time:
+      range: fy2026
+    filters:
+    - dimension: segment
+      operator: '='
+      value: Government
+- id: pc18
+  phrasings:
+    PLANNING_ROLE: Cycle time in Q2
+    PROCUREMENT_ROLE: Fulfilment cycle in Q2
+    LOGISTICS_ROLE: Order cycle in Q2
+  query:
+    metrics:
+    - order_fulfilment_cycle_days
+    dimensions: []
+    time:
+      range: q2
+    filters: []
+- id: pc19
+  phrasings:
+    PLANNING_ROLE: Transit time by carrier
+    PROCUREMENT_ROLE: Shipping duration by carrier
+    LOGISTICS_ROLE: Transit hours by carrier
+  query:
+    metrics:
+    - transit_hours
+    dimensions:
+    - carrier_name
+    time:
+      range: fy2026
+    filters: []
+- id: pc20
+  phrasings:
+    PLANNING_ROLE: Transit time in Q1
+    PROCUREMENT_ROLE: Shipping duration in Q1
+    LOGISTICS_ROLE: Transit hours in Q1
+  query:
+    metrics:
+    - transit_hours
+    dimensions: []
+    time:
+      range: q1
+    filters: []
