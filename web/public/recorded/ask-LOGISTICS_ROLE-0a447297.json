@@ -16,7 +16,7 @@
   "degraded": true,
   "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
-  "latency_ms": 3,
+  "latency_ms": 2,
   "lineage": {
     "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
     "metric": "landed_cost_per_unit",
@@ -86,8 +86,8 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "e3f499fcfd26",
-  "result_checksum": "015d97e8f518e79b",
+  "request_id": "f74f08404f1b",
+  "result_checksum": "48c634e1acbc074b",
   "role": "LOGISTICS_ROLE",
   "row_count": 12,
   "rows": [
@@ -100,27 +100,27 @@
       "period_month": "2025-11-01"
     },
     {
-      "landed_cost_per_unit": 154.9151502550082,
+      "landed_cost_per_unit": 154.91515025500829,
       "period_month": "2025-12-01"
     },
     {
-      "landed_cost_per_unit": 155.60902195630038,
+      "landed_cost_per_unit": 155.60902195630013,
       "period_month": "2026-01-01"
     },
     {
-      "landed_cost_per_unit": 152.4089108272477,
+      "landed_cost_per_unit": 152.4089108272478,
       "period_month": "2026-02-01"
     },
     {
-      "landed_cost_per_unit": 148.56171805395158,
+      "landed_cost_per_unit": 148.56171805395144,
       "period_month": "2026-03-01"
     },
     {
-      "landed_cost_per_unit": 156.31189413472535,
+      "landed_cost_per_unit": 156.31189413472552,
       "period_month": "2026-04-01"
     },
     {
-      "landed_cost_per_unit": 149.1980605561788,
+      "landed_cost_per_unit": 149.19806055617875,
       "period_month": "2026-05-01"
     },
     {
@@ -128,15 +128,15 @@
       "period_month": "2026-06-01"
     },
     {
-      "landed_cost_per_unit": 148.46000190557322,
+      "landed_cost_per_unit": 148.46000190557325,
       "period_month": "2026-07-01"
     },
     {
-      "landed_cost_per_unit": 155.9969357153989,
+      "landed_cost_per_unit": 155.9969357153991,
       "period_month": "2026-08-01"
     },
     {
-      "landed_cost_per_unit": 162.31299351388284,
+      "landed_cost_per_unit": 162.312993513883,
       "period_month": "2026-09-01"
     }
   ],

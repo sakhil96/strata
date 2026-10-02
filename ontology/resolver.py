@@ -112,9 +112,8 @@ def resolve(registry: Registry, question: str, persona: str | None = None,
             if dim not in dims and not any(f["dimension"] == dim for f in filters):
                 dims.append(dim)
             consumed = consumed.replace(w, " ")
-    if "worst" in text or "best" in text:
-        if "supplier" in text and "supplier_name" not in dims:
-            dims.append("supplier_name")
+    if ("worst" in text or "best" in text) and "supplier" in text and "supplier_name" not in dims:
+        dims.append("supplier_name")
 
     time_range = "last_month" if set(metrics) <= POINT_IN_TIME else "fy2026"
     for pattern, label in TIME_WORDS:

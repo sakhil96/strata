@@ -46,7 +46,7 @@ def test_every_metric_matches_truth_at_grouping(warehouse, registry, truth, grou
         metric_type = registry.metrics[metric]["type"]
         keys = grouping.split(",")
         actual = answer_by_grouping(warehouse, registry, metric, grouping)
-        expected = rows[keys + ["value"]].copy()
+        expected = rows[[*keys, "value"]].copy()
         expected["month"] = pd.to_datetime(expected["month"]).dt.date
         for k in keys[1:]:
             expected[k] = expected[k].astype(str)
@@ -54,7 +54,7 @@ def test_every_metric_matches_truth_at_grouping(warehouse, registry, truth, grou
         merged = expected.merge(actual, on=keys, how="outer", indicator=True)
         missing = merged[merged._merge != "both"]
         assert missing.empty, f"{metric} at {grouping}: rows only on one side\n{missing.head()}"
-        bad = merged[[not within_tolerance(e, a, metric_type) for e, a in zip(merged.value, merged[metric])]]
+        bad = merged[[not within_tolerance(e, a, metric_type) for e, a in zip(merged.value, merged[metric], strict=False)]]
         assert bad.empty, f"{metric} at {grouping} differs from truth\n{bad.head()}"
     if grouping == "month":
         assert truth[truth.grouping == "month"].metric.nunique() == len(registry.metrics)

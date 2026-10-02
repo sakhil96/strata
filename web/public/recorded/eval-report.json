@@ -1,7 +1,7 @@
 {
   "environment": "local DuckDB build",
-  "generated_at": "2026-10-02T21:57:02+00:00",
-  "pass_rate": 0.9765,
+  "generated_at": "2026-10-02T22:29:41+00:00",
+  "pass_rate": 1.0,
   "suites": [
     {
       "detail": "all checks ran",
@@ -53,23 +53,23 @@
       "total": 8
     },
     {
-      "detail": "1 skipped locally",
+      "detail": "all checks ran",
       "name": "frontend",
       "needs_account": [],
-      "passed": 6,
+      "passed": 7,
       "status": "passed",
       "title": "6 \u00b7 Front end",
-      "total": 6
+      "total": 7
     },
     {
-      "detail": "failing: test_python_dependencies_have_no_known_high_severity_vulnerabilities, test_web_dependencies_have_no_high_severity_advisories",
+      "detail": "1 skipped locally",
       "name": "supply_chain",
       "needs_account": [],
-      "passed": 3,
-      "status": "failed",
+      "passed": 4,
+      "status": "passed",
       "title": "7 \u00b7 Software supply chain",
-      "total": 5
+      "total": 4
     }
   ],
-  "summary": "83 of 85 checks passed across 7 suites; 2 checks need the account."
+  "summary": "85 of 85 checks passed across 7 suites; 2 checks need the account."
 }

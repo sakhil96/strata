@@ -16,7 +16,7 @@
         },
         "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
         "engine": "duckdb",
-        "latency_ms": 3,
+        "latency_ms": 2,
         "lineage": {
           "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
           "metric": "days_of_inventory",
@@ -85,13 +85,13 @@
           }
         ],
         "notes": [],
-        "request_id": "e2aa09027171",
-        "result_checksum": "c1ed609e1d00fbbd",
+        "request_id": "66b2b97d95a0",
+        "result_checksum": "387d5366899683a4",
         "role": "PLANNING_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "days_of_inventory": 18.510123705819236
+            "days_of_inventory": 18.51012370581926
           }
         ],
         "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
@@ -104,11 +104,11 @@
       "role": "PLANNING_ROLE",
       "rows": [
         {
-          "days_of_inventory": 18.510123705819236
+          "days_of_inventory": 18.51012370581926
         }
       ],
       "unit": "days",
-      "value": 18.510123705819236
+      "value": 18.51012370581926
     },
     {
       "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
@@ -126,7 +126,7 @@
         },
         "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
         "engine": "duckdb",
-        "latency_ms": 2,
+        "latency_ms": 1,
         "lineage": {
           "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
           "metric": "days_of_inventory",
@@ -195,13 +195,13 @@
           }
         ],
         "notes": [],
-        "request_id": "e2aa09027171",
-        "result_checksum": "c1ed609e1d00fbbd",
+        "request_id": "66b2b97d95a0",
+        "result_checksum": "387d5366899683a4",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "days_of_inventory": 18.510123705819236
+            "days_of_inventory": 18.51012370581926
           }
         ],
         "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
@@ -214,11 +214,11 @@
       "role": "PROCUREMENT_ROLE",
       "rows": [
         {
-          "days_of_inventory": 18.510123705819236
+          "days_of_inventory": 18.51012370581926
         }
       ],
       "unit": "days",
-      "value": 18.510123705819236
+      "value": 18.51012370581926
     },
     {
       "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
@@ -305,13 +305,13 @@
           }
         ],
         "notes": [],
-        "request_id": "e2aa09027171",
-        "result_checksum": "c1ed609e1d00fbbd",
+        "request_id": "66b2b97d95a0",
+        "result_checksum": "387d5366899683a4",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "days_of_inventory": 18.510123705819236
+            "days_of_inventory": 18.51012370581926
           }
         ],
         "semantic_query_hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
@@ -324,11 +324,11 @@
       "role": "LOGISTICS_ROLE",
       "rows": [
         {
-          "days_of_inventory": 18.510123705819236
+          "days_of_inventory": 18.51012370581926
         }
       ],
       "unit": "days",
-      "value": 18.510123705819236
+      "value": 18.51012370581926
     }
   ],
   "converged": true,

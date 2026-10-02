@@ -1,6 +1,6 @@
-# Evaluation report, 2026-10-02T21:57:02+00:00
+# Evaluation report, 2026-10-02T22:29:41+00:00
 
-83 of 85 checks passed across 7 suites; 2 checks need the account.
+85 of 85 checks passed across 7 suites; 2 checks need the account.
 
 | Suite | Status | Passed | Detail |
 |---|---|---|---|
@@ -9,5 +9,5 @@
 | 3 · One question, three roles, one hash | passed | 22/22 | all checks ran |
 | 4 · Governance rules | passed | 19/19 | all checks ran |
 | 5 · Resilience and operations | passed | 8/8 | 1 check(s) need the account |
-| 6 · Front end | passed | 6/6 | 1 skipped locally |
-| 7 · Software supply chain | failed | 3/5 | failing: test_python_dependencies_have_no_known_high_severity_vulnerabilities, test_web_dependencies_have_no_high_severity_advisories |
+| 6 · Front end | passed | 7/7 | all checks ran |
+| 7 · Software supply chain | passed | 4/4 | 1 skipped locally |

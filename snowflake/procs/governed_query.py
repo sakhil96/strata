@@ -13,11 +13,11 @@ import logging
 import time
 from typing import Any
 
-import semantic
-from snowflake import telemetry
+from explain_lineage import lineage_for
 from snowflake.snowpark import Session
 
-from explain_lineage import lineage_for
+import semantic
+from snowflake import telemetry
 
 STATEMENT_TIMEOUT_S = 30
 ROW_CAP = 10_000

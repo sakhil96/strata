@@ -15,7 +15,7 @@
       },
       "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
       "engine": "duckdb",
-      "latency_ms": 784,
+      "latency_ms": 587,
       "lineage": {
         "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
         "metric": "on_time_delivery",
@@ -78,7 +78,7 @@
         }
       ],
       "notes": [],
-      "request_id": "860d6c3e3b24",
+      "request_id": "e69f0234a34c",
       "result_checksum": "d3995cc070be1c2e",
       "role": "EXECUTIVE_ROLE",
       "row_count": 1,

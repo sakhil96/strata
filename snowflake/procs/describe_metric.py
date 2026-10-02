@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import semantic
 from snowflake.snowpark import Session
+
+import semantic
 
 
 def run(session: Session, name: str) -> dict[str, Any]:

@@ -295,5 +295,5 @@ def execute_local(connection: Any, registry: Registry, query: dict[str, Any]) ->
     sql, params = local_sql(registry, canonical)
     cursor = connection.execute(sql, params)
     columns = [c[0] for c in cursor.description]
-    rows = [dict(zip(columns, (v.isoformat() if isinstance(v, date) else v for v in r))) for r in cursor.fetchall()]
+    rows = [dict(zip(columns, (v.isoformat() if isinstance(v, date) else v for v in r), strict=False)) for r in cursor.fetchall()]
     return {"canonical_query": canonical, "semantic_query_hash": query_hash(canonical), "rows": rows}

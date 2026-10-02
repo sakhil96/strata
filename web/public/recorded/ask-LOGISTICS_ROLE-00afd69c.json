@@ -16,7 +16,7 @@
   "degraded": true,
   "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
-  "latency_ms": 5,
+  "latency_ms": 3,
   "lineage": {
     "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
     "metric": "supplier_on_time_receipt",
@@ -86,7 +86,7 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "c57bd1116440",
+  "request_id": "94f88ff69a2b",
   "result_checksum": "bc43f3bf5696783c",
   "role": "LOGISTICS_ROLE",
   "row_count": 40,

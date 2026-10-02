@@ -16,7 +16,7 @@
   "degraded": true,
   "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
-  "latency_ms": 4,
+  "latency_ms": 3,
   "lineage": {
     "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
     "metric": "days_of_inventory",
@@ -88,8 +88,8 @@
     "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
   ],
   "path": "resolver",
-  "request_id": "e9baaf539c83",
-  "result_checksum": "0e83ca6e3bf79cc8",
+  "request_id": "2dc4c3b86ca2",
+  "result_checksum": "dc2c387e060930f7",
   "role": "LOGISTICS_ROLE",
   "row_count": 5,
   "rows": [
@@ -98,19 +98,19 @@
       "plant_id": "DC-NL01"
     },
     {
-      "days_of_inventory": 19.141389949566566,
+      "days_of_inventory": 19.14138994956657,
       "plant_id": "DC-US01"
     },
     {
-      "days_of_inventory": 19.643325878378167,
+      "days_of_inventory": 19.64332587837818,
       "plant_id": "PLT-DE01"
     },
     {
-      "days_of_inventory": 17.472248174595098,
+      "days_of_inventory": 17.4722481745951,
       "plant_id": "PLT-SG01"
     },
     {
-      "days_of_inventory": 18.43865265620181,
+      "days_of_inventory": 18.438652656201807,
       "plant_id": "PLT-US01"
     }
   ],

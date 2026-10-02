@@ -9,7 +9,7 @@ import json
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -64,7 +64,7 @@ def main() -> int:
     passed = sum(s["passed"] for s in suites)
     pending = sum(len(s["needs_account"]) for s in suites)
     report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "environment": "local DuckDB build",
         "pass_rate": round(passed / ran, 4) if ran else None,
         "summary": f"{passed} of {ran} checks passed across {len(suites)} suites; {pending} checks need the account.",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -226,7 +226,7 @@ def fx_lookup(fx: pd.DataFrame):
 
 def local_to_utc(d: date, hour: float, tz: str) -> datetime:
     local = datetime.combine(d, time(0, 0)) + timedelta(minutes=round(hour * 60))
-    return local.replace(tzinfo=ZoneInfo(tz)).astimezone(timezone.utc).replace(tzinfo=None)
+    return local.replace(tzinfo=ZoneInfo(tz)).astimezone(UTC).replace(tzinfo=None)
 
 
 def build_sales(rng, customers, parts, locations, carriers):
@@ -235,8 +235,8 @@ def build_sales(rng, customers, parts, locations, carriers):
         picks = rng.choice(len(parts), size=40, replace=False)
         combos.extend((loc.storage_location_id, loc.plant_id, parts.part_id.iloc[p]) for p in sorted(picks))
     combos = pd.DataFrame(combos, columns=["storage_location_id", "plant_id", "part_id"])
-    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region))
-    pack = dict(zip(parts.part_id, parts.pack_factor))
+    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region, strict=False))
+    pack = dict(zip(parts.part_id, parts.pack_factor, strict=False))
 
     line_rows, ship_rows, ship_line_rows = [], [], []
     n_orders = 15000
@@ -320,7 +320,7 @@ def build_sales(rng, customers, parts, locations, carriers):
 
 
 def price_freight(shipments, ship_lines, parts, fx_of):
-    weight = dict(zip(parts.part_id, parts.weight_kg))
+    weight = dict(zip(parts.part_id, parts.weight_kg, strict=False))
     ship_lines = ship_lines.copy()
     ship_lines["line_weight_kg"] = ship_lines.part_id.map(weight) * ship_lines.shipped_qty
     totals = ship_lines.groupby("shipment_id").line_weight_kg.sum()
@@ -328,7 +328,7 @@ def price_freight(shipments, ship_lines, parts, fx_of):
     shipments["chargeable_weight_kg"] = shipments.shipment_id.map(totals).round(1)
     usd = np.where(shipments.is_cross_region, 600 + 4.2 * shipments.chargeable_weight_kg,
                    180 + 0.9 * shipments.chargeable_weight_kg)
-    rates = [fx_of(c, d) for c, d in zip(shipments.billing_currency, shipments.ship_date)]
+    rates = [fx_of(c, d) for c, d in zip(shipments.billing_currency, shipments.ship_date, strict=False)]
     shipments["freight_charge"] = np.round(usd / np.array(rates), 2)
     shipments["freight_usd"] = shipments.freight_charge * np.array(rates)
     share = ship_lines.line_weight_kg / ship_lines.shipment_id.map(totals)
@@ -338,8 +338,8 @@ def price_freight(shipments, ship_lines, parts, fx_of):
 
 
 def build_events(rng, shipments, customers, carriers):
-    tz_cust = dict(zip(customers.customer_id, customers.country_code.map(TZ_OF)))
-    tz_plant = dict(zip(PLANTS.plant_id, PLANTS.timezone))
+    tz_cust = dict(zip(customers.customer_id, customers.country_code.map(TZ_OF), strict=False))
+    tz_plant = dict(zip(PLANTS.plant_id, PLANTS.timezone, strict=False))
     rows, transit = [], {}
     as_of_end = datetime.combine(AS_OF, time(23, 59))
     for s in shipments.itertuples():
@@ -374,14 +374,14 @@ def build_events(rng, shipments, customers, carriers):
 
 
 def build_inventory(rng, combos, ship_lines, lines, parts):
-    cost = dict(zip(parts.part_id, parts.std_cost_usd))
+    cost = dict(zip(parts.part_id, parts.std_cost_usd, strict=False))
     shipped = ship_lines.merge(lines[["so_line_id", "storage_location_id"]], on="so_line_id")
     day_index = {d: i for i, d in enumerate(DAYS.date)}
     rows = []
     for c in combos.itertuples():
         demand = np.zeros(len(DAYS))
         mine = shipped[(shipped.storage_location_id == c.storage_location_id) & (shipped.part_id == c.part_id)]
-        for d, q in zip(mine.ship_date, mine.shipped_qty):
+        for d, q in zip(mine.ship_date, mine.shipped_qty, strict=False):
             demand[day_index[d]] += q
         daily = max(demand.mean(), 1.0)
         on_hand = round(daily * 30)
@@ -391,7 +391,7 @@ def build_inventory(rng, combos, ship_lines, lines, parts):
             on_hand += arrivals.pop(i, 0)
             on_hand = max(0, on_hand - int(demand[i]))
             if on_hand < reorder and not arrivals:
-                arrivals[i + int(rng.integers(4, 11))] = int(round(order_up_to - on_hand))
+                arrivals[i + int(rng.integers(4, 11))] = round(order_up_to - on_hand)
             allocated = int(demand[i + 1:i + 4].sum())
             rows.append((c.storage_location_id, c.plant_id, c.part_id, DAYS[i].date(), on_hand,
                          on_hand * cost[c.part_id], allocated, demand[i], demand[i] * cost[c.part_id]))
@@ -401,10 +401,10 @@ def build_inventory(rng, combos, ship_lines, lines, parts):
 
 
 def build_procurement(rng, suppliers, parts, fx_of, tariffs, constants):
-    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region))
-    plant_country = dict(zip(PLANTS.plant_id, PLANTS.country_code))
-    weight = dict(zip(parts.part_id, parts.weight_kg))
-    pack = dict(zip(parts.part_id, parts.pack_factor))
+    plant_region = dict(zip(PLANTS.plant_id, PLANTS.region, strict=False))
+    plant_country = dict(zip(PLANTS.plant_id, PLANTS.country_code, strict=False))
+    weight = dict(zip(parts.part_id, parts.weight_kg, strict=False))
+    pack = dict(zip(parts.part_id, parts.pack_factor, strict=False))
     tariff_rows = tariffs.sort_values(["part_id", "effective_from"]).itertuples()
     tariff_of = {}
     for t in tariff_rows:
@@ -530,8 +530,8 @@ PROCEDURES = [
 
 def build_documents(rng, events, shipments, agreements, suppliers):
     rows = []
-    eta = dict(zip(shipments.shipment_id, shipments.carrier_eta))
-    pod = dict(zip(shipments.shipment_id, shipments.actual_delivery))
+    eta = dict(zip(shipments.shipment_id, shipments.carrier_eta, strict=False))
+    pod = dict(zip(shipments.shipment_id, shipments.actual_delivery, strict=False))
     exceptions = events[events.event_type == "exception"].reset_index(drop=True)
     for i, e in exceptions.iterrows():
         cause, text, visible = EXCEPTION_CAUSES[int(rng.integers(0, len(EXCEPTION_CAUSES)))]
@@ -542,7 +542,7 @@ def build_documents(rng, events, shipments, agreements, suppliers):
             "body": text.format(hub=HUBS[int(rng.integers(0, len(HUBS)))]),
             "category": cause, "is_customer_impacting": bool(visible and late), "source_system": "portal",
         })
-    names = dict(zip(suppliers.supplier_id, suppliers.supplier_name))
+    names = dict(zip(suppliers.supplier_id, suppliers.supplier_name, strict=False))
     for a in agreements.itertuples():
         for key, heading, text in CLAUSES:
             rows.append({
@@ -566,7 +566,7 @@ def grouped(frame, metric, dims, kind, num=None, den=None, value=None):
     sets = [[]] + [[d] for d in dims] + ([dims] if len(dims) > 1 else [])
     out = []
     for extra in sets:
-        keys = ["month"] + extra
+        keys = ["month", *extra]
         g = frame.groupby(keys, dropna=False)
         if kind == "ratio":
             agg = g.agg(numerator=(num, "sum"), denominator=(den, "sum")).reset_index()
@@ -583,9 +583,9 @@ def grouped(frame, metric, dims, kind, num=None, den=None, value=None):
 
 
 def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, parts):
-    region = dict(zip(PLANTS.plant_id, PLANTS.region))
-    segment = dict(zip(customers.customer_id, customers.segment))
-    family = dict(zip(parts.part_id, parts.part_family))
+    region = dict(zip(PLANTS.plant_id, PLANTS.region, strict=False))
+    segment = dict(zip(customers.customer_id, customers.segment, strict=False))
+    family = dict(zip(parts.part_id, parts.part_family, strict=False))
     first = ship_lines[ship_lines.shipment_seq == 1].merge(
         shipments[["shipment_id", "ship_date", "actual_delivery"]], on="shipment_id")
     sl = lines.merge(first[["so_line_id", "shipped_qty", "actual_delivery"]], on="so_line_id", how="left")
@@ -604,7 +604,7 @@ def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, 
     sl["line_filled"] = (live & (sl.first_qty >= sl.ordered_qty)).astype(int)
     sl["live_line"] = live.astype(int)
     sl["cycle_days"] = [(a - o).days if d else np.nan
-                        for a, o, d in zip(sl.actual_delivery, sl.order_date, delivered)]
+                        for a, o, d in zip(sl.actual_delivery, sl.order_date, delivered, strict=False)]
 
     dims_so = ["plant_id", "region", "segment", "part_family"]
     by_delivery = sl.assign(month=month_of(sl.actual_delivery.where(delivered)))
@@ -647,7 +647,7 @@ def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, 
     po["month"] = month_of(po.receipt_date)
     po["received_line"] = received.astype(int)
     po["on_time_receipt"] = (received & (po.receipt_date <= po.promised_date)).astype(int)
-    po["lead_days"] = [(r - o).days if ok else np.nan for r, o, ok in zip(po.receipt_date, po.order_date, received)]
+    po["lead_days"] = [(r - o).days if ok else np.nan for r, o, ok in zip(po.receipt_date, po.order_date, received, strict=False)]
     dims_po = ["plant_id", "region", "part_family"]
     parts_out += grouped(po, "supplier_on_time_receipt", dims_po, "ratio", "on_time_receipt", "received_line")
     parts_out += grouped(po, "landed_cost_per_unit", dims_po, "ratio", "landed_usd", "received_qty")
@@ -682,14 +682,14 @@ def compute_truth(lines, shipments, ship_lines, inventory, po_lines, customers, 
 
 def inventory_months(inventory: pd.DataFrame) -> pd.DataFrame:
     keys = ["storage_location_id", "plant_id", "part_id"]
-    inv = inventory.sort_values(keys + ["snapshot_date"]).reset_index(drop=True)
+    inv = inventory.sort_values([*keys, "snapshot_date"]).reset_index(drop=True)
     inv["month"] = month_of(inv.snapshot_date)
     inv["stockout"] = ((inv.on_hand_qty == 0) & (inv.allocated_qty > 0)).astype(int)
     rolling = (inv.groupby(keys, sort=False)[["cogs_usd", "shipped_qty"]].rolling(90, min_periods=1).sum()
                .reset_index(level=list(range(len(keys))), drop=True))
     inv["cogs_90d"] = rolling["cogs_usd"]
     inv["units_90d"] = rolling["shipped_qty"]
-    by_month = inv.groupby(keys + ["month"], sort=True)
+    by_month = inv.groupby([*keys, "month"], sort=True)
     agg = by_month.agg(
         avg_value_month=("on_hand_value_std", "mean"), cogs_month=("cogs_usd", "sum"),
         days_in_month=("snapshot_date", "count"), stockout_days=("stockout", "sum"), obs_days=("snapshot_date", "count"),
@@ -741,8 +741,8 @@ def emit_sources(rng, d):
           "erp/purchasing_info_records.parquet")
 
     po = d["po_lines"]
-    pack = dict(zip(p.part_id, p.pack_factor))
-    pallet = dict(zip(p.part_id, p.cases_per_pallet))
+    pack = dict(zip(p.part_id, p.pack_factor, strict=False))
+    pallet = dict(zip(p.part_id, p.cases_per_pallet, strict=False))
     uom, qty = [], []
     for row in po.itertuples():
         per_pal = pack[row.part_id] * pallet[row.part_id]
@@ -782,7 +782,7 @@ def emit_sources(rng, d):
 
     sh = d["shipments"]
     write(pd.DataFrame({
-        "SHIPMENT_NO": sh.shipment_id, "CARRIER_SCAC": sh.carrier_id.map(dict(zip(CARRIERS.carrier_id, CARRIERS.scac_code))),
+        "SHIPMENT_NO": sh.shipment_id, "CARRIER_SCAC": sh.carrier_id.map(dict(zip(CARRIERS.carrier_id, CARRIERS.scac_code, strict=False))),
         "ORIGIN_PLANT": sh.origin_plant_id, "SHIP_TO": sh.customer_id, "DEPART_DATE": sh.ship_date,
         "CARRIER_ETA": sh.carrier_eta, "POD_DATE": sh.actual_delivery, "FREIGHT_AMT": sh.freight_charge,
         "FREIGHT_CCY": sh.billing_currency, "CHG_WEIGHT_KG": sh.chargeable_weight_kg,
@@ -796,10 +796,10 @@ def emit_sources(rng, d):
 
     ev = d["events"]
     local, basis = [], []
-    for when, tz in zip(ev.event_time_utc, ev.site_tz):
-        aware = when.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(tz))
+    for when, tz in zip(ev.event_time_utc, ev.site_tz, strict=False):
+        aware = when.replace(tzinfo=UTC).astimezone(ZoneInfo(tz))
         naive = aware.replace(tzinfo=None)
-        roundtrip = naive.replace(tzinfo=ZoneInfo(tz)).astimezone(timezone.utc).replace(tzinfo=None)
+        roundtrip = naive.replace(tzinfo=ZoneInfo(tz)).astimezone(UTC).replace(tzinfo=None)
         if rng.random() < 0.4 and roundtrip == when:
             local.append(naive), basis.append("LOCAL")
         else:
@@ -850,7 +850,7 @@ def main() -> int:
     card = {
         "seed": SEED, "fiscal_year": f"{FY_START} to {AS_OF}", "as_of": str(AS_OF),
         "tariff_step": str(TARIFF_STEP),
-        "rows": {k: int(len(v)) for k, v in world.items()} | {"truth_metrics": int(len(truth))},
+        "rows": {k: len(v) for k, v in world.items()} | {"truth_metrics": len(truth)},
         "fy_headline": {k: round(float(v), 4) for k, v in headline.items()},
     }
     (OUT / "DATA_CARD.json").write_text(json.dumps(card, indent=2, sort_keys=True) + "\n")

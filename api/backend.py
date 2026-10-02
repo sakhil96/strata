@@ -12,7 +12,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -149,7 +149,7 @@ class LocalBackend:
 
     def _write_audit(self, caller: Caller, question: str | None, answer: dict[str, Any]) -> None:
         record = {
-            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "user": caller.user,
+            "ts": datetime.now(UTC).isoformat(timespec="seconds"), "user": caller.user,
             "role": caller.role, "question": question, "metric": answer["metric_name"],
             "canonical_query": answer["canonical_query"], "hash": answer["semantic_query_hash"],
             "sql": answer["sql"], "result_checksum": answer["result_checksum"],
@@ -161,7 +161,7 @@ class LocalBackend:
             self._recent.append(record)
 
     def record_refusal(self, caller: Caller, question: str, reason: str) -> None:
-        record = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "user": caller.user,
+        record = {"ts": datetime.now(UTC).isoformat(timespec="seconds"), "user": caller.user,
                   "role": caller.role, "question": question, "metric": None, "refusal": reason,
                   "hash": None, "request_id": caller.request_id}
         with self._lock:
@@ -229,7 +229,7 @@ class LocalBackend:
             files = sorted((ROOT / "data" / "out" / system).glob("*.parquet"))
             if files:
                 newest = max(f.stat().st_mtime for f in files)
-                freshness.append({"source": system, "loaded_at": datetime.fromtimestamp(newest, timezone.utc)
+                freshness.append({"source": system, "loaded_at": datetime.fromtimestamp(newest, UTC)
                                   .isoformat(timespec="minutes"), "files": len(files),
                                   "stale": time.time() - newest > STALE_AFTER_S})
         results = run.get("results", [])
@@ -347,9 +347,9 @@ class SnowflakeBackend:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute(f"SELECT * FROM {self.db}.OPS.SLO_STATUS")
             cols = [c[0].lower() for c in cur.description]
-            slo = [dict(zip(cols, r)) for r in cur.fetchall()]
+            slo = [dict(zip(cols, r, strict=False)) for r in cur.fetchall()]
             cur.execute(f"SELECT name, schedule, last_fired, state FROM {self.db}.OPS.ALERT_STATUS")
-            alerts = [dict(zip(("name", "schedule", "last_fired", "state"), r)) for r in cur.fetchall()]
+            alerts = [dict(zip(("name", "schedule", "last_fired", "state"), r, strict=False)) for r in cur.fetchall()]
             cur.execute(f"SELECT week, credits FROM {self.db}.OPS.WEEKLY_COST ORDER BY week DESC LIMIT 1")
             week = cur.fetchone()
         return {"slo": slo, "alerts": alerts,
