@@ -1,0 +1,515 @@
+# Metric registry for the SCM Ontology project.
+# Every metric here is the single source of truth for its definition.
+# The compiler refuses any metric missing a required field.
+# Only metrics with status: approved deploy to SCM_PROD.
+
+metrics:
+
+  on_time_delivery:
+    title: On-Time Delivery
+    type: ratio
+    grain: sales_order_line
+    date_basis: actual_delivery_date
+    window: period
+    numerator: >-
+      COUNT of sales order lines where actual_delivery_date falls within the
+      reporting period AND actual_delivery_date <= committed_date
+    denominator: >-
+      COUNT of sales order lines where actual_delivery_date falls within the
+      reporting period
+    definition: >-
+      The fraction of delivered sales order lines that arrived on or before the
+      committed date, excluding cancelled lines.
+    formula_text: >-
+      SUM(CASE WHEN actual_delivery_date <= committed_date THEN 1 ELSE 0 END)
+      / COUNT(*)
+      WHERE actual_delivery_date IN period AND status != 'CANCELLED'
+    synonyms:
+      - OTD
+      - on-time delivery rate
+      - delivery performance
+    variants:
+      on_time_to_request:
+        date_basis: actual_delivery_date
+        comparison_date: requested_date
+        definition: >-
+          Fraction of delivered lines arriving on or before the customer-requested
+          date instead of the committed date.
+      supplier_on_time_receipt:
+        grain: purchase_order_line
+        date_basis: receipt_date
+        comparison_date: promised_date
+        definition: >-
+          Fraction of PO lines where receipt_date <= supplier promised_date.
+      carrier_on_time:
+        grain: shipment
+        date_basis: actual_delivery
+        comparison_date: carrier_eta
+        definition: >-
+          Fraction of shipments where actual_delivery <= carrier_eta.
+    owner: VP Supply Chain
+    steward: Supply Chain Analytics Lead
+    scor_attribute: RL.1.1 Perfect Order Fulfillment (component)
+    unit: ratio
+    persona_synonyms:
+      PLANNING_ROLE:
+        - delivery rate
+        - OTD
+      PROCUREMENT_ROLE:
+        - supplier delivery performance
+      LOGISTICS_ROLE:
+        - carrier on-time
+        - transit reliability
+      EXECUTIVE_ROLE:
+        - on-time delivery
+        - OTD
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  otif:
+    title: On-Time In-Full
+    type: ratio
+    grain: sales_order_line
+    date_basis: actual_delivery_date
+    window: period
+    numerator: >-
+      COUNT of sales order lines where actual_delivery_date falls within the
+      reporting period AND actual_delivery_date <= committed_date AND the
+      first-shipment shipped_qty >= ordered_qty
+    denominator: >-
+      COUNT of sales order lines where actual_delivery_date falls within the
+      reporting period
+    definition: >-
+      The fraction of delivered sales order lines that were both on time
+      (actual <= committed) and in full (first shipment qty >= ordered qty),
+      excluding cancelled lines.
+    formula_text: >-
+      SUM(CASE WHEN actual_delivery_date <= committed_date
+                AND first_shipment_qty >= ordered_qty THEN 1 ELSE 0 END)
+      / COUNT(*)
+      WHERE actual_delivery_date IN period AND status != 'CANCELLED'
+    synonyms:
+      - OTIF
+      - on-time in-full
+      - perfect delivery
+    variants: {}
+    owner: VP Supply Chain
+    steward: Supply Chain Analytics Lead
+    scor_attribute: RL.1.1 Perfect Order Fulfillment
+    unit: ratio
+    persona_synonyms:
+      PLANNING_ROLE:
+        - OTIF
+        - perfect delivery
+      PROCUREMENT_ROLE:
+        - OTIF
+      LOGISTICS_ROLE:
+        - OTIF
+        - complete and on-time
+      EXECUTIVE_ROLE:
+        - OTIF
+        - perfect order rate
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  unit_fill_rate:
+    title: Unit Fill Rate
+    type: ratio
+    grain: sales_order_line
+    date_basis: requested_date
+    window: period
+    numerator: >-
+      SUM of first-shipment shipped_qty for lines where requested_date falls
+      within the reporting period
+    denominator: >-
+      SUM of ordered_qty for lines where requested_date falls within the
+      reporting period
+    definition: >-
+      The ratio of units shipped on first shipment to units ordered, measured
+      at the requested date, excluding cancelled lines. A measure of immediate
+      availability.
+    formula_text: >-
+      SUM(first_shipment_qty) / SUM(ordered_qty)
+      WHERE requested_date IN period AND status != 'CANCELLED'
+    synonyms:
+      - fill rate
+      - initial fill
+    variants:
+      line_fill_rate:
+        type: ratio
+        numerator: >-
+          COUNT of lines where first_shipment_qty >= ordered_qty
+        denominator: >-
+          COUNT of lines in period
+        definition: >-
+          Fraction of lines completely filled on first shipment.
+      order_fill_rate:
+        type: ratio
+        grain: sales_order
+        numerator: >-
+          COUNT of orders where ALL lines are completely filled on first shipment
+        denominator: >-
+          COUNT of orders in period
+        definition: >-
+          Fraction of orders where every line is completely filled on first shipment.
+    owner: VP Supply Chain
+    steward: Demand Planning Manager
+    scor_attribute: RL.2.3 % of Orders Delivered In Full
+    unit: ratio
+    persona_synonyms:
+      PLANNING_ROLE:
+        - fill rate
+        - availability
+      PROCUREMENT_ROLE:
+        - supplier fill
+      LOGISTICS_ROLE:
+        - shipment completeness
+      EXECUTIVE_ROLE:
+        - fill rate
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  days_of_inventory:
+    title: Days of Inventory
+    type: ratio
+    grain: storage_location_part
+    date_basis: snapshot_date
+    window: point_in_time
+    numerator: >-
+      SUM of on_hand_value_std at period end (on-hand only, excluding
+      in-transit and allocated)
+    denominator: >-
+      Trailing 90-day cost of goods shipped divided by 90
+    definition: >-
+      The number of days current on-hand inventory would last at the trailing
+      90-day consumption rate. Measured as a ratio of sums at the requested
+      grouping.
+    formula_text: >-
+      SUM(on_hand_value_std at period_end)
+      / (SUM(cogs_shipped over trailing_90_days) / 90)
+    synonyms:
+      - DOI
+      - days on hand
+      - inventory days
+    variants:
+      doi_units:
+        numerator: SUM of on_hand_qty at period end
+        denominator: trailing 90-day units shipped / 90
+        definition: Days of inventory measured in units rather than value.
+      dio_financial:
+        owner: Finance
+        numerator: average inventory value over the period
+        denominator: cost of sales over the period
+        formula_text: (AVG(inventory_value) / cost_of_sales) * days_in_period
+        definition: >-
+          Days inventory outstanding as used in financial reporting.
+          Average inventory / cost of sales x days in period.
+    owner: VP Supply Chain
+    steward: Inventory Manager
+    scor_attribute: AM.2.2 Days of Supply
+    unit: days
+    persona_synonyms:
+      PLANNING_ROLE:
+        - DOI
+        - days of supply
+      PROCUREMENT_ROLE:
+        - stock days
+      LOGISTICS_ROLE:
+        - warehouse days cover
+      EXECUTIVE_ROLE:
+        - inventory days
+        - DOI
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  landed_cost_per_unit:
+    title: Landed Cost Per Unit
+    type: weighted_average
+    grain: purchase_order_line
+    date_basis: receipt_date
+    window: period
+    numerator: >-
+      SUM of (material cost + freight allocation + duty + insurance + handling)
+      for PO lines received in the period.
+      Material = unit_cost * ordered_qty * FX rate at PO order_date.
+      Freight = shipment freight_charge * (line chargeable_weight / shipment chargeable_weight).
+      Duty = duty_rate in force on actual_ship_date * customs_value.
+    denominator: >-
+      SUM of received_qty for PO lines received in the period
+    definition: >-
+      The fully loaded cost per unit of received goods, including material,
+      freight, duty, insurance and handling, weighted by received quantity.
+    formula_text: >-
+      SUM(material_cost + freight_allocation + duty_cost + insurance + handling)
+      / SUM(received_qty)
+      WHERE receipt_date IN period
+    synonyms:
+      - landed cost
+      - total acquisition cost
+      - all-in cost
+    variants: {}
+    owner: VP Procurement
+    steward: Procurement Analytics Lead
+    scor_attribute: CO.2.1 Material Landed Cost
+    unit: currency_per_unit
+    persona_synonyms:
+      PLANNING_ROLE:
+        - cost per unit
+      PROCUREMENT_ROLE:
+        - landed cost
+        - all-in cost
+        - total cost
+      LOGISTICS_ROLE:
+        - delivered cost
+      EXECUTIVE_ROLE:
+        - unit cost
+        - landed cost
+    version: 1
+    status: approved
+    approved_by: VP Procurement
+    approved_on: "2026-10-01"
+
+  # Supporting metrics
+
+  supplier_lead_time_days:
+    title: Supplier Lead Time
+    type: percentile
+    grain: purchase_order_line
+    date_basis: receipt_date
+    window: period
+    numerator: >-
+      DATEDIFF(DAY, order_date, receipt_date) for PO lines received in period
+    denominator: n/a (percentile)
+    definition: >-
+      Median and 90th percentile calendar days from PO order date to goods
+      receipt date.
+    formula_text: >-
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(DAY, order_date, receipt_date))
+      and PERCENTILE_CONT(0.9) ...
+    synonyms:
+      - lead time
+      - procurement lead time
+    variants:
+      lead_time_variability:
+        type: sum
+        definition: >-
+          Standard deviation of supplier lead time in days, measuring consistency.
+        formula_text: STDDEV(DATEDIFF(DAY, order_date, receipt_date))
+    owner: VP Procurement
+    steward: Procurement Analytics Lead
+    scor_attribute: RS.2.1 Source Lead Time
+    unit: days
+    persona_synonyms:
+      PLANNING_ROLE:
+        - lead time
+      PROCUREMENT_ROLE:
+        - supplier lead time
+        - receipt lead time
+      LOGISTICS_ROLE:
+        - inbound lead time
+      EXECUTIVE_ROLE:
+        - lead time
+    version: 1
+    status: approved
+    approved_by: VP Procurement
+    approved_on: "2026-10-01"
+
+  order_fulfilment_cycle_days:
+    title: Order Fulfilment Cycle Time
+    type: percentile
+    grain: sales_order_line
+    date_basis: actual_delivery_date
+    window: period
+    numerator: >-
+      DATEDIFF(DAY, order_date, actual_delivery_date) for delivered lines in period
+    denominator: n/a
+    definition: >-
+      Median calendar days from sales order placement to customer delivery.
+    formula_text: >-
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(DAY, order_date, actual_delivery_date))
+    synonyms:
+      - cycle time
+      - order-to-delivery
+    variants: {}
+    owner: VP Supply Chain
+    steward: Supply Chain Analytics Lead
+    scor_attribute: RS.1.1 Order Fulfillment Cycle Time
+    unit: days
+    persona_synonyms:
+      PLANNING_ROLE:
+        - cycle time
+      PROCUREMENT_ROLE:
+        - fulfilment cycle
+      LOGISTICS_ROLE:
+        - order cycle
+      EXECUTIVE_ROLE:
+        - cycle time
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  transit_hours:
+    title: Transit Time
+    type: percentile
+    grain: shipment
+    date_basis: actual_delivery
+    window: period
+    numerator: >-
+      DATEDIFF(HOUR, ship_date, actual_delivery) for delivered shipments in period
+    denominator: n/a
+    definition: >-
+      Median and 90th percentile hours from shipment departure to delivery.
+    formula_text: >-
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(HOUR, ship_date, actual_delivery))
+    synonyms:
+      - transit time
+      - shipping time
+    variants: {}
+    owner: VP Logistics
+    steward: Logistics Analytics Lead
+    scor_attribute: DR.2.4 Deliver Cycle Time
+    unit: hours
+    persona_synonyms:
+      PLANNING_ROLE:
+        - transit time
+      PROCUREMENT_ROLE:
+        - shipping duration
+      LOGISTICS_ROLE:
+        - transit hours
+        - transit time
+      EXECUTIVE_ROLE:
+        - delivery time
+    version: 1
+    status: approved
+    approved_by: VP Logistics
+    approved_on: "2026-10-01"
+
+  inventory_turns:
+    title: Inventory Turns
+    type: ratio
+    grain: storage_location_part
+    date_basis: snapshot_date
+    window: trailing
+    numerator: >-
+      Annualised trailing 90-day cost of goods shipped
+      (SUM(cogs_shipped over trailing_90_days) / 90 * 365)
+    denominator: >-
+      Average on-hand inventory value over the trailing 90 days
+    definition: >-
+      The number of times inventory turns over per year, based on trailing 90-day
+      consumption and average inventory. Invariant: inventory_turns * days_of_inventory = 365.
+    formula_text: >-
+      (SUM(cogs_shipped_90d) / 90 * 365) / AVG(on_hand_value_std_90d)
+    synonyms:
+      - turns
+      - stock turns
+      - inventory turnover
+    variants: {}
+    owner: VP Supply Chain
+    steward: Inventory Manager
+    scor_attribute: AM.2.1 Inventory Turns
+    unit: turns_per_year
+    persona_synonyms:
+      PLANNING_ROLE:
+        - turns
+        - stock velocity
+      PROCUREMENT_ROLE:
+        - inventory turns
+      LOGISTICS_ROLE:
+        - warehouse turns
+      EXECUTIVE_ROLE:
+        - inventory turns
+        - turnover
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  stockout_rate:
+    title: Stockout Rate
+    type: ratio
+    grain: storage_location_part
+    date_basis: snapshot_date
+    window: period
+    numerator: >-
+      COUNT of (storage_location, part, snapshot_date) where on_hand_qty = 0
+      and allocated_qty > 0 (demand exists but no stock)
+    denominator: >-
+      COUNT of all (storage_location, part, snapshot_date) combinations in period
+    definition: >-
+      Fraction of location-part-day observations where demand exists but
+      on-hand inventory is zero.
+    formula_text: >-
+      SUM(CASE WHEN on_hand_qty = 0 AND allocated_qty > 0 THEN 1 ELSE 0 END)
+      / COUNT(*)
+    synonyms:
+      - stockout frequency
+      - out-of-stock rate
+    variants: {}
+    owner: VP Supply Chain
+    steward: Inventory Manager
+    scor_attribute: RL.3.35 % Orders/Lines Received Defect-Free (adapted)
+    unit: ratio
+    persona_synonyms:
+      PLANNING_ROLE:
+        - stockout
+        - OOS
+      PROCUREMENT_ROLE:
+        - material shortage
+      LOGISTICS_ROLE:
+        - stockout
+      EXECUTIVE_ROLE:
+        - stockout rate
+    version: 1
+    status: approved
+    approved_by: VP Supply Chain
+    approved_on: "2026-10-01"
+
+  freight_cost_per_unit:
+    title: Freight Cost Per Unit
+    type: weighted_average
+    grain: shipment_line
+    date_basis: ship_date
+    window: period
+    numerator: >-
+      SUM of freight_charge allocated to the shipment line
+      (freight_charge * line_chargeable_weight / shipment_chargeable_weight)
+    denominator: >-
+      SUM of shipped_qty
+    definition: >-
+      Freight cost per unit shipped, allocated by chargeable weight share,
+      weighted by shipped quantity.
+    formula_text: >-
+      SUM(freight_allocation) / SUM(shipped_qty)
+      WHERE ship_date IN period
+    synonyms:
+      - shipping cost per unit
+      - transport cost per unit
+    variants: {}
+    owner: VP Logistics
+    steward: Logistics Analytics Lead
+    scor_attribute: CO.2.4 Transportation Cost
+    unit: currency_per_unit
+    persona_synonyms:
+      PLANNING_ROLE:
+        - freight cost
+      PROCUREMENT_ROLE:
+        - transport cost
+      LOGISTICS_ROLE:
+        - freight cost per unit
+        - shipping cost
+      EXECUTIVE_ROLE:
+        - freight cost
+    version: 1
+    status: approved
+    approved_by: VP Logistics
+    approved_on: "2026-10-01"
