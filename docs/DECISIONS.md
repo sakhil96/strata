@@ -175,3 +175,21 @@ routine stays defined so it can be resumed for an investigation; nothing depends
 DEV loads its sources once, so the stale-source alert would mail every hour from six hours after
 that load. dev.yaml sets `stale_source_alert: SUSPEND`, which resume_alerts.sql applies; TEST and
 PROD resume it. The other three alerts judge things DEV still produces and stay on.
+
+## The /query latency target is 2500 ms (2026-10-03)
+
+On SCM_DEV the builder path measured p95 1590 ms over its first day against a 1500 ms target, and
+SLO_BREACH_ALERT triggered on it. Most of that time is the procedure call and the semantic view on
+an XS warehouse that resumes from suspend, not the API. The target is the measured value with
+headroom, 2500 ms, in OPS.SLO_STATUS, the local backend and docs/slo.md; the agent target stays
+6 s. It is revisited once a week of answers exists rather than a day.
+
+## Operations and governance read the environment, not the repository (2026-10-03)
+
+ALERT_HISTORY and SHOW ALERTS answer only an alert's owner, so OPS.ALERT_STATUS is now a procedure
+owned by SCM_ADMIN that runs as its owner, and readers call it: started or suspended from SHOW
+ALERTS, the last outcome and the last firing from the history. The cost task runs daily and keeps
+a week-to-date row. eval/report.py writes every suite and the total to EVAL.EVAL_RUNS when it runs
+against an account, and the governance page reads the latest batch there and the agent card from
+DESCRIBE AGENT. The committed governance snapshot keeps only grants and policies, with {{DB}}
+left as a placeholder, so nothing committed names an environment or a model it does not run.

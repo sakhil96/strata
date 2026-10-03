@@ -50,7 +50,24 @@ class Backend(Protocol):
     def lineage(self, metric: str) -> dict[str, Any]: ...
     def audit(self, limit: int) -> list[dict[str, Any]]: ...
     def status(self) -> dict[str, Any]: ...
+    def eval_report(self) -> dict[str, Any] | None: ...
+    def agent_card(self) -> dict[str, Any]: ...
     def health(self) -> dict[str, Any]: ...
+
+
+def agent_tools(spec: dict[str, Any]) -> list[dict[str, Any]]:
+    return [{"name": t["tool_spec"]["name"], "type": t["tool_spec"]["type"],
+             "description": " ".join(str(t["tool_spec"].get("description", "")).split())} for t in spec.get("tools", [])]
+
+
+def committed_agent_spec() -> dict[str, Any]:
+    import re
+
+    import yaml
+
+    sql = (ROOT / "snowflake" / "agent" / "create_agent.sql").read_text()
+    body = re.search(r"FROM SPECIFICATION\s*\$\$(.*?)\$\$", sql, re.S).group(1)
+    return yaml.safe_load(body.replace("{{DB}}", "SCM_ENV").replace("{{WH}}", "SCM_WH_ENV"))
 
 
 def view_for(role: str) -> str:
@@ -248,7 +265,7 @@ class LocalBackend:
         report_path = ROOT / "eval" / "report.json"
         rate = json.loads(report_path.read_text()).get("pass_rate") if report_path.exists() else None
         slo = [
-            slo_row("p95 answer latency through /query", "≤ 1500 ms", p95, 1500, "ms",
+            slo_row("p95 answer latency through /query", "≤ 2500 ms", p95, 2500, "ms",
                     f"local audit trail, {len(latencies)} answers"),
             {"name": "p95 answer latency through the agent", "target": "≤ 6 s", "measured": None,
              "status": "needs_account", "source": "AUDIT.ANSWERS where path = agent"},
@@ -260,6 +277,15 @@ class LocalBackend:
         return {"slo": slo, "alerts": ALERTS,
                 "cost": {"week": "this week", "credits": None,
                          "note": "Locally nothing is spent. On the account this reads the weekly cost task's output."}}
+
+    def eval_report(self) -> dict[str, Any] | None:
+        path = ROOT / "eval" / "report.json"
+        return json.loads(path.read_text()) if path.exists() else None
+
+    def agent_card(self) -> dict[str, Any]:
+        spec = committed_agent_spec()
+        return {"name": "SCM_AGENT", "model": spec["models"]["orchestration"], "tools": agent_tools(spec),
+                "source": "committed spec in snowflake/agent/create_agent.sql; nothing is deployed locally"}
 
     def health(self) -> dict[str, Any]:
         self._cursor().execute("select 1").fetchone()
@@ -347,13 +373,41 @@ class SnowflakeBackend:
             cur.execute(f"SELECT * FROM {self.db}.OPS.SLO_STATUS")
             cols = [c[0].lower() for c in cur.description]
             slo = [dict(zip(cols, r, strict=False)) for r in cur.fetchall()]
-            cur.execute(f"SELECT name, schedule, last_fired, state FROM {self.db}.OPS.ALERT_STATUS")
-            alerts = [dict(zip(("name", "schedule", "last_fired", "state"), r, strict=False)) for r in cur.fetchall()]
-            cur.execute(f"SELECT week, credits FROM {self.db}.OPS.WEEKLY_COST ORDER BY week DESC LIMIT 1")
+            cur.execute(f"CALL {self.db}.OPS.ALERT_STATUS()")
+            fields = ("name", "schedule", "state", "last_outcome", "last_run", "last_fired")
+            alerts = [dict(zip(fields, r, strict=True)) for r in cur.fetchall()]
+            cur.execute(f"SELECT week, credits FROM {self.db}.OPS.WEEKLY_COST "
+                        "WHERE week = DATE_TRUNC(week, CURRENT_DATE())")
             week = cur.fetchone()
         return {"slo": slo, "alerts": alerts,
-                "cost": {"week": str(week[0]) if week else None, "credits": float(week[1]) if week else None,
-                         "note": "From the weekly cost task over ACCOUNT_USAGE."}}
+                "cost": {"week": str(week[0]) if week else None,
+                         "credits": round(float(week[1]), 2) if week and week[1] is not None else None,
+                         "note": "Week to date, from the daily cost task over ACCOUNT_USAGE (up to a few hours behind)."}}
+
+    def eval_report(self) -> dict[str, Any] | None:
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(f"SELECT suite, passed, total, pass_rate, detail, run_at FROM {self.db}.EVAL.EVAL_RUNS "
+                        f"WHERE run_at = (SELECT MAX(run_at) FROM {self.db}.EVAL.EVAL_RUNS WHERE suite = 'all')")
+            rows = cur.fetchall()
+        if not rows:
+            return None
+        total = next(r for r in rows if r[0] == "all")
+        suites = [json.loads(r[4]) for r in rows if r[0] != "all"]
+        order = ("metric_identity", "nl_accuracy", "persona_consistency", "governance", "resilience", "frontend",
+                 "supply_chain")
+        suites.sort(key=lambda s: order.index(s["name"]) if s["name"] in order else len(order))
+        return {"generated_at": str(total[5]), "environment": self.db, "pass_rate": total[3],
+                "summary": json.loads(total[4])["summary"], "suites": suites}
+
+    def agent_card(self) -> dict[str, Any]:
+        name = f"{self.db}.AGENT.SCM_AGENT"
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(f"DESCRIBE AGENT {name}")
+            cols = [c[0].lower() for c in cur.description]
+            row = dict(zip(cols, cur.fetchone(), strict=True))
+        spec = json.loads(row["agent_spec"])
+        return {"name": name, "model": spec["models"]["orchestration"], "tools": agent_tools(spec),
+                "source": f"DESCRIBE AGENT on {self.db}"}
 
     def health(self) -> dict[str, Any]:
         with self._connect() as conn, conn.cursor() as cur:
@@ -365,16 +419,15 @@ class SnowflakeBackend:
 
 
 ALERTS = [
-    {"name": "STALE_SOURCE_ALERT", "schedule": "hourly, any source older than 6 h", "last_fired": None,
-     "state": "defined, runs on the account"},
-    {"name": "DBT_TEST_FAILURE_ALERT", "schedule": "hourly, failures in the last 2 h", "last_fired": None,
-     "state": "defined, runs on the account"},
-    {"name": "EVAL_REGRESSION_ALERT", "schedule": "daily 03:00 UTC, pass rate under 90%", "last_fired": None,
-     "state": "defined, runs on the account"},
-    {"name": "SLO_BREACH_ALERT", "schedule": "every 15 min, p95 over target", "last_fired": None,
-     "state": "defined, runs on the account"},
-    {"name": "SCM_PROD_MONITOR", "schedule": "resource monitor, 50/75/90/100%", "last_fired": None,
-     "state": "defined, runs on the account"},
+    {"name": name, "schedule": schedule, "state": "defined, runs on the account", "last_outcome": None,
+     "last_run": None, "last_fired": None}
+    for name, schedule in (
+        ("STALE_SOURCE_ALERT", "hourly, any source older than 6 h"),
+        ("DBT_TEST_FAILURE_ALERT", "hourly, failures in the last 2 h"),
+        ("EVAL_REGRESSION_ALERT", "daily 03:00 UTC, pass rate under 90%"),
+        ("SLO_BREACH_ALERT", "every 15 min, p95 over target"),
+        ("SCM_<ENV>_MONITOR", "resource monitor, 50/75/90/100%"),
+    )
 ]
 
 

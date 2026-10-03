@@ -15,7 +15,14 @@ interface Slo {
 
 interface Ops {
   slo: Slo[];
-  alerts: { name: string; schedule: string; last_fired: string | null; state: string }[];
+  alerts: {
+    name: string;
+    schedule: string;
+    state: string;
+    last_outcome: string | null;
+    last_run: string | null;
+    last_fired: string | null;
+  }[];
   cost: { week: string; credits: number | null; note: string };
 }
 
@@ -127,7 +134,9 @@ export default function OperationsPage() {
                       <span className="font-mono text-bone">{a.name}</span> <span className="text-ash">· {a.schedule}</span>
                     </span>
                     <span className="font-mono text-micro uppercase text-ash">
-                      {a.last_fired ? `fired ${a.last_fired}` : a.state}
+                      {a.state}
+                      {a.last_outcome ? ` · last ${a.last_outcome.replace("_", " ").toLowerCase()}` : " · not run yet"}
+                      {a.last_fired ? ` · fired ${a.last_fired.slice(0, 16).replace("T", " ")}` : ""}
                     </span>
                   </li>
                 ))}

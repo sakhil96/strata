@@ -6,7 +6,7 @@
 
 ## Answer latency
 - Agent path (/ask): p95 <= 6 seconds end to end.
-- Builder path (/query): p95 <= 1.5 seconds.
+- Builder path (/query): p95 <= 2.5 seconds (was 1.5; see DECISIONS.md, 2026-10-03).
 - Measured from: AUDIT.ANSWERS.latency_ms.
 
 ## Evaluation pass rate

@@ -4,6 +4,7 @@ lives in eval/account/ and runs only with SCM_BACKEND=snowflake."""
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -314,3 +315,14 @@ def test_on_the_account_the_deployed_views_round_trip_with_the_governed_expressi
         assert _metric_exprs(deployed) == _metric_exprs(committed) and len(_metric_exprs(deployed)) == 19, name
         dims = {d["name"].lower() for t in deployed["tables"] for d in t.get("dimensions", [])}
         assert ("supplier_unit_cost" in dims) is (name != "scm_governed"), name
+
+
+def test_nothing_committed_names_an_environment_or_a_model_the_spec_does_not_run():
+    snapshot = (ROOT / "eval" / "governance_snapshot.json").read_text()
+    assert "agent" not in json.loads(snapshot)
+    assert not re.search(r"SCM_(PROD|TEST|DEV)\b", snapshot)
+    model = agent_spec()["models"]["orchestration"]
+    for name in ("governance", "operations", "eval-report"):
+        recorded = (ROOT / "web" / "public" / "recorded" / f"{name}.json").read_text()
+        assert not re.search(r"SCM_PROD\b", recorded), name
+        assert set(re.findall(r"claude-[\w.-]+", recorded)) <= {model}, name

@@ -9,7 +9,6 @@ from ..backend import ROOT
 from .deps import backend, caller
 
 router = APIRouter(tags=["operations"])
-REPORT = ROOT / "eval" / "report.json"
 GOVERNANCE = ROOT / "eval" / "governance_snapshot.json"
 
 
@@ -22,17 +21,18 @@ def audit(request: Request, limit: int = Query(default=50, ge=1, le=200)):
 @router.get("/eval/report", summary="Latest evaluation report")
 def eval_report(request: Request):
     caller(request)
-    if not REPORT.exists():
+    report = backend().eval_report()
+    if report is None:
         return JSONResponse(status_code=404, content={"error": "no_report", "message": "Run `make eval` to produce one."})
-    return json.loads(REPORT.read_text())
+    return report
 
 
-@router.get("/governance", summary="Agent tools, grants and policies as last snapshotted")
+@router.get("/governance", summary="The deployed agent's tools, and the grants and policies the setup makes")
 def governance(request: Request):
     caller(request)
     if not GOVERNANCE.exists():
         return JSONResponse(status_code=404, content={"error": "no_snapshot", "message": "Run `make governance-snapshot`."})
-    return json.loads(GOVERNANCE.read_text())
+    return {**json.loads(GOVERNANCE.read_text()), "agent": backend().agent_card()}
 
 
 @router.get("/status", summary="Freshness, last dbt run and last evaluation score")

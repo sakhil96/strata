@@ -2,31 +2,41 @@
   "alerts": [
     {
       "last_fired": null,
+      "last_outcome": null,
+      "last_run": null,
       "name": "STALE_SOURCE_ALERT",
       "schedule": "hourly, any source older than 6 h",
       "state": "defined, runs on the account"
     },
     {
       "last_fired": null,
+      "last_outcome": null,
+      "last_run": null,
       "name": "DBT_TEST_FAILURE_ALERT",
       "schedule": "hourly, failures in the last 2 h",
       "state": "defined, runs on the account"
     },
     {
       "last_fired": null,
+      "last_outcome": null,
+      "last_run": null,
       "name": "EVAL_REGRESSION_ALERT",
       "schedule": "daily 03:00 UTC, pass rate under 90%",
       "state": "defined, runs on the account"
     },
     {
       "last_fired": null,
+      "last_outcome": null,
+      "last_run": null,
       "name": "SLO_BREACH_ALERT",
       "schedule": "every 15 min, p95 over target",
       "state": "defined, runs on the account"
     },
     {
       "last_fired": null,
-      "name": "SCM_PROD_MONITOR",
+      "last_outcome": null,
+      "last_run": null,
+      "name": "SCM_<ENV>_MONITOR",
       "schedule": "resource monitor, 50/75/90/100%",
       "state": "defined, runs on the account"
     }
@@ -40,9 +50,9 @@
     {
       "measured": "6 ms",
       "name": "p95 answer latency through /query",
-      "source": "local audit trail, 75 answers",
+      "source": "local audit trail, 101 answers",
       "status": "met",
-      "target": "\u2264 1500 ms"
+      "target": "\u2264 2500 ms"
     },
     {
       "measured": null,

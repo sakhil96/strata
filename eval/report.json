@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-03T05:51:02+00:00",
-  "environment": "local DuckDB build",
-  "pass_rate": 0.9808,
-  "summary": "102 of 104 checks passed across 7 suites; 0 checks need the account.",
+  "generated_at": "2026-10-03T10:36:45+00:00",
+  "environment": "SCM_DEV",
+  "pass_rate": 1.0,
+  "summary": "113 of 113 checks passed across 7 suites; 2 checks need the account.",
   "suites": [
     {
       "name": "metric_identity",
@@ -16,11 +16,14 @@
     {
       "name": "nl_accuracy",
       "title": "2 \u00b7 Words to governed query",
-      "status": "failed",
-      "passed": 5,
-      "total": 6,
-      "needs_account": [],
-      "detail": "failing: test_agent_meets_the_same_floors_through_agent_run"
+      "status": "passed",
+      "passed": 7,
+      "total": 7,
+      "needs_account": [
+        "test_agent_meets_the_same_floors_through_agent_run",
+        "test_the_agent_on_the_held_out_set_is_recorded_not_tuned"
+      ],
+      "detail": "2 check(s) need the account"
     },
     {
       "name": "persona_consistency",
@@ -35,19 +38,19 @@
       "name": "governance",
       "title": "4 \u00b7 Governance rules",
       "status": "passed",
-      "passed": 28,
-      "total": 28,
+      "passed": 37,
+      "total": 37,
       "needs_account": [],
       "detail": "all checks ran"
     },
     {
       "name": "resilience",
       "title": "5 \u00b7 Resilience and operations",
-      "status": "failed",
-      "passed": 8,
+      "status": "passed",
+      "passed": 9,
       "total": 9,
       "needs_account": [],
-      "detail": "failing: test_restore_from_a_time_travel_clone_matches_the_original"
+      "detail": "all checks ran"
     },
     {
       "name": "frontend",
@@ -62,10 +65,10 @@
       "name": "supply_chain",
       "title": "7 \u00b7 Software supply chain",
       "status": "passed",
-      "passed": 5,
-      "total": 5,
+      "passed": 4,
+      "total": 4,
       "needs_account": [],
-      "detail": "all checks ran"
+      "detail": "1 skipped locally"
     }
   ]
 }

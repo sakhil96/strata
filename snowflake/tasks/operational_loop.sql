@@ -80,24 +80,37 @@ AS
            SYSTEM$TASK_RUNTIME_INFO('CURRENT_TASK_GRAPH_RUN_GROUP_ID');
 
 -- Weekly cost: warehouses, the compute pool and Cortex function credits for this environment.
+-- Daily, so this week's row is week to date and last week's row closes on Monday's run.
 CREATE OR REPLACE TASK {{DB}}.OPS.WEEKLY_COST_REPORT
     WAREHOUSE = {{WH}}
-    SCHEDULE = 'USING CRON 0 6 * * MON UTC'
+    SCHEDULE = 'USING CRON 0 6 * * * UTC'
 AS
-    INSERT INTO {{DB}}.OPS.WEEKLY_COST (week, warehouse_credits, container_credits, ai_credits, credits)
-    WITH wh AS (
-        SELECT SUM(credits_used) c FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
-        WHERE warehouse_name = '{{WH}}' AND start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
-          AND start_time < DATE_TRUNC(week, CURRENT_DATE())
-    ), pool AS (
-        SELECT SUM(credits_used) c FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWPARK_CONTAINER_SERVICES_HISTORY
-        WHERE compute_pool_name = 'SCM_POOL_{{ENV}}' AND start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
-          AND start_time < DATE_TRUNC(week, CURRENT_DATE())
-    ), ai AS (
-        SELECT SUM(token_credits) c FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY
-        WHERE start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
-          AND start_time < DATE_TRUNC(week, CURRENT_DATE())
-    )
-    SELECT DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE())), wh.c, pool.c, ai.c,
-           COALESCE(wh.c, 0) + COALESCE(pool.c, 0) + COALESCE(ai.c, 0)
-    FROM wh, pool, ai;
+    MERGE INTO {{DB}}.OPS.WEEKLY_COST t
+    USING (
+        WITH weeks AS (
+            SELECT DATE_TRUNC(week, CURRENT_DATE()) AS week
+            UNION ALL SELECT DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
+        ), wh AS (
+            SELECT DATE_TRUNC(week, start_time)::DATE week, SUM(credits_used) c
+            FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+            WHERE warehouse_name = '{{WH}}' AND start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
+            GROUP BY 1
+        ), pool AS (
+            SELECT DATE_TRUNC(week, start_time)::DATE week, SUM(credits_used) c
+            FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWPARK_CONTAINER_SERVICES_HISTORY
+            WHERE compute_pool_name = 'SCM_POOL_{{ENV}}' AND start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
+            GROUP BY 1
+        ), ai AS (
+            SELECT DATE_TRUNC(week, start_time)::DATE week, SUM(token_credits) c
+            FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY
+            WHERE start_time >= DATEADD(week, -1, DATE_TRUNC(week, CURRENT_DATE()))
+            GROUP BY 1
+        )
+        SELECT w.week, wh.c AS warehouse_credits, pool.c AS container_credits, ai.c AS ai_credits,
+               COALESCE(wh.c, 0) + COALESCE(pool.c, 0) + COALESCE(ai.c, 0) AS credits
+        FROM weeks w LEFT JOIN wh USING (week) LEFT JOIN pool USING (week) LEFT JOIN ai USING (week)
+    ) s ON t.week = s.week
+    WHEN MATCHED THEN UPDATE SET warehouse_credits = s.warehouse_credits, container_credits = s.container_credits,
+                                 ai_credits = s.ai_credits, credits = s.credits
+    WHEN NOT MATCHED THEN INSERT (week, warehouse_credits, container_credits, ai_credits, credits)
+                          VALUES (s.week, s.warehouse_credits, s.container_credits, s.ai_credits, s.credits);

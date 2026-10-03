@@ -23,7 +23,7 @@ interface Report {
 }
 
 interface Snapshot {
-  agent: { name: string; model: string; tools: { name: string; type: string; description: string }[] };
+  agent: { name: string; model: string; source: string; tools: { name: string; type: string; description: string }[] };
   grants: { role: string; privilege: string; object: string }[];
   policies: { name: string; kind: string; applies_to: string }[];
   source: string;
@@ -97,14 +97,14 @@ export default function GovernancePage() {
         <Section
           numeral="11.2"
           title="Agent tools"
-          lede="Rendered from the agent specification. No tool here can run SQL you write."
+          lede="Read from the agent this environment runs. No tool here can run SQL you write."
         >
           {snapshot.state === "loading" ? <Loading what="Reading the governance snapshot" /> : null}
           {snapshot.state === "failed" ? <Problem problem={snapshot.problem} /> : null}
           {snapshot.state === "ready" ? (
             <>
               <p className="font-mono text-micro text-ash">
-                {snapshot.value.agent.name} · model {snapshot.value.agent.model} · from {snapshot.value.source}
+                {snapshot.value.agent.name} · model {snapshot.value.agent.model} · {snapshot.value.agent.source}
               </p>
               <dl className="mt-2">
                 {snapshot.value.agent.tools.map((t) => (

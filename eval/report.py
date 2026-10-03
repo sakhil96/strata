@@ -1,11 +1,14 @@
 """Run the seven suites and write eval/report.json and eval/report.md.
 
 A suite whose checks all need the account is reported as needs_account, not as passed. The
-pass rate counts only checks that ran. Exit status is non-zero if any check that ran failed."""
+pass rate counts only checks that ran. Exit status is non-zero if any check that ran failed.
+Against an account (SCM_BACKEND=snowflake) each suite and the total also land in EVAL.EVAL_RUNS,
+which the governance page, the release gate and the regression alert read."""
 
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -47,6 +50,25 @@ def run_suite(name: str, paths: list[str]) -> dict:
     return {"passed": passed, "failed": failed, "skipped": skipped, "needs_account": needs_account, "failures": failures}
 
 
+def publish(report: dict) -> None:
+    import snowflake.connector
+
+    db = report["environment"]
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    rows = [(s["name"], s["passed"], s["total"], s["passed"] / s["total"] if s["total"] else None, sha, json.dumps(s))
+            for s in report["suites"]]
+    ran = sum(s["total"] for s in report["suites"])
+    rows.append(("all", sum(s["passed"] for s in report["suites"]), ran, report["pass_rate"], sha,
+                 json.dumps({"summary": report["summary"], "generated_at": report["generated_at"]})))
+    with snowflake.connector.connect(connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", "scm_dev"), database=db) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT CURRENT_TIMESTAMP()")
+        run_at = cur.fetchone()[0]
+        for row in rows:
+            cur.execute(f"INSERT INTO {db}.EVAL.EVAL_RUNS (run_at, suite, passed, total, pass_rate, git_sha, detail) "
+                        "SELECT %s, %s, %s, %s, %s, %s, PARSE_JSON(%s)", (run_at, *row))
+
+
 def main() -> int:
     suites = []
     for name, title, paths in SUITES:
@@ -70,6 +92,9 @@ def main() -> int:
         "summary": f"{passed} of {ran} checks passed across {len(suites)} suites; {pending} checks need the account.",
         "suites": suites,
     }
+    if os.getenv("SCM_BACKEND") == "snowflake":
+        report["environment"] = f"SCM_{os.getenv('SCM_ENV', 'dev').upper()}"
+        publish(report)
     (HERE / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     lines = [f"# Evaluation report, {report['generated_at']}", "", report["summary"], "",
              "| Suite | Status | Passed | Detail |", "|---|---|---|---|"]

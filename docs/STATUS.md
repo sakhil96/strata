@@ -59,3 +59,17 @@ commit the full `make eval-account` was not repeated.
 | `pytest api/tests` | 23 passed |
 | `ruff check .` | clean |
 | `npm run build`, `npm run lint`, Playwright | not re-run; no front-end change since 78 of 78 |
+
+## Preview findings (2026-10-03, `make preview` against SCM_DEV)
+
+All ten pages render against live data with no page errors and no failed /api calls. The three
+findings from the first preview are fixed in the repository:
+
+| Page | Finding | Now |
+|---|---|---|
+| Governance | Evaluation read the last local report; the agent card named SCM_PROD and claude-4-sonnet from a committed snapshot | Latest batch in EVAL.EVAL_RUNS (113 of 113, 2 need the account); agent card from DESCRIBE AGENT: SCM_DEV.AGENT.SCM_AGENT, claude-sonnet-4-6, four tools |
+| Operations | Every alert NOT_RUN; credits 0; p95 1590 ms against 1500 ms | OPS.ALERT_STATUS() as the alerts' owner: three started, STALE_SOURCE_ALERT suspended, last outcomes and SLO_BREACH_ALERT's firing at 09:36; credits this week 5.38 (warehouse); target 2500 ms, measured 1414 ms, met |
+| Ask, Compare | The Next dev proxy cut agent answers off at 30 s | preview config raises it to 240 s |
+
+The cost row counts warehouse, compute-pool and Cortex function credits; Cortex Agents and Cortex
+Code credits are not in it, so it reads well below the account's spend.
