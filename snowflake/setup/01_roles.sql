@@ -48,7 +48,7 @@ CREATE USER IF NOT EXISTS SCM_SERVICE_USER
 GRANT ROLE SCM_SERVICE_ROLE TO USER SCM_SERVICE_USER;
 
 -- The API answers as the caller's persona with USE ROLE, so the service must be able to assume
--- the four personas. They sit on their own role granted to the user, not under SCM_SERVICE_ROLE:
+-- the personas. They sit on their own role granted to the user, not under SCM_SERVICE_ROLE:
 -- a role inherits what it is granted, and SCM_SERVICE_ROLE is what agent:run runs as, so holding
 -- them there would put PROCUREMENT_ROLE's columns in every agent session. No secondary roles by
 -- default, for the same reason. The mapping from caller to persona is in docs/governance.md.
@@ -64,6 +64,7 @@ ALTER USER SCM_SERVICE_USER SET DEFAULT_SECONDARY_ROLES = ();
 CREATE ROLE IF NOT EXISTS EMEA_PLANNING_ROLE COMMENT = 'Planning persona scoped to EMEA plants';
 GRANT ROLE SCM_READER TO ROLE EMEA_PLANNING_ROLE;
 GRANT ROLE EMEA_PLANNING_ROLE TO ROLE SCM_DEPLOY;
+GRANT ROLE EMEA_PLANNING_ROLE TO ROLE SCM_SERVICE_PERSONAS;
 
 -- Deploy identity for loads, dbt and releases from CI and the deploying workstation. Key-pair
 -- only; its public key is set by runbooks/rotate-keys.md.

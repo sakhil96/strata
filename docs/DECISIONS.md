@@ -205,3 +205,25 @@ or it drifts the first time a plant is added. Synonyms the held-out set leaned o
 "run dry", "lets us down", "land") belong in the registry's synonyms so the resolver fallback gets
 them too, not only the agent. The set should grow with each judge's own questions, and a question
 that fails goes into the tuned set only after it has been scored here once.
+
+## The agent resolves, the persona executes (2026-10-03)
+
+How agent:run picks its role, from the Cortex Agents docs: "Cortex Agents determines permissions from
+the querying user's default role, not the role active in their session", and a request can run
+under another role only by setting the X-Snowflake-Role header
+(https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-manage). Our calls set no
+such header, so every agent tool call ran as SCM_SERVICE_ROLE on SCM_GOVERNED_V1, and the Ask
+ledger showed that role: a scoped persona such as EMEA_PLANNING_ROLE would have read global numbers.
+
+The agent is now only the reader of the question. /ask takes every distinct canonical query the
+agent settled on and runs it again through GOVERNED_QUERY as the caller's persona (USE ROLE through
+SCM_SERVICE_PERSONAS) on that persona's semantic view. The rows, chart, table, hash, ledger and audit
+row shown are that execution's; the agent's own tool calls, as SCM_SERVICE_ROLE, are not shown and
+leave their own audit rows marked with the agent path. We did not use X-Snowflake-Role for the
+persona because the agent would still choose the view, and because it would give every persona the
+agent's whole tool set at once rather than one governed query.
+
+The agent's reply is at most two plain sentences on how it read the question. The lead sentence is
+written by the API from the persona's own result (api/narrate.py), and a reading that carries an
+amount, a rate or a hash is dropped. A signed-in user listed in SCM_USER_PERSONAS is pinned to that
+persona and the dial follows; other users choose with the dial.

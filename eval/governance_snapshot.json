@@ -321,6 +321,11 @@
       "role": "SCM_READER"
     },
     {
+      "object": "EMEA_PLANNING_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
       "object": "EXECUTIVE_ROLE",
       "privilege": "ROLE",
       "role": "SCM_SERVICE_PERSONAS"

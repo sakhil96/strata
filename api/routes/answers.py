@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from .. import agent
+from .. import agent, narrate
 from ..backend import PERSONAS
 from ..schemas import AskRequest, BeforeAfterRequest, CompareRequest, QueryRequest
-from .deps import backend, caller
+from .deps import backend, caller, pinned_persona
 
 router = APIRouter(tags=["answers"])
 COMPARE_ROLES = ("PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE")
@@ -23,28 +24,61 @@ def governed_answer(request: Request, who, query: dict[str, Any], question: str 
     return backend().query(who, query, question)
 
 
+def dimension_titles() -> dict[str, str]:
+    return {d: meta.get("title", d) for spec in backend().registry.tables.values()
+            for d, meta in spec.get("dimensions", {}).items()}
+
+
+def told(answer: dict[str, Any], question: str, started: float) -> dict[str, Any]:
+    return answer | {"lead": narrate.lead(answer, question, dimension_titles()),
+                     "total_ms": int((time.perf_counter() - started) * 1000)}
+
+
+def distinct(queries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen, kept = set(), []
+    for q in queries:
+        key = repr(sorted((k, repr(v)) for k, v in q.items()))
+        if key not in seen:
+            seen.add(key)
+            kept.append(q)
+    return kept
+
+
 @router.post("/query", summary="Answer a structured semantic query without the model")
 def structured_query(body: QueryRequest, request: Request):
+    started = time.perf_counter()
     who = caller(request, body.persona)
     try:
-        return governed_answer(request, who, body.query.model_dump(exclude_none=True), None) | {"path": "builder"}
+        answer = governed_answer(request, who, body.query.model_dump(exclude_none=True), None)
     except ValueError as exc:
         return semantic_failure(exc)
+    return told(answer, "", started) | {"path": "builder"}
 
 
-@router.post("/ask", summary="Answer a question through the governed agent, or the resolver when it is down")
+@router.post("/ask", summary="Resolve with the governed agent, then answer as the caller's persona")
 def ask(body: AskRequest, request: Request):
+    # The agent only reads the question: it runs as the service's own role and its results are not
+    # shown. Every canonical query it settled on is run again here as the caller's persona, on that
+    # persona's semantic view, and that execution is the answer, its hash and its audit row.
+    started = time.perf_counter()
     who = caller(request, body.persona)
     fallback_reason = None
     if agent.enabled():
         try:
             reply = agent.run(body.question, who.role, who.user, body.thread_id, body.parent_message_id)
-            if reply["answer"]:
-                return reply["answer"] | {"path": "agent", "narrative": reply["narrative"], "fallback": False}
+            queries = distinct([a["canonical_query"] for a in reply["answers"] if a.get("canonical_query")])
+            if queries:
+                try:
+                    answers = [governed_answer(request, who, q, body.question) for q in queries]
+                except ValueError as exc:
+                    return semantic_failure(exc)
+                answers = [told(a, body.question, started) for a in answers]
+                return answers[0] | {"answers": answers, "path": "agent", "reading": narrate.reading(reply["narrative"]),
+                                     "fallback": False}
             if reply["refusal"]:
                 backend().record_refusal(who, body.question, reply["refusal"])
-                return {"path": "agent", "refusal": reply["refusal"], "narrative": reply["narrative"], "fallback": False}
-            fallback_reason = "the agent answered without calling GOVERNED_QUERY, so we did not use its answer"
+                return {"path": "agent", "refusal": reply["refusal"], "fallback": False}
+            fallback_reason = "the agent answered without settling on a governed query, so we did not use its answer"
         except agent.AgentUnavailable as exc:
             fallback_reason = str(exc)
     else:
@@ -55,10 +89,10 @@ def ask(body: AskRequest, request: Request):
         backend().record_refusal(who, body.question, resolution["refusal"])
         return {"path": "resolver", "refusal": resolution["refusal"], "fallback": True, "fallback_reason": fallback_reason}
     try:
-        answer = governed_answer(request, who, resolution["query"], body.question)
+        answer = told(governed_answer(request, who, resolution["query"], body.question), body.question, started)
     except ValueError as exc:
         return semantic_failure(exc)
-    return answer | {"path": "resolver", "fallback": True, "fallback_reason": fallback_reason,
+    return answer | {"answers": [answer], "path": "resolver", "fallback": True, "fallback_reason": fallback_reason,
                      "notes": answer["notes"] + resolution["notes"]}
 
 
@@ -111,6 +145,8 @@ def before_after(body: BeforeAfterRequest, request: Request):
                          "ledger": governed}}
 
 
-@router.get("/personas", summary="Roles this product can answer as")
+@router.get("/personas", summary="Roles this product can answer as, and the signed-in user's if it is fixed")
 def personas(request: Request):
-    return {"default": request.app.state.default_role, "personas": list(PERSONAS)}
+    pinned = pinned_persona(request)
+    return {"default": pinned or request.app.state.default_role, "pinned": pinned is not None,
+            "personas": list(PERSONAS)}

@@ -23,14 +23,15 @@ def meta(request: Request):
     dims = {}
     for table, spec in registry.tables.items():
         for d in spec.get("dimensions", {}):
-            dims[d] = {"table": table, "synonyms": spec["dimensions"][d].get("synonyms", [])}
+            dims[d] = {"table": table, "title": spec["dimensions"][d].get("title", d), "synonyms": spec["dimensions"][d].get("synonyms", [])}
     return {
         "version": VERSION,
         "metrics": [{"name": n, "title": m["title"], "type": m["type"], "unit": m["unit"], "parent": m["parent"],
                      "date_basis": m["date_basis"], "dimensions": sorted(registry.reachable(m["semantic"]["table"]))}
                     for n, m in sorted(registry.metrics.items())],
         "dimensions": dims,
-        "windows": ["fy2026", "q1", "q2", "q3", "q4", "last_quarter", "last_month", "pre_tariff_step", "post_tariff_step"],
+        "windows": ["fy2026", "q1", "q2", "q3", "q4", "last_quarter", "last_month", "across_tariff_step", "pre_tariff_step",
+                    "post_tariff_step"],
         "values": backend().dimension_values() if hasattr(backend(), "dimension_values") else {},
     }
 

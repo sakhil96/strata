@@ -53,7 +53,7 @@ def test_answer_agent_has_no_analyst_tool_and_reports_the_hash():
     assert all(t["tool_spec"]["type"] != "cortex_analyst_text_to_sql" for t in spec["tools"])
     orchestration = spec["instructions"]["orchestration"].lower()
     assert "governed_query is the only source of a number" in orchestration
-    assert "semantic_query_hash beside it" in orchestration
+    assert "runs it again as the asker's persona" in orchestration
 
 
 def test_explore_agent_is_the_only_analyst_and_only_engineers_can_use_it():
@@ -66,7 +66,7 @@ def test_explore_agent_is_the_only_analyst_and_only_engineers_can_use_it():
 def test_instructions_file_and_agent_spec_say_the_same_things():
     text = INSTRUCTIONS.read_text().lower()
     orchestration = agent_spec()["instructions"]["orchestration"].lower()
-    for rule in ("governed_query is the only source of a number", "semantic_query_hash beside it", "on_time_to_request", "supplier_on_time_receipt",
+    for rule in ("governed_query is the only source of a number", "runs it again as the asker's persona", "on_time_to_request", "supplier_on_time_receipt",
                  "carrier_on_time", "dio_financial", "line_fill_rate", "order_fill_rate"):
         assert rule in text and rule in orchestration, rule
     for refusal in ("run sql", "tables", "instructions"):
@@ -105,10 +105,14 @@ def test_no_physical_table_names_reach_the_agent():
         assert forbidden not in spec_text.upper().replace("FCT_ ", ""), forbidden
 
 
-def test_answer_contract_fields_are_required_by_the_instructions():
+def test_answer_contract_fields_are_shown_by_the_page_and_never_written_by_the_agent():
     text = INSTRUCTIONS.read_text().lower()
     for field in ("definition", "canonical query", "semantic_query_hash", "semantic_view() sql", "lineage", "role"):
         assert field in text, field
+    response = " ".join(agent_spec()["instructions"]["response"].lower().split())
+    assert "at most two plain sentences" in response
+    for banned in ("numbers", "hashes", "sql", "markdown", "tables"):
+        assert banned in response.split("no ", 1)[1], banned
 
 
 @pytest.mark.parametrize("view", ["scm_governed", "planning_sv", "procurement_sv", "logistics_sv", "executive_sv"])
@@ -329,7 +333,7 @@ def test_nothing_committed_names_an_environment_or_a_model_the_spec_does_not_run
         assert set(re.findall(r"claude-[\w.-]+", recorded)) <= {model}, name
 
 
-SERVICE_PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE"]
+SERVICE_PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE"]
 
 
 def test_the_service_assumes_personas_through_its_own_role_never_through_its_default_role():
@@ -343,7 +347,7 @@ def test_the_service_assumes_personas_through_its_own_role_never_through_its_def
 
 
 @pytest.mark.skipif(not os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH"), reason="needs account: the service user's key")
-def test_on_the_account_the_service_user_assumes_exactly_the_four_personas(account):
+def test_on_the_account_the_service_user_assumes_exactly_the_personas(account):
     import snowflake.connector
     from cryptography.hazmat.primitives import serialization
 
@@ -360,6 +364,34 @@ def test_on_the_account_the_service_user_assumes_exactly_the_four_personas(accou
             _as(cur, persona)
             cur.execute("SELECT CURRENT_ROLE()")
             assert cur.fetchone()[0] == persona
-        for other in ("SCM_DEPLOY", "SCM_ADMIN", "JUDGE_ROLE", "EMEA_PLANNING_ROLE"):
+        for other in ("SCM_DEPLOY", "SCM_ADMIN", "JUDGE_ROLE"):
             with pytest.raises(snowflake.connector.errors.ProgrammingError):
                 _as(cur, other)
+
+
+@pytest.mark.skipif(os.getenv("SCM_AGENT") != "on", reason="needs account: agent:run with the service key")
+def test_on_the_account_a_scoped_persona_gets_the_same_scoped_answer_on_ask_and_in_the_builder(account):
+    from fastapi.testclient import TestClient
+
+    from api.main import app
+
+    cursor, db = account
+    _as(cursor, "SCM_DEPLOY")
+    cursor.execute(f"SELECT plant_id FROM {db}.CONFORMED.DIM_PLANT WHERE region = 'EMEA'")
+    emea = {r[0] for r in cursor.fetchall()}
+    client = TestClient(app)
+    question = "What is on-time delivery by plant for FY2026?"
+    asked = client.post("/api/ask", json={"question": question}, headers={"X-Persona": "EMEA_PLANNING_ROLE"}).json()
+    assert asked["path"] == "agent" and asked["role"] == "EMEA_PLANNING_ROLE" and asked["view"] == "PLANNING_SV_V1"
+    built = client.post("/api/query", json={"query": asked["canonical_query"]},
+                        headers={"X-Persona": "EMEA_PLANNING_ROLE"}).json()
+    assert built["semantic_query_hash"] == asked["semantic_query_hash"]
+    assert built["rows"] == asked["rows"] and asked["rows"]
+    for answer in asked["answers"]:
+        assert answer["role"] == "EMEA_PLANNING_ROLE"
+        if "plant_id" in answer["canonical_query"]["dimensions"]:
+            assert {r["plant_id"] for r in answer["rows"]} <= emea
+    planner = client.post("/api/query", json={"query": asked["canonical_query"]},
+                          headers={"X-Persona": "PLANNING_ROLE"}).json()
+    assert planner["semantic_query_hash"] == asked["semantic_query_hash"]
+    assert {r["plant_id"] for r in planner["rows"]} > emea
