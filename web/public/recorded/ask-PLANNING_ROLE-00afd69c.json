@@ -1,4 +1,264 @@
 {
+  "answers": [
+    {
+      "canonical_query": {
+        "dimensions": [
+          "supplier_name"
+        ],
+        "filters": [],
+        "metrics": [
+          "supplier_on_time_receipt"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "definition": "Share of received purchase order lines that arrived on or before the supplier's promised date.",
+      "engine": "duckdb",
+      "latency_ms": 7,
+      "lead": "Of 40 supplier values, Ensambles Electr\u00f3nicos de Monterrey SA de CV is lowest on supplier on-time receipt at 79.5% and Grupo Plastimex SA de CV highest at 94.1%, Oct 2025 to Sep 2026.",
+      "lineage": {
+        "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
+        "metric": "supplier_on_time_receipt",
+        "path": [
+          {
+            "layer": "source",
+            "objects": [
+              "erp/fx_rates",
+              "erp/goods_receipts",
+              "erp/material_master",
+              "erp/material_tariffs",
+              "erp/plants",
+              "erp/purchase_order_lines",
+              "erp/supplier_master",
+              "portal/supplier_profiles",
+              "tms/inbound_shipments"
+            ]
+          },
+          {
+            "layer": "staging",
+            "objects": [
+              "stg_goods_receipts",
+              "stg_parts",
+              "stg_purchase_order_lines",
+              "stg_supplier_crosswalk",
+              "stg_suppliers"
+            ]
+          },
+          {
+            "layer": "conformed",
+            "objects": [
+              "dim_tariff_code",
+              "fct_po_line"
+            ]
+          },
+          {
+            "columns": [
+              "is_on_time_receipt",
+              "is_received"
+            ],
+            "layer": "semantic",
+            "objects": [
+              "po_lines.supplier_on_time_receipt"
+            ]
+          }
+        ],
+        "source": "dbt manifest"
+      },
+      "metric_name": "supplier_on_time_receipt",
+      "metrics": [
+        {
+          "date_basis": "receipt_date",
+          "definition": "Share of received purchase order lines that arrived on or before the supplier's promised date.",
+          "denominator": "Received PO lines with receipt_date in the period.",
+          "formula_text": "SUM(is_on_time_receipt) / SUM(is_received), dated by receipt_date.",
+          "grain": "purchase_order_line",
+          "name": "supplier_on_time_receipt",
+          "owner": "VP Procurement",
+          "parent": "on_time_delivery",
+          "status": "approved",
+          "steward": "Procurement Analytics Lead",
+          "title": "Supplier on-time receipt",
+          "unit": "ratio",
+          "version": 1,
+          "window": "period"
+        }
+      ],
+      "notes": [],
+      "request_id": "3aae384c6596",
+      "result_checksum": "170fc45acc36a269",
+      "role": "PLANNING_ROLE",
+      "row_count": 40,
+      "rows": [
+        {
+          "supplier_name": "Abbott Motion Systems Ltd",
+          "supplier_on_time_receipt": 0.893939393939
+        },
+        {
+          "supplier_name": "Bauer & S\u00f6hne Antriebstechnik GmbH",
+          "supplier_on_time_receipt": 0.796296296296
+        },
+        {
+          "supplier_name": "Bengaluru Drives Pvt Ltd",
+          "supplier_on_time_receipt": 0.869863013699
+        },
+        {
+          "supplier_name": "Cascade Power Electronics Inc",
+          "supplier_on_time_receipt": 0.820895522388
+        },
+        {
+          "supplier_name": "Chennai Circuit Works Pvt Ltd",
+          "supplier_on_time_receipt": 0.842767295597
+        },
+        {
+          "supplier_name": "Corrugated Solutions of Kent Ltd",
+          "supplier_on_time_receipt": 0.835714285714
+        },
+        {
+          "supplier_name": "Dongguan Lianfa Plastics Co Ltd",
+          "supplier_on_time_receipt": 0.923076923077
+        },
+        {
+          "supplier_name": "Empaques del Norte SA de CV",
+          "supplier_on_time_receipt": 0.920903954802
+        },
+        {
+          "supplier_name": "Ensambles Electr\u00f3nicos de Monterrey SA de CV",
+          "supplier_on_time_receipt": 0.794520547945
+        },
+        {
+          "supplier_name": "Great Plains Packaging Inc",
+          "supplier_on_time_receipt": 0.934343434343
+        },
+        {
+          "supplier_name": "Grupo Plastimex SA de CV",
+          "supplier_on_time_receipt": 0.940639269406
+        },
+        {
+          "supplier_name": "Gujarat Polychem Pvt Ltd",
+          "supplier_on_time_receipt": 0.915322580645
+        },
+        {
+          "supplier_name": "Halvorsen Fasteners Ltd",
+          "supplier_on_time_receipt": 0.853535353535
+        },
+        {
+          "supplier_name": "Hartmann Pr\u00e4zisionsteile GmbH",
+          "supplier_on_time_receipt": 0.929411764706
+        },
+        {
+          "supplier_name": "Haryana Cartons Pvt Ltd",
+          "supplier_on_time_receipt": 0.89375
+        },
+        {
+          "supplier_name": "Hokuriku Resin KK",
+          "supplier_on_time_receipt": 0.829787234043
+        },
+        {
+          "supplier_name": "Industrias Met\u00e1licas del Baj\u00edo SA de CV",
+          "supplier_on_time_receipt": 0.871428571429
+        },
+        {
+          "supplier_name": "Jurong Precision Engineering Pte Ltd",
+          "supplier_on_time_receipt": 0.885572139303
+        },
+        {
+          "supplier_name": "Kallang Motion Pte Ltd",
+          "supplier_on_time_receipt": 0.916256157635
+        },
+        {
+          "supplier_name": "Kansai Denshi Kogyo KK",
+          "supplier_on_time_receipt": 0.880597014925
+        },
+        {
+          "supplier_name": "Kessler Elektronik GmbH",
+          "supplier_on_time_receipt": 0.915662650602
+        },
+        {
+          "supplier_name": "Lakeshore Components Inc",
+          "supplier_on_time_receipt": 0.883838383838
+        },
+        {
+          "supplier_name": "Marina Packaging Pte Ltd",
+          "supplier_on_time_receipt": 0.812807881773
+        },
+        {
+          "supplier_name": "Nagoya Drive Systems KK",
+          "supplier_on_time_receipt": 0.833333333333
+        },
+        {
+          "supplier_name": "Ningbo Zhenhai Fastener Co Ltd",
+          "supplier_on_time_receipt": 0.93125
+        },
+        {
+          "supplier_name": "Nordwerk Hydraulik GmbH",
+          "supplier_on_time_receipt": 0.890547263682
+        },
+        {
+          "supplier_name": "Pennine Polymers Ltd",
+          "supplier_on_time_receipt": 0.818181818182
+        },
+        {
+          "supplier_name": "Pune Forge & Fasteners Pvt Ltd",
+          "supplier_on_time_receipt": 0.835443037975
+        },
+        {
+          "supplier_name": "Redwood Bearing Co",
+          "supplier_on_time_receipt": 0.927184466019
+        },
+        {
+          "supplier_name": "Rheinfels Kunststoffe GmbH",
+          "supplier_on_time_receipt": 0.833333333333
+        },
+        {
+          "supplier_name": "Sakura Seimitsu KK",
+          "supplier_on_time_receipt": 0.905882352941
+        },
+        {
+          "supplier_name": "Shenzhen Huaxin Electronics Co Ltd",
+          "supplier_on_time_receipt": 0.842105263158
+        },
+        {
+          "supplier_name": "Straits Polymer Pte Ltd",
+          "supplier_on_time_receipt": 0.833333333333
+        },
+        {
+          "supplier_name": "Suzhou Yongda Precision Motion Co Ltd",
+          "supplier_on_time_receipt": 0.934426229508
+        },
+        {
+          "supplier_name": "Thames Valley Controls Ltd",
+          "supplier_on_time_receipt": 0.844827586207
+        },
+        {
+          "supplier_name": "Tohoku Fastening KK",
+          "supplier_on_time_receipt": 0.926701570681
+        },
+        {
+          "supplier_name": "Transmisiones Quer\u00e9taro SA de CV",
+          "supplier_on_time_receipt": 0.910377358491
+        },
+        {
+          "supplier_name": "Tri-County Fastener Supply Inc",
+          "supplier_on_time_receipt": 0.854838709677
+        },
+        {
+          "supplier_name": "Tuas Power Modules Pte Ltd",
+          "supplier_on_time_receipt": 0.917391304348
+        },
+        {
+          "supplier_name": "Xiamen Heng'an Packaging Co Ltd",
+          "supplier_on_time_receipt": 0.915254237288
+        }
+      ],
+      "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
+      "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+      "total_ms": 9,
+      "user": "LOCAL_DEVELOPER",
+      "view": "PLANNING_SV_V1"
+    }
+  ],
   "canonical_query": {
     "dimensions": [
       "supplier_name"
@@ -16,7 +276,8 @@
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 4,
+  "latency_ms": 7,
+  "lead": "Of 40 supplier values, Ensambles Electr\u00f3nicos de Monterrey SA de CV is lowest on supplier on-time receipt at 79.5% and Grupo Plastimex SA de CV highest at 94.1%, Oct 2025 to Sep 2026.",
   "lineage": {
     "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
     "metric": "supplier_on_time_receipt",
@@ -86,7 +347,7 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "5224a690ce86",
+  "request_id": "3aae384c6596",
   "result_checksum": "170fc45acc36a269",
   "role": "PLANNING_ROLE",
   "row_count": 40,
@@ -254,6 +515,7 @@
   ],
   "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
   "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+  "total_ms": 9,
   "user": "LOCAL_DEVELOPER",
   "view": "PLANNING_SV_V1"
 }

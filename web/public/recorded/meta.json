@@ -4,33 +4,38 @@
       "synonyms": [
         "account"
       ],
-      "table": "customers"
+      "table": "customers",
+      "title": "Account"
     },
     "carrier_name": {
       "synonyms": [
         "haulier",
         "forwarder"
       ],
-      "table": "carriers"
+      "table": "carriers",
+      "title": "Carrier"
     },
     "carrier_type": {
       "synonyms": [
         "mode"
       ],
-      "table": "carriers"
+      "table": "carriers",
+      "title": "Carrier type"
     },
     "category": {
       "synonyms": [
         "product category"
       ],
-      "table": "parts"
+      "table": "parts",
+      "title": "Category"
     },
     "part_family": {
       "synonyms": [
         "family",
         "product family"
       ],
-      "table": "parts"
+      "table": "parts",
+      "title": "Part family"
     },
     "plant_id": {
       "synonyms": [
@@ -38,37 +43,43 @@
         "site",
         "facility"
       ],
-      "table": "plants"
+      "table": "plants",
+      "title": "Plant"
     },
     "plant_name": {
       "synonyms": [],
-      "table": "plants"
+      "table": "plants",
+      "title": "Plant name"
     },
     "region": {
       "synonyms": [
         "geography",
         "theatre"
       ],
-      "table": "plants"
+      "table": "plants",
+      "title": "Region"
     },
     "segment": {
       "synonyms": [
         "market segment",
         "customer segment"
       ],
-      "table": "customers"
+      "table": "customers",
+      "title": "Segment"
     },
     "supplier_country": {
       "synonyms": [
         "supplier country"
       ],
-      "table": "suppliers"
+      "table": "suppliers",
+      "title": "Supplier country"
     },
     "supplier_name": {
       "synonyms": [
         "vendor"
       ],
-      "table": "suppliers"
+      "table": "suppliers",
+      "title": "Supplier"
     }
   },
   "metrics": [
@@ -465,6 +476,7 @@
     "q4",
     "last_quarter",
     "last_month",
+    "across_tariff_step",
     "pre_tariff_step",
     "post_tariff_step"
   ]

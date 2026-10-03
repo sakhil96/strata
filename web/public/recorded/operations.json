@@ -69,7 +69,7 @@
       "target": "99.5% a month"
     },
     {
-      "measured": "98.1 %",
+      "measured": "100.0 %",
       "name": "Evaluation pass rate",
       "source": "eval/report.json",
       "status": "met",

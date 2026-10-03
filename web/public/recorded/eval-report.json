@@ -1,52 +1,80 @@
 {
   "environment": "local DuckDB build",
-  "generated_at": "2026-10-03T05:51:02+00:00",
-  "pass_rate": 0.9808,
+  "generated_at": "2026-10-03T14:34:10+00:00",
+  "pass_rate": 1.0,
   "suites": [
     {
-      "detail": "all checks ran",
+      "detail": "5 check(s) need the account",
       "name": "metric_identity",
-      "needs_account": [],
-      "passed": 25,
+      "needs_account": [
+        "test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view[on_time_delivery]",
+        "test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view[unit_fill_rate]",
+        "test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view[otif]",
+        "test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view[days_of_inventory]",
+        "test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view[landed_cost_per_unit]"
+      ],
+      "passed": 20,
       "status": "passed",
       "title": "1 \u00b7 Metric identity against truth",
-      "total": 25
+      "total": 20
     },
     {
-      "detail": "failing: test_agent_meets_the_same_floors_through_agent_run",
+      "detail": "2 check(s) need the account",
       "name": "nl_accuracy",
-      "needs_account": [],
-      "passed": 5,
-      "status": "failed",
+      "needs_account": [
+        "test_agent_meets_the_same_floors_through_agent_run",
+        "test_the_agent_on_the_held_out_set_is_recorded_not_tuned"
+      ],
+      "passed": 7,
+      "status": "passed",
       "title": "2 \u00b7 Words to governed query",
-      "total": 6
+      "total": 7
     },
     {
-      "detail": "all checks ran",
+      "detail": "2 check(s) need the account",
       "name": "persona_consistency",
-      "needs_account": [],
-      "passed": 24,
+      "needs_account": [
+        "test_on_the_account_three_roles_get_one_hash_and_one_number_for_every_case",
+        "test_every_numeric_agent_answer_has_an_audit_row_with_its_hash"
+      ],
+      "passed": 22,
       "status": "passed",
       "title": "3 \u00b7 One question, three roles, one hash",
-      "total": 24
+      "total": 22
     },
     {
-      "detail": "all checks ran",
+      "detail": "13 check(s) need the account",
       "name": "governance",
-      "needs_account": [],
-      "passed": 28,
+      "needs_account": [
+        "test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath[PLANNING_ROLE]",
+        "test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath[PROCUREMENT_ROLE]",
+        "test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath[LOGISTICS_ROLE]",
+        "test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath[EXECUTIVE_ROLE]",
+        "test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath[EMEA_PLANNING_ROLE]",
+        "test_on_the_account_every_column_rule_evaluates_as_the_registry_says_for_every_role",
+        "test_on_the_account_supplier_unit_cost_shows_or_nulls_as_the_registry_says[PROCUREMENT_ROLE-PROCUREMENT_SV_V1-True]",
+        "test_on_the_account_supplier_unit_cost_shows_or_nulls_as_the_registry_says[LOGISTICS_ROLE-LOGISTICS_SV_V1-False]",
+        "test_on_the_account_the_deployed_views_round_trip_with_the_governed_expressions",
+        "test_on_the_account_the_service_user_assumes_exactly_the_personas",
+        "test_on_the_account_a_scoped_persona_gets_the_same_scoped_answer_on_ask_and_in_the_builder",
+        "test_on_the_account_a_fresh_session_for_each_identity_we_connect_as_carries_no_secondary_roles",
+        "test_on_the_account_through_the_api_logistics_cannot_read_supplier_unit_cost_and_emea_sees_emea_only"
+      ],
+      "passed": 29,
       "status": "passed",
       "title": "4 \u00b7 Governance rules",
-      "total": 28
+      "total": 29
     },
     {
-      "detail": "failing: test_restore_from_a_time_travel_clone_matches_the_original",
+      "detail": "1 check(s) need the account",
       "name": "resilience",
-      "needs_account": [],
+      "needs_account": [
+        "test_restore_from_a_time_travel_clone_matches_the_original"
+      ],
       "passed": 8,
-      "status": "failed",
+      "status": "passed",
       "title": "5 \u00b7 Resilience and operations",
-      "total": 9
+      "total": 8
     },
     {
       "detail": "all checks ran",
@@ -67,5 +95,5 @@
       "total": 5
     }
   ],
-  "summary": "102 of 104 checks passed across 7 suites; 0 checks need the account."
+  "summary": "98 of 98 checks passed across 7 suites; 23 checks need the account."
 }

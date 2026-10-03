@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { DEMO } from "@/lib/api";
+
+// The live service endpoint; the mirror links to it and holds nothing that can call it.
+const LIVE_URL = process.env.NEXT_PUBLIC_STRATA_LIVE_URL ?? "https://mbloac-dzvlnoz-zv32033.snowflakecomputing.app";
 import { PersonaProvider } from "@/lib/persona";
 
 import { PersonaDial } from "./persona-dial";
@@ -57,7 +60,10 @@ export function Shell({ children }: { children: ReactNode }) {
         </nav>
         {DEMO ? (
           <p className="micro border-t border-hairline py-1 text-warn">
-            Public mirror · answers replayed from the recorded local build; nothing here reaches Snowflake
+            Recorded demo data · answers replayed from the recorded local build; nothing here reaches Snowflake.{" "}
+            <a className="underline" href={LIVE_URL}>
+              Open the live app
+            </a>
           </p>
         ) : null}
       </header>

@@ -47,37 +47,37 @@
   },
   "dbt": {
     "failed": 0,
-    "finished_at": "2026-10-03T05:40:07.690044Z",
+    "finished_at": "2026-10-03T15:15:11.922802Z",
     "passed": 78
   },
   "eval": {
-    "generated_at": "2026-10-03T05:51:02+00:00",
-    "pass_rate": 0.9808
+    "generated_at": "2026-10-03T14:34:10+00:00",
+    "pass_rate": 1.0
   },
   "freshness": [
     {
       "files": 11,
-      "loaded_at": "2026-10-03T05:27+00:00",
+      "loaded_at": "2026-10-03T09:11+00:00",
       "source": "erp",
-      "stale": false
+      "stale": true
     },
     {
       "files": 4,
-      "loaded_at": "2026-10-03T05:54+00:00",
+      "loaded_at": "2026-10-03T14:33+00:00",
       "source": "tms",
       "stale": false
     },
     {
       "files": 2,
-      "loaded_at": "2026-10-03T05:27+00:00",
+      "loaded_at": "2026-10-03T09:12+00:00",
       "source": "portal",
-      "stale": false
+      "stale": true
     },
     {
       "files": 1,
-      "loaded_at": "2026-10-03T05:27+00:00",
+      "loaded_at": "2026-10-03T09:12+00:00",
       "source": "iot",
-      "stale": false
+      "stale": true
     }
   ],
   "mode": "local"

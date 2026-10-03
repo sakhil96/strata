@@ -16,7 +16,7 @@
         },
         "definition": "Share of ordered units that left on the first shipment, dated by the customer's requested date.",
         "engine": "duckdb",
-        "latency_ms": 1,
+        "latency_ms": 2,
         "lineage": {
           "expression": "SUM(requested_lines.live_first_qty) / NULLIF(SUM(requested_lines.live_ordered_qty), 0)",
           "metric": "unit_fill_rate",
@@ -79,7 +79,7 @@
           }
         ],
         "notes": [],
-        "request_id": "6c76e61e8762",
+        "request_id": "99772d7621ab",
         "result_checksum": "b416fec827aed623",
         "role": "PLANNING_ROLE",
         "row_count": 1,
@@ -183,7 +183,7 @@
           }
         ],
         "notes": [],
-        "request_id": "6c76e61e8762",
+        "request_id": "99772d7621ab",
         "result_checksum": "b416fec827aed623",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
@@ -287,7 +287,7 @@
           }
         ],
         "notes": [],
-        "request_id": "6c76e61e8762",
+        "request_id": "99772d7621ab",
         "result_checksum": "b416fec827aed623",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,

@@ -1,4 +1,128 @@
 {
+  "answers": [
+    {
+      "canonical_query": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-04-01"
+        }
+      },
+      "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+      "engine": "duckdb",
+      "latency_ms": 5,
+      "lead": "Landed cost per unit rose from $156.31 in Apr 2026 to $162.31 in Sep 2026, up $6.00, 3.8%. The low was $148.46 in Jul 2026 and the high $162.31 in Sep 2026.",
+      "lineage": {
+        "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
+        "metric": "landed_cost_per_unit",
+        "path": [
+          {
+            "layer": "source",
+            "objects": [
+              "erp/fx_rates",
+              "erp/goods_receipts",
+              "erp/material_master",
+              "erp/material_tariffs",
+              "erp/plants",
+              "erp/purchase_order_lines",
+              "erp/supplier_master",
+              "portal/supplier_profiles",
+              "tms/inbound_shipments"
+            ]
+          },
+          {
+            "layer": "staging",
+            "objects": [
+              "stg_goods_receipts",
+              "stg_parts",
+              "stg_purchase_order_lines",
+              "stg_supplier_crosswalk",
+              "stg_suppliers"
+            ]
+          },
+          {
+            "layer": "conformed",
+            "objects": [
+              "dim_tariff_code",
+              "fct_po_line"
+            ]
+          },
+          {
+            "columns": [
+              "landed_usd",
+              "received_qty"
+            ],
+            "layer": "semantic",
+            "objects": [
+              "po_lines.landed_cost_per_unit"
+            ]
+          }
+        ],
+        "source": "dbt manifest"
+      },
+      "metric_name": "landed_cost_per_unit",
+      "metrics": [
+        {
+          "date_basis": "receipt_date",
+          "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+          "denominator": "Units received in the period.",
+          "formula_text": "SUM(material + freight + duty + insurance + handling) / SUM(received_qty), dated by receipt_date.",
+          "grain": "purchase_order_line",
+          "name": "landed_cost_per_unit",
+          "owner": "VP Procurement",
+          "parent": null,
+          "status": "approved",
+          "steward": "Procurement Analytics Lead",
+          "title": "Landed cost per unit",
+          "unit": "usd_per_unit",
+          "version": 1,
+          "window": "period"
+        }
+      ],
+      "notes": [],
+      "request_id": "d8e71768967a",
+      "result_checksum": "ad131f6024b99a2d",
+      "role": "PLANNING_ROLE",
+      "row_count": 6,
+      "rows": [
+        {
+          "landed_cost_per_unit": 156.311894135,
+          "period_month": "2026-04-01"
+        },
+        {
+          "landed_cost_per_unit": 149.198060556,
+          "period_month": "2026-05-01"
+        },
+        {
+          "landed_cost_per_unit": 153.763108121,
+          "period_month": "2026-06-01"
+        },
+        {
+          "landed_cost_per_unit": 148.460001906,
+          "period_month": "2026-07-01"
+        },
+        {
+          "landed_cost_per_unit": 155.996935715,
+          "period_month": "2026-08-01"
+        },
+        {
+          "landed_cost_per_unit": 162.312993514,
+          "period_month": "2026-09-01"
+        }
+      ],
+      "semantic_query_hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+      "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+      "total_ms": 6,
+      "user": "LOCAL_DEVELOPER",
+      "view": "PLANNING_SV_V1"
+    }
+  ],
   "canonical_query": {
     "dimensions": [
       "period_month"
@@ -9,14 +133,15 @@
     ],
     "time": {
       "end": "2026-09-01",
-      "start": "2025-10-01"
+      "start": "2026-04-01"
     }
   },
   "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 2,
+  "latency_ms": 5,
+  "lead": "Landed cost per unit rose from $156.31 in Apr 2026 to $162.31 in Sep 2026, up $6.00, 3.8%. The low was $148.46 in Jul 2026 and the high $162.31 in Sep 2026.",
   "lineage": {
     "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
     "metric": "landed_cost_per_unit",
@@ -86,35 +211,11 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "94506576e26d",
-  "result_checksum": "13bd163b713c2de8",
+  "request_id": "d8e71768967a",
+  "result_checksum": "ad131f6024b99a2d",
   "role": "PLANNING_ROLE",
-  "row_count": 12,
+  "row_count": 6,
   "rows": [
-    {
-      "landed_cost_per_unit": 128.728441767,
-      "period_month": "2025-10-01"
-    },
-    {
-      "landed_cost_per_unit": 147.004110728,
-      "period_month": "2025-11-01"
-    },
-    {
-      "landed_cost_per_unit": 154.915150255,
-      "period_month": "2025-12-01"
-    },
-    {
-      "landed_cost_per_unit": 155.609021956,
-      "period_month": "2026-01-01"
-    },
-    {
-      "landed_cost_per_unit": 152.408910827,
-      "period_month": "2026-02-01"
-    },
-    {
-      "landed_cost_per_unit": 148.561718054,
-      "period_month": "2026-03-01"
-    },
     {
       "landed_cost_per_unit": 156.311894135,
       "period_month": "2026-04-01"
@@ -140,8 +241,9 @@
       "period_month": "2026-09-01"
     }
   ],
-  "semantic_query_hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
-  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
+  "semantic_query_hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+  "total_ms": 6,
   "user": "LOCAL_DEVELOPER",
   "view": "PLANNING_SV_V1"
 }

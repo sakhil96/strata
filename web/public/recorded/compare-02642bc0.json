@@ -16,7 +16,7 @@
         },
         "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
         "engine": "duckdb",
-        "latency_ms": 1,
+        "latency_ms": 2,
         "lineage": {
           "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
           "metric": "on_time_delivery",
@@ -79,7 +79,7 @@
           }
         ],
         "notes": [],
-        "request_id": "3c1094112dcc",
+        "request_id": "ba8414051d89",
         "result_checksum": "7f965a2209f6b749",
         "role": "PLANNING_ROLE",
         "row_count": 1,
@@ -120,7 +120,7 @@
         },
         "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
         "engine": "duckdb",
-        "latency_ms": 1,
+        "latency_ms": 2,
         "lineage": {
           "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
           "metric": "on_time_delivery",
@@ -183,7 +183,7 @@
           }
         ],
         "notes": [],
-        "request_id": "3c1094112dcc",
+        "request_id": "ba8414051d89",
         "result_checksum": "7f965a2209f6b749",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
@@ -224,7 +224,7 @@
         },
         "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
         "engine": "duckdb",
-        "latency_ms": 1,
+        "latency_ms": 2,
         "lineage": {
           "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
           "metric": "on_time_delivery",
@@ -287,7 +287,7 @@
           }
         ],
         "notes": [],
-        "request_id": "3c1094112dcc",
+        "request_id": "ba8414051d89",
         "result_checksum": "7f965a2209f6b749",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,
