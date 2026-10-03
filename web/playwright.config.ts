@@ -1,6 +1,10 @@
+import { existsSync } from "node:fs";
+
 import { defineConfig } from "@playwright/test";
 
 const port = Number(process.env.STRATA_PORT ?? 8077);
+// CI installs into the runner's Python; a laptop has the repository's .venv.
+const python = existsSync("../.venv/bin/python") ? ".venv/bin/python" : "python";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -16,7 +20,7 @@ export default defineConfig({
   webServer: process.env.STRATA_EXTERNAL
     ? undefined
     : {
-        command: `cd .. && SCM_BACKEND=local SCM_STATE_DIR=.strata/e2e SCM_RATE_PER_MINUTE=10000 .venv/bin/uvicorn api.main:app --port ${port}`,
+        command: `cd .. && SCM_BACKEND=local SCM_STATE_DIR=.strata/e2e SCM_RATE_PER_MINUTE=10000 ${python} -m uvicorn api.main:app --port ${port}`,
         url: `http://127.0.0.1:${port}/health`,
         reuseExistingServer: true,
         timeout: 60_000,
