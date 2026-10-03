@@ -28,6 +28,10 @@ class Load:
     checksum: str
 
 
+# The tables api/legacy.py reads for /before-after; nothing else in RAW is granted beyond SCM_DEPLOY.
+LEGACY_TABLES = ("SALES_ORDER_LINES", "SHIPMENT_LINES", "SHIPMENTS", "STORAGE_LOCATIONS")
+
+
 def plan(out: Path = OUT) -> list[Load]:
     loads = []
     for system in SYSTEMS:
@@ -95,6 +99,9 @@ def main(env: str, connection: str | None, dry_run: bool) -> None:
             for sql, params in statements(load, db):
                 cur.execute(sql, params)
             click.echo(f"  {load.system}/{load.path.name} -> {load.table}")
+        # CREATE OR REPLACE drops grants, so the legacy reader gets its four tables back after every load.
+        for table in LEGACY_TABLES:
+            cur.execute(f"GRANT SELECT ON TABLE {db}.RAW.{table} TO ROLE SCM_LEGACY_READER")
     click.echo(f"loaded {len(loads)} files into {db}")
 
 

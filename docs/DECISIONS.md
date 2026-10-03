@@ -274,3 +274,21 @@ through SCM_USER_PERSONAS for the three endpoint-check users; everyone else choo
   endpoint, because only service-function traffic counts as activity. So the service does not
   suspend itself: we suspend it with `ALTER SERVICE ... SUSPEND` when no one is evaluating, and the
   pool's AUTO_SUSPEND_SECS = 300 then stops the node. The first request after that wakes both.
+
+## The home panel's 500, and what a page shows while the service wakes (2026-10-03)
+
+The INTERNAL ERROR on the home page was `/api/before-after` failing on every call: its three legacy
+on-time numbers read four RAW tables, and the service role reached RAW only through SCM_READER's
+USAGE on every schema, which was narrowed the same afternoon. Persona, cold start and the account
+timeout were not involved; the JSON log dropped the traceback, so the log showed only the request id.
+
+- SCM_LEGACY_READER reads exactly those four RAW tables and only SCM_SERVICE_ROLE holds it. The table
+  grants follow each load, because the load replaces the tables.
+- The log keeps the traceback.
+- Until the first Snowflake session has opened, a failing data route answers 503 with Retry-After and
+  the pages show "Waking the service, usually under a minute" while they retry; /health reports the
+  session state, and the readiness probe stays on /live.
+- Each call has its own timeout and one retry, shown as "still computing". /compare stays one call
+  that runs the three roles on the server; splitting it per persona would be a refactor.
+- Service sessions set STATEMENT_TIMEOUT_IN_SECONDS at connect to the governed query's own 30 s.
+- A broken persona mapping answers 403; unmapped users choose on the dial, mapped ones stay pinned.

@@ -298,9 +298,15 @@ class SnowflakeBackend:
     identity header gives caller's-rights execution; outside, key-pair auth from connections.toml."""
 
     mode = "snowflake"
+    # The governed query's own limit (snowflake/procs/governed_query.py), set on every service session
+    # so the account default never decides when a cold query is cut short.
+    STATEMENT_TIMEOUT_S = 30
 
     def __init__(self):
         import snowflake.connector
+
+        self.warm = False
+        session = {"STATEMENT_TIMEOUT_IN_SECONDS": self.STATEMENT_TIMEOUT_S}
 
         self.registry = semantic.load_registry()
         self.db = f"SCM_{os.getenv('SCM_ENV', 'dev').upper()}"
@@ -309,16 +315,25 @@ class SnowflakeBackend:
             self._connect = lambda: snowflake.connector.connect(
                 host=os.environ["SNOWFLAKE_HOST"], account=os.environ["SNOWFLAKE_ACCOUNT"],
                 authenticator="oauth", token=token_file.read_text(), database=self.db, schema="AGENT",
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", f"SCM_WH_{os.getenv('SCM_ENV', 'dev').upper()}"))
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", f"SCM_WH_{os.getenv('SCM_ENV', 'dev').upper()}"),
+                session_parameters=session)
         else:
             self._connect = lambda: snowflake.connector.connect(
                 connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", f"scm_{os.getenv('SCM_ENV', 'dev')}"),
-                database=self.db, schema="AGENT")
+                database=self.db, schema="AGENT", session_parameters=session)
+        opened = self._connect
+
+        def connect():
+            conn = opened()
+            self.warm = True
+            return conn
+
+        self._connect = connect
 
     def _call(self, caller: Caller, procedure: str, *args: Any, path: str = "api") -> dict[str, Any]:
         tag = json.dumps({"app": "strata", "request_id": caller.request_id, "user": caller.user, "path": path})
         with self._connect() as conn, conn.cursor() as cur:
-            cur.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 30, QUERY_TAG = %s", (tag,))
+            cur.execute("ALTER SESSION SET QUERY_TAG = %s", (tag,))
             cur.execute("USE SECONDARY ROLES NONE")
             cur.execute("USE ROLE IDENTIFIER(%s)", (caller.role,))
             placeholders = ", ".join(["PARSE_JSON(%s)" if isinstance(a, (dict, list)) else "%s" for a in args])
@@ -417,7 +432,7 @@ class SnowflakeBackend:
     def health(self) -> dict[str, Any]:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute("SELECT 1")
-        return {"status": "ready", "mode": self.mode, "metrics": len(self.registry.metrics)}
+        return {"status": "ready", "mode": self.mode, "session": "ready", "metrics": len(self.registry.metrics)}
 
     def record_refusal(self, caller: Caller, question: str, reason: str) -> None:
         self._call(caller, "RECORD_REFUSAL", question, reason)

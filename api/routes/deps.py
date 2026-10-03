@@ -23,7 +23,13 @@ def user_personas() -> dict[str, str]:
 
 
 def pinned_persona(request: Request) -> str | None:
-    return user_personas().get(caller_identity(request))
+    # Users the mapping does not name (admins, reviewers) choose on the dial; a broken mapping refuses
+    # rather than failing, because no identity case should reach the 500 handler.
+    try:
+        return user_personas().get(caller_identity(request))
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=403, detail="This sign-in is not mapped to a persona the service can "
+                                                    "assume. Ask the administrator to check SCM_USER_PERSONAS.") from exc
 
 
 def caller(request: Request, persona: str | None = None) -> Caller:

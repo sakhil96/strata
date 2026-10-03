@@ -27,21 +27,74 @@ export class ApiProblem extends Error {
   }
 }
 
+// What a pending call is waiting on, for the loading line: the service waking after a suspend, or
+// a cold query past its own timeout and retried once.
+export type Pending = "waking" | "slow" | null;
+const listeners = new Set<(pending: Pending) => void>();
+export function onPending(listener: (pending: Pending) => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+const announce = (pending: Pending) => listeners.forEach((l) => l(pending));
+
+const WAKE_ATTEMPTS = 24;
+// The agent path takes about half a minute; everything else answers in a few seconds once warm.
+const TIMEOUT_MS: Record<string, number> = { "/ask": 120_000, "/compare": 90_000 };
+
+async function attempt(url: string, init: RequestInit, timeoutMs: number): Promise<Response | "timeout"> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal, cache: "no-store" });
+  } catch (err) {
+    if (controller.signal.aborted) return "timeout";
+    throw err;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 async function call<T>(path: string, persona: Persona | null, init?: RequestInit, base = ""): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (init?.body) headers["Content-Type"] = "application/json";
   if (persona) headers["X-Persona"] = persona;
-  let response: Response;
+  const url = `${base}/api${path}`;
+  const timeoutMs = TIMEOUT_MS[path] ?? 45_000;
+  let retriedSlow = false;
   try {
-    response = await fetch(`${base}/api${path}`, { ...init, headers, cache: "no-store" });
-  } catch {
-    throw new ApiProblem({ error: "unreachable", message: "The service did not answer. Check your connection and retry." }, 0);
+    for (let wake = 0; ;) {
+      let response: Response | "timeout";
+      try {
+        response = await attempt(url, { ...init, headers }, timeoutMs);
+      } catch {
+        throw new ApiProblem(
+          { error: "unreachable", message: "The service did not answer. Check your connection and retry." },
+          0,
+        );
+      }
+      if (response === "timeout") {
+        if (retriedSlow)
+          throw new ApiProblem({ error: "timed_out", message: "Still computing after two tries. Try again in a minute." }, 0);
+        retriedSlow = true;
+        announce("slow");
+        continue;
+      }
+      if (response.status === 503 && wake < WAKE_ATTEMPTS) {
+        wake += 1;
+        announce("waking");
+        const seconds = Number(response.headers.get("Retry-After")) || 5;
+        await new Promise((resolve) => window.setTimeout(resolve, seconds * 1000));
+        continue;
+      }
+      const body = await response
+        .json()
+        .catch(() => ({ error: "unreadable", message: "The service sent a reply we could not read." }));
+      if (!response.ok) throw new ApiProblem(body as Problem, response.status);
+      return body as T;
+    }
+  } finally {
+    announce(null);
   }
-  const body = await response
-    .json()
-    .catch(() => ({ error: "unreadable", message: "The service sent a reply we could not read." }));
-  if (!response.ok) throw new ApiProblem(body as Problem, response.status);
-  return body as T;
 }
 
 async function recorded<T>(name: string): Promise<T> {

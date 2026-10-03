@@ -15,6 +15,7 @@ from .backend import get_backend
 from .routes import answers, catalogue, operations
 from .security import BASE_HEADERS, PageHashes, RateLimiter, content_security_policy
 
+WAKE_RETRY_S = 5
 WEB_OUT = Path(os.getenv("SCM_WEB_OUT", Path(__file__).resolve().parent.parent / "web" / "out"))
 
 
@@ -25,6 +26,8 @@ class JsonFormatter(logging.Formatter):
         for key in ("request_id", "method", "path", "status", "latency_ms", "user", "mode", "tools"):
             if hasattr(record, key):
                 entry[key] = getattr(record, key)
+        if record.exc_info:
+            entry["traceback"] = self.formatException(record.exc_info)
         return json.dumps(entry)
 
 
@@ -49,6 +52,13 @@ app.state.backend_mode = os.getenv("SCM_BACKEND", "local")
 pages = PageHashes(WEB_OUT)
 
 
+def waking() -> bool:
+    try:
+        return not getattr(get_backend(), "warm", True)
+    except Exception:
+        return True
+
+
 @app.middleware("http")
 async def envelope(request: Request, call_next):
     request.state.request_id = request.headers.get("x-request-id", uuid.uuid4().hex[:12])[:32]
@@ -56,11 +66,18 @@ async def envelope(request: Request, call_next):
     try:
         response: Response = await call_next(request)
     except Exception:
-        log.exception("unhandled_error", extra={"request_id": request.state.request_id, "path": request.url.path})
-        response = JSONResponse(status_code=500, content={
-            "error": "internal_error",
-            "message": "Something failed on our side. Quote this request id when you report it.",
-            "request_id": request.state.request_id})
+        if request.url.path.startswith("/api/") and waking():
+            # The first Snowflake session after a resume is not open yet: say so and let the page retry.
+            log.warning("waking", extra={"request_id": request.state.request_id, "path": request.url.path})
+            response = JSONResponse(status_code=503, headers={"Retry-After": str(WAKE_RETRY_S)}, content={
+                "error": "waking", "message": "Waking the service, usually under a minute.",
+                "request_id": request.state.request_id})
+        else:
+            log.exception("unhandled_error", extra={"request_id": request.state.request_id, "path": request.url.path})
+            response = JSONResponse(status_code=500, content={
+                "error": "internal_error",
+                "message": "Something failed on our side. Try again in a minute; quote this id if it persists.",
+                "request_id": request.state.request_id})
     for header, value in BASE_HEADERS.items():
         response.headers.setdefault(header, value)
     response.headers.setdefault("Content-Security-Policy", content_security_policy())
@@ -97,7 +114,9 @@ def readiness():
         return get_backend().health()
     except Exception as exc:
         log.warning("not_ready", extra={"mode": app.state.backend_mode})
-        return JSONResponse(status_code=503, content={"status": "not_ready", "reason": exc.__class__.__name__})
+        session = "waking" if waking() else "failing"
+        return JSONResponse(status_code=503, headers={"Retry-After": str(WAKE_RETRY_S)},
+                            content={"status": "not_ready", "session": session, "reason": exc.__class__.__name__})
 
 
 @app.get("/live", tags=["probes"], summary="Liveness: the process is serving")

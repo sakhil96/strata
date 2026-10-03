@@ -1,13 +1,22 @@
-import type { ReactNode } from "react";
+"use client";
 
-import type { ApiProblem } from "@/lib/api";
+import { type ReactNode, useEffect, useState } from "react";
+
+import { type ApiProblem, onPending, type Pending } from "@/lib/api";
 import { REFUSAL_COPY } from "@/lib/format";
 
+const PENDING_COPY: Record<Exclude<Pending, null>, string> = {
+  waking: "Waking the service, usually under a minute",
+  slow: "Still computing; trying once more",
+};
+
 export function Loading({ what }: { what: string }) {
+  const [pending, setPending] = useState<Pending>(null);
+  useEffect(() => onPending(setPending), []);
   return (
     <div role="status" aria-live="polite" className="flex items-center gap-2 py-3">
       <span className="h-px w-8 animate-pulse bg-ore" aria-hidden />
-      <span className="text-sm text-ash">{what}</span>
+      <span className="text-sm text-ash">{pending ? PENDING_COPY[pending] : what}</span>
     </div>
   );
 }

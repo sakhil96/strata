@@ -40,6 +40,11 @@ GRANT ROLE SCM_ADMIN TO ROLE SYSADMIN;
 CREATE ROLE IF NOT EXISTS SCM_SERVICE_ROLE COMMENT = 'The Strata service and its agent calls';
 GRANT ROLE SCM_READER TO ROLE SCM_SERVICE_ROLE;
 GRANT ROLE SCM_SERVICE_ROLE TO ROLE SCM_DEPLOY;
+-- The Before and after page computes the old team numbers on RAW. This role reads exactly the four
+-- RAW tables those calculations use (data/load.py grants them after each load), and only the
+-- service holds it; no persona or reviewer can reach RAW.
+CREATE ROLE IF NOT EXISTS SCM_LEGACY_READER COMMENT = 'Reads the four RAW tables behind /before-after';
+GRANT ROLE SCM_LEGACY_READER TO ROLE SCM_SERVICE_ROLE;
 CREATE USER IF NOT EXISTS SCM_SERVICE_USER
     TYPE = SERVICE
     DEFAULT_ROLE = SCM_SERVICE_ROLE
