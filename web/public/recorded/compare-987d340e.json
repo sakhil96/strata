@@ -79,13 +79,13 @@
           }
         ],
         "notes": [],
-        "request_id": "09a4a58cf23e",
-        "result_checksum": "77696c77771f6c71",
+        "request_id": "6c76e61e8762",
+        "result_checksum": "b416fec827aed623",
         "role": "PLANNING_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "unit_fill_rate": 0.9792274755525135
+            "unit_fill_rate": 0.979227475553
           }
         ],
         "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
@@ -98,11 +98,11 @@
       "role": "PLANNING_ROLE",
       "rows": [
         {
-          "unit_fill_rate": 0.9792274755525135
+          "unit_fill_rate": 0.979227475553
         }
       ],
       "unit": "ratio",
-      "value": 0.9792274755525135
+      "value": 0.979227475553
     },
     {
       "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
@@ -183,13 +183,13 @@
           }
         ],
         "notes": [],
-        "request_id": "09a4a58cf23e",
-        "result_checksum": "77696c77771f6c71",
+        "request_id": "6c76e61e8762",
+        "result_checksum": "b416fec827aed623",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "unit_fill_rate": 0.9792274755525135
+            "unit_fill_rate": 0.979227475553
           }
         ],
         "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
@@ -202,11 +202,11 @@
       "role": "PROCUREMENT_ROLE",
       "rows": [
         {
-          "unit_fill_rate": 0.9792274755525135
+          "unit_fill_rate": 0.979227475553
         }
       ],
       "unit": "ratio",
-      "value": 0.9792274755525135
+      "value": 0.979227475553
     },
     {
       "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
@@ -287,13 +287,13 @@
           }
         ],
         "notes": [],
-        "request_id": "09a4a58cf23e",
-        "result_checksum": "77696c77771f6c71",
+        "request_id": "6c76e61e8762",
+        "result_checksum": "b416fec827aed623",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "unit_fill_rate": 0.9792274755525135
+            "unit_fill_rate": 0.979227475553
           }
         ],
         "semantic_query_hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
@@ -306,11 +306,11 @@
       "role": "LOGISTICS_ROLE",
       "rows": [
         {
-          "unit_fill_rate": 0.9792274755525135
+          "unit_fill_rate": 0.979227475553
         }
       ],
       "unit": "ratio",
-      "value": 0.9792274755525135
+      "value": 0.979227475553
     }
   ],
   "converged": true,

@@ -901,13 +901,13 @@
     "definition": "Median hours a delivered shipment spent between pick-up and proof of delivery.",
     "denominator": "not applicable (median)",
     "deprecated_by": null,
-    "expression": "MEDIAN(shipments.transit_hours)",
+    "expression": "MEDIAN(shipments.transit_hours_elapsed)",
     "formula_text": "MEDIAN(delivered_utc - picked_up_utc) in hours, dated by actual_delivery.",
     "grain": "shipment",
     "lineage": {
       "conformed_model": "fct_shipment",
       "facts": [
-        "transit_hours"
+        "transit_hours_elapsed"
       ],
       "semantic_table": "shipments"
     },

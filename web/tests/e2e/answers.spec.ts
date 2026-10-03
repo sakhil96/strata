@@ -46,7 +46,7 @@ test("a raw SQL question is refused with copy that says why", async ({ page }) =
   await expect(page.getByText("We do not run SQL typed into a question.")).toBeVisible();
 });
 
-test("the degraded state offers the builder when the agent is not used", async ({ page }) => {
+test("the fallback state offers the builder when the agent is not used", async ({ page }) => {
   await page.goto("/ask");
   await page.getByLabel("Your question").fill("What is fill rate by plant?");
   await page.getByRole("button", { name: "Answer it" }).click();

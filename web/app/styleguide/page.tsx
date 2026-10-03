@@ -12,7 +12,7 @@ import { LineagePath } from "@/components/lineage-path";
 import { Numeral } from "@/components/numeral";
 import { PersonaDial } from "@/components/persona-dial";
 import { PageHead, Section } from "@/components/section";
-import { Degraded, Empty, Loading, Problem, Refused } from "@/components/states";
+import { Fallback, Empty, Loading, Problem, Refused } from "@/components/states";
 import { Strata } from "@/components/strata";
 import { ApiProblem } from "@/lib/api";
 import type { Answer, GlossaryEntry, Lineage } from "@/lib/types";
@@ -310,7 +310,7 @@ export default function Styleguide() {
           <div className="space-y-3">
             <Loading what="Running the governed query as Planning" />
             <Empty title="No answers recorded yet">The first governed answer will appear here with its hash.</Empty>
-            <Degraded reason="the agent is switched off in this environment" onBuild={() => undefined} />
+            <Fallback reason="the agent is switched off in this environment" onBuild={() => undefined} />
             <Refused reason="prompt_injection" />
             <Problem
               problem={

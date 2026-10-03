@@ -69,8 +69,8 @@ export interface Answer {
   latency_ms: number;
   notes: string[];
   path?: "agent" | "resolver" | "builder" | "recorded";
-  degraded?: boolean;
-  degraded_reason?: string | null;
+  fallback?: boolean;
+  fallback_reason?: string | null;
   narrative?: string;
   request_id: string;
 }
@@ -78,8 +78,8 @@ export interface Answer {
 export interface Refusal {
   refusal: string;
   path: string;
-  degraded?: boolean;
-  degraded_reason?: string | null;
+  fallback?: boolean;
+  fallback_reason?: string | null;
   narrative?: string;
 }
 

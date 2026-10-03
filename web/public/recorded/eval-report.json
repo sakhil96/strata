@@ -1,56 +1,52 @@
 {
   "environment": "local DuckDB build",
-  "generated_at": "2026-10-02T22:29:41+00:00",
-  "pass_rate": 1.0,
+  "generated_at": "2026-10-03T05:51:02+00:00",
+  "pass_rate": 0.9808,
   "suites": [
     {
       "detail": "all checks ran",
       "name": "metric_identity",
       "needs_account": [],
-      "passed": 20,
+      "passed": 25,
       "status": "passed",
       "title": "1 \u00b7 Metric identity against truth",
-      "total": 20
+      "total": 25
     },
     {
-      "detail": "1 check(s) need the account",
+      "detail": "failing: test_agent_meets_the_same_floors_through_agent_run",
       "name": "nl_accuracy",
-      "needs_account": [
-        "test_agent_meets_the_same_floors_through_agent_run"
-      ],
+      "needs_account": [],
       "passed": 5,
-      "status": "passed",
+      "status": "failed",
       "title": "2 \u00b7 Words to governed query",
-      "total": 5
+      "total": 6
     },
     {
       "detail": "all checks ran",
       "name": "persona_consistency",
       "needs_account": [],
-      "passed": 22,
+      "passed": 24,
       "status": "passed",
       "title": "3 \u00b7 One question, three roles, one hash",
-      "total": 22
+      "total": 24
     },
     {
       "detail": "all checks ran",
       "name": "governance",
       "needs_account": [],
-      "passed": 19,
+      "passed": 28,
       "status": "passed",
       "title": "4 \u00b7 Governance rules",
-      "total": 19
+      "total": 28
     },
     {
-      "detail": "1 check(s) need the account",
+      "detail": "failing: test_restore_from_a_time_travel_clone_matches_the_original",
       "name": "resilience",
-      "needs_account": [
-        "test_restore_from_a_time_travel_clone_matches_the_original"
-      ],
+      "needs_account": [],
       "passed": 8,
-      "status": "passed",
+      "status": "failed",
       "title": "5 \u00b7 Resilience and operations",
-      "total": 8
+      "total": 9
     },
     {
       "detail": "all checks ran",
@@ -62,14 +58,14 @@
       "total": 7
     },
     {
-      "detail": "1 skipped locally",
+      "detail": "all checks ran",
       "name": "supply_chain",
       "needs_account": [],
-      "passed": 4,
+      "passed": 5,
       "status": "passed",
       "title": "7 \u00b7 Software supply chain",
-      "total": 4
+      "total": 5
     }
   ],
-  "summary": "85 of 85 checks passed across 7 suites; 2 checks need the account."
+  "summary": "102 of 104 checks passed across 7 suites; 0 checks need the account."
 }

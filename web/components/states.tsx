@@ -52,7 +52,7 @@ export function Refused({ reason }: { reason: string }) {
   );
 }
 
-export function Degraded({ reason, onBuild }: { reason?: string | null; onBuild?: () => void }) {
+export function Fallback({ reason, onBuild }: { reason?: string | null; onBuild?: () => void }) {
   return (
     <div role="status" className="border-l border-warn py-1 pl-2">
       <p className="micro text-warn">Answered without the model</p>

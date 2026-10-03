@@ -2,14 +2,15 @@
   "as_of": "2026-09-30",
   "data_card": {
     "as_of": "2026-09-30",
+    "duty_source": "erp/material_tariffs: a per-part rate table written by this generator, with effective_from/effective_to; the rate applied is the one in force on the inbound shipment's depart date. reference/hts_2026.csv lists the headings that stepped and is not read by the landed-cost model.",
     "fiscal_year": "2025-10-01 to 2026-09-30",
     "fy_headline": {
       "carrier_on_time": 0.9234,
-      "days_of_inventory": 20.3549,
-      "dio_financial": 19.47,
-      "doi_units": 20.5896,
+      "days_of_inventory": 18.5101,
+      "dio_financial": 18.9659,
+      "doi_units": 18.8985,
       "freight_cost_per_unit": 7.7029,
-      "inventory_turns": 17.9318,
+      "inventory_turns": 19.7189,
       "landed_cost_per_unit": 153.505,
       "lead_time_variability": 7.1343,
       "line_fill_rate": 0.9295,
@@ -18,7 +19,7 @@
       "order_fill_rate": 0.7578,
       "order_fulfilment_cycle_days": 14.0,
       "otif": 0.7776,
-      "stockout_rate": 0.04,
+      "stockout_rate": 0.0399,
       "supplier_lead_time_days": 47.5,
       "supplier_on_time_receipt": 0.8797,
       "transit_hours": 53.75,
@@ -46,35 +47,35 @@
   },
   "dbt": {
     "failed": 0,
-    "finished_at": "2026-10-02T22:22:40.488739Z",
+    "finished_at": "2026-10-03T05:40:07.690044Z",
     "passed": 78
   },
   "eval": {
-    "generated_at": "2026-10-02T22:29:41+00:00",
-    "pass_rate": 1.0
+    "generated_at": "2026-10-03T05:51:02+00:00",
+    "pass_rate": 0.9808
   },
   "freshness": [
     {
       "files": 11,
-      "loaded_at": "2026-10-02T22:22+00:00",
+      "loaded_at": "2026-10-03T05:27+00:00",
       "source": "erp",
       "stale": false
     },
     {
       "files": 4,
-      "loaded_at": "2026-10-02T22:29+00:00",
+      "loaded_at": "2026-10-03T05:54+00:00",
       "source": "tms",
       "stale": false
     },
     {
       "files": 2,
-      "loaded_at": "2026-10-02T22:22+00:00",
+      "loaded_at": "2026-10-03T05:27+00:00",
       "source": "portal",
       "stale": false
     },
     {
       "files": 1,
-      "loaded_at": "2026-10-02T22:22+00:00",
+      "loaded_at": "2026-10-03T05:27+00:00",
       "source": "iot",
       "stale": false
     }

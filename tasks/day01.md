@@ -1,6 +1,6 @@
 # Day 01: Repository, roles and environments
 
-- AGENTS.md, DECISIONS.md, licence
+- AGENTS.md, docs/DECISIONS.md, licence
 - snowflake/setup/00-03: roles, databases, schemas, warehouses, monitors
 - Key-pair connections scm_dev, scm_test, scm_prod
 

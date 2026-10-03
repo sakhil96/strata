@@ -79,5 +79,5 @@ drop shadows; pill buttons everywhere; dark-mode toggle as a hero feature.
 1. `cortex --plan` for any DDL or grant statement.
 2. `/guardrails` before executing in any environment.
 3. Commit at every milestone with an imperative message.
-4. Record assumptions in DECISIONS.md with dates.
+4. Record assumptions in docs/DECISIONS.md with dates.
 5. Keep CHANGELOG.md current.

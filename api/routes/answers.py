@@ -35,30 +35,30 @@ def structured_query(body: QueryRequest, request: Request):
 @router.post("/ask", summary="Answer a question through the governed agent, or the resolver when it is down")
 def ask(body: AskRequest, request: Request):
     who = caller(request, body.persona)
-    degraded_reason = None
+    fallback_reason = None
     if agent.enabled():
         try:
             reply = agent.run(body.question, who.role, who.user, body.thread_id, body.parent_message_id)
             if reply["answer"]:
-                return reply["answer"] | {"path": "agent", "narrative": reply["narrative"], "degraded": False}
+                return reply["answer"] | {"path": "agent", "narrative": reply["narrative"], "fallback": False}
             if reply["refusal"]:
                 backend().record_refusal(who, body.question, reply["refusal"])
-                return {"path": "agent", "refusal": reply["refusal"], "narrative": reply["narrative"], "degraded": False}
-            degraded_reason = "the agent answered without calling GOVERNED_QUERY, so we did not use its answer"
+                return {"path": "agent", "refusal": reply["refusal"], "narrative": reply["narrative"], "fallback": False}
+            fallback_reason = "the agent answered without calling GOVERNED_QUERY, so we did not use its answer"
         except agent.AgentUnavailable as exc:
-            degraded_reason = str(exc)
+            fallback_reason = str(exc)
     else:
-        degraded_reason = "the agent is switched off in this environment"
+        fallback_reason = "the agent is switched off in this environment"
 
     resolution = backend().resolve(who, body.question)
     if resolution["refusal"]:
         backend().record_refusal(who, body.question, resolution["refusal"])
-        return {"path": "resolver", "refusal": resolution["refusal"], "degraded": True, "degraded_reason": degraded_reason}
+        return {"path": "resolver", "refusal": resolution["refusal"], "fallback": True, "fallback_reason": fallback_reason}
     try:
         answer = governed_answer(request, who, resolution["query"], body.question)
     except ValueError as exc:
         return semantic_failure(exc)
-    return answer | {"path": "resolver", "degraded": True, "degraded_reason": degraded_reason,
+    return answer | {"path": "resolver", "fallback": True, "fallback_reason": fallback_reason,
                      "notes": answer["notes"] + resolution["notes"]}
 
 

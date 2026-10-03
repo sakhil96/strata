@@ -7,7 +7,7 @@ import { Chart } from "@/components/chart";
 import { Ledger } from "@/components/ledger";
 import { Numeral } from "@/components/numeral";
 import { PageHead } from "@/components/section";
-import { Degraded, Loading, Problem, Refused } from "@/components/states";
+import { Fallback, Loading, Problem, Refused } from "@/components/states";
 import { ApiProblem, api } from "@/lib/api";
 import { PERSONA_LABEL, formatValue, monthLabel, period } from "@/lib/format";
 import { usePersona } from "@/lib/persona";
@@ -128,7 +128,7 @@ export default function AskPage() {
           {busy ? <Loading what={`Running the governed query as ${PERSONA_LABEL[persona]}`} /> : null}
           {problem ? <Problem problem={problem} onRetry={last ? () => void run(last) : undefined} /> : null}
           {refusal ? <Refused reason={refusal.refusal} /> : null}
-          {answer?.degraded ? <Degraded reason={answer.degraded_reason} onBuild={() => setMode("build")} /> : null}
+          {answer?.fallback ? <Fallback reason={answer.fallback_reason} onBuild={() => setMode("build")} /> : null}
           {answer && !busy ? (
             <article aria-label="Answer" className="mt-3">
               <p className="micro">

@@ -1,7 +1,7 @@
 """Suite 2: from words to the governed query. Floors: metric resolution 90%, exact query 85%,
 numbers 100% when the metric is right, refusals 10 of 10.
 
-Locally this scores the model-free resolver, which is the degraded path and the baseline the
+Locally this scores the model-free resolver, which is the fallback path and the baseline the
 agent must beat. With SCM_AGENT=on and an account it scores the agent through agent:run."""
 
 from __future__ import annotations

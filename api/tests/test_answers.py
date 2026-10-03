@@ -51,8 +51,8 @@ def test_unexpected_fields_are_refused(client):
 
 def test_ask_without_the_agent_degrades_to_the_resolver_and_says_so(client):
     answer = client.post("/api/ask", json={"question": "What is OTIF this year?"}).json()
-    assert answer["degraded"] is True and answer["path"] == "resolver"
-    assert "switched off" in answer["degraded_reason"]
+    assert answer["fallback"] is True and answer["path"] == "resolver"
+    assert "switched off" in answer["fallback_reason"]
     assert answer["metric_name"] == "otif"
 
 

@@ -40,7 +40,7 @@
     {
       "measured": "6 ms",
       "name": "p95 answer latency through /query",
-      "source": "local audit trail, 49 answers",
+      "source": "local audit trail, 75 answers",
       "status": "met",
       "target": "\u2264 1500 ms"
     },
@@ -59,7 +59,7 @@
       "target": "99.5% a month"
     },
     {
-      "measured": "100.0 %",
+      "measured": "98.1 %",
       "name": "Evaluation pass rate",
       "source": "eval/report.json",
       "status": "met",

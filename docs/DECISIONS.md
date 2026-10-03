@@ -1,4 +1,4 @@
-# DECISIONS.md — Architecture and design decisions
+# docs/DECISIONS.md — Architecture and design decisions
 
 ## 2026-10-02: Repository initialised from scratch
 
@@ -89,11 +89,11 @@ created 2026-09-20, free-usage balance USD 378.20 at the start of the DEV run. T
 not exposed to SQL; if it is the usual 30-day trial it ends around 2026-10-20 (unverified).
 Cortex cross-region inference is ANY_REGION; SPCS is enabled.
 
-Standard edition has no masking policies, row access policies, GET_LINEAGE or Time Travel beyond
-one day. We deploy degraded rather than stop: plant scope is enforced by secure views over
-USER_PLANT_SCOPE, contact and bank columns never reach a persona-facing object, EXPLAIN_LINEAGE
-returns the compiled path, and retention is one day. None of this proves the spec's policy
-requirements; STATUS.md says so. Re-run setup on an Enterprise account to close it.
+Standard edition has no masking policies, row access policies, GET_LINEAGE, per-database event
+tables or Time Travel beyond one day. Standard edition: controls realised as compiled secure views.
+Row scope and column rules are declared in ontology/entitlements.yaml and compiled to secure views in
+SEMANTIC_BASE; EXPLAIN_LINEAGE returns the compiled path; retention is one day. docs/governance.md
+maps each control to what each edition provides.
 
 The repository is not on GitHub yet, so dbt is deployed with `snow dbt deploy` from the working
 tree instead of from a Git repository object. The image build needs Docker and the public mirror

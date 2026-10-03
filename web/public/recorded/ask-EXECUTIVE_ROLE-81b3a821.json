@@ -13,10 +13,10 @@
     }
   },
   "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
-  "degraded": true,
-  "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
-  "latency_ms": 2,
+  "fallback": true,
+  "fallback_reason": "the agent is switched off in this environment",
+  "latency_ms": 1,
   "lineage": {
     "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
     "metric": "days_of_inventory",
@@ -88,34 +88,34 @@
     "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
   ],
   "path": "resolver",
-  "request_id": "154a335737fb",
-  "result_checksum": "dc2c387e060930f7",
+  "request_id": "6a6ef0763322",
+  "result_checksum": "3f8b24ddc762fb37",
   "role": "EXECUTIVE_ROLE",
   "row_count": 5,
   "rows": [
     {
-      "days_of_inventory": 18.696531527999472,
+      "days_of_inventory": 18.696531528,
       "plant_id": "DC-NL01"
     },
     {
-      "days_of_inventory": 19.14138994956657,
+      "days_of_inventory": 19.1413899496,
       "plant_id": "DC-US01"
     },
     {
-      "days_of_inventory": 19.64332587837818,
+      "days_of_inventory": 19.6433258784,
       "plant_id": "PLT-DE01"
     },
     {
-      "days_of_inventory": 17.4722481745951,
+      "days_of_inventory": 17.4722481746,
       "plant_id": "PLT-SG01"
     },
     {
-      "days_of_inventory": 18.438652656201807,
+      "days_of_inventory": 18.4386526562,
       "plant_id": "PLT-US01"
     }
   ],
   "semantic_query_hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
-  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY plant_id",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
   "user": "LOCAL_DEVELOPER",
   "view": "EXECUTIVE_SV_V1"
 }

@@ -55,7 +55,7 @@ def test_ask_degrades_instead_of_failing_when_the_agent_is_unreachable(client, m
     monkeypatch.setenv("SCM_AGENT", "on")
     monkeypatch.delenv("SNOWFLAKE_HOST", raising=False)
     answer = client.post("/api/ask", json={"question": "What is fill rate by plant?"}).json()
-    assert answer["degraded"] is True and "SNOWFLAKE_HOST" in answer["degraded_reason"]
+    assert answer["fallback"] is True and "SNOWFLAKE_HOST" in answer["fallback_reason"]
     assert answer["metric_name"] == "unit_fill_rate"
 
 

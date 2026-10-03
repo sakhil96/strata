@@ -11,9 +11,9 @@
     }
   },
   "definition": "Share of delivered sales order lines that arrived on or before the date we committed to the customer.",
-  "degraded": true,
-  "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
+  "fallback": true,
+  "fallback_reason": "the agent is switched off in this environment",
   "latency_ms": 1,
   "lineage": {
     "expression": "SUM(delivered_lines.is_on_time) / NULLIF(SUM(delivered_lines.is_delivered), 0)",
@@ -80,13 +80,13 @@
     "on_time_delivery resolved to the governed default; variants: carrier_on_time, on_time_to_request, supplier_on_time_receipt"
   ],
   "path": "resolver",
-  "request_id": "5cd3b2345f7c",
-  "result_checksum": "d3995cc070be1c2e",
+  "request_id": "30aa1ea65cc6",
+  "result_checksum": "7f965a2209f6b749",
   "role": "PLANNING_ROLE",
   "row_count": 1,
   "rows": [
     {
-      "on_time_delivery": 0.8375534950071327
+      "on_time_delivery": 0.837553495007
     }
   ],
   "semantic_query_hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",

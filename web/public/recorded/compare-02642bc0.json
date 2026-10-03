@@ -79,13 +79,13 @@
           }
         ],
         "notes": [],
-        "request_id": "4a26062053c7",
-        "result_checksum": "d3995cc070be1c2e",
+        "request_id": "3c1094112dcc",
+        "result_checksum": "7f965a2209f6b749",
         "role": "PLANNING_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "on_time_delivery": 0.8375534950071327
+            "on_time_delivery": 0.837553495007
           }
         ],
         "semantic_query_hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
@@ -98,11 +98,11 @@
       "role": "PLANNING_ROLE",
       "rows": [
         {
-          "on_time_delivery": 0.8375534950071327
+          "on_time_delivery": 0.837553495007
         }
       ],
       "unit": "ratio",
-      "value": 0.8375534950071327
+      "value": 0.837553495007
     },
     {
       "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
@@ -183,13 +183,13 @@
           }
         ],
         "notes": [],
-        "request_id": "4a26062053c7",
-        "result_checksum": "d3995cc070be1c2e",
+        "request_id": "3c1094112dcc",
+        "result_checksum": "7f965a2209f6b749",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "on_time_delivery": 0.8375534950071327
+            "on_time_delivery": 0.837553495007
           }
         ],
         "semantic_query_hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
@@ -202,11 +202,11 @@
       "role": "PROCUREMENT_ROLE",
       "rows": [
         {
-          "on_time_delivery": 0.8375534950071327
+          "on_time_delivery": 0.837553495007
         }
       ],
       "unit": "ratio",
-      "value": 0.8375534950071327
+      "value": 0.837553495007
     },
     {
       "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
@@ -287,13 +287,13 @@
           }
         ],
         "notes": [],
-        "request_id": "4a26062053c7",
-        "result_checksum": "d3995cc070be1c2e",
+        "request_id": "3c1094112dcc",
+        "result_checksum": "7f965a2209f6b749",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,
         "rows": [
           {
-            "on_time_delivery": 0.8375534950071327
+            "on_time_delivery": 0.837553495007
           }
         ],
         "semantic_query_hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
@@ -306,11 +306,11 @@
       "role": "LOGISTICS_ROLE",
       "rows": [
         {
-          "on_time_delivery": 0.8375534950071327
+          "on_time_delivery": 0.837553495007
         }
       ],
       "unit": "ratio",
-      "value": 0.8375534950071327
+      "value": 0.837553495007
     }
   ],
   "converged": true,

@@ -2,7 +2,7 @@
 
 ## Severity levels
 - **P1**: Service down, data breach, or production data corruption.
-- **P2**: Degraded service (agent unavailable, metrics returning errors).
+- **P2**: Reduced service (agent unavailable, metrics returning errors).
 - **P3**: Non-critical (stale data, failed evaluation, test regression).
 
 ## Response flow

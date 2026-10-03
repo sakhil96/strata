@@ -15,4 +15,4 @@ passes). Loading it gives a session the project's rules instead of re-explaining
 Bundled skills used during the build: `cortex-ai-function-studio` for the AI_CLASSIFY and AI_FILTER
 note models, and `cortex-code-guide` for the plugin layout. Account-side checks those skills
 recommend (privilege checks, live validation) were deferred to the account run and are listed in
-STATUS.md.
+docs/STATUS.md.

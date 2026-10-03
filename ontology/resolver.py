@@ -1,6 +1,6 @@
 """Resolve a question to a semantic query without a model.
 
-This is the degraded path when the agent is unavailable and the baseline the agent is
+This is the fallback path when the agent is unavailable and the baseline the agent is
 scored against. It only ever produces governed metric names; anything it cannot place
 is refused.
 """

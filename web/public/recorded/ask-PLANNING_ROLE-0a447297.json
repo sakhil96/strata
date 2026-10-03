@@ -13,9 +13,9 @@
     }
   },
   "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
-  "degraded": true,
-  "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
+  "fallback": true,
+  "fallback_reason": "the agent is switched off in this environment",
   "latency_ms": 2,
   "lineage": {
     "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
@@ -86,57 +86,57 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "8f9b1a6884b3",
-  "result_checksum": "48c634e1acbc074b",
+  "request_id": "94506576e26d",
+  "result_checksum": "13bd163b713c2de8",
   "role": "PLANNING_ROLE",
   "row_count": 12,
   "rows": [
     {
-      "landed_cost_per_unit": 128.72844176689836,
+      "landed_cost_per_unit": 128.728441767,
       "period_month": "2025-10-01"
     },
     {
-      "landed_cost_per_unit": 147.00411072758095,
+      "landed_cost_per_unit": 147.004110728,
       "period_month": "2025-11-01"
     },
     {
-      "landed_cost_per_unit": 154.91515025500829,
+      "landed_cost_per_unit": 154.915150255,
       "period_month": "2025-12-01"
     },
     {
-      "landed_cost_per_unit": 155.60902195630013,
+      "landed_cost_per_unit": 155.609021956,
       "period_month": "2026-01-01"
     },
     {
-      "landed_cost_per_unit": 152.4089108272478,
+      "landed_cost_per_unit": 152.408910827,
       "period_month": "2026-02-01"
     },
     {
-      "landed_cost_per_unit": 148.56171805395144,
+      "landed_cost_per_unit": 148.561718054,
       "period_month": "2026-03-01"
     },
     {
-      "landed_cost_per_unit": 156.31189413472552,
+      "landed_cost_per_unit": 156.311894135,
       "period_month": "2026-04-01"
     },
     {
-      "landed_cost_per_unit": 149.19806055617875,
+      "landed_cost_per_unit": 149.198060556,
       "period_month": "2026-05-01"
     },
     {
-      "landed_cost_per_unit": 153.76310812053538,
+      "landed_cost_per_unit": 153.763108121,
       "period_month": "2026-06-01"
     },
     {
-      "landed_cost_per_unit": 148.46000190557325,
+      "landed_cost_per_unit": 148.460001906,
       "period_month": "2026-07-01"
     },
     {
-      "landed_cost_per_unit": 155.9969357153991,
+      "landed_cost_per_unit": 155.996935715,
       "period_month": "2026-08-01"
     },
     {
-      "landed_cost_per_unit": 162.312993513883,
+      "landed_cost_per_unit": 162.312993514,
       "period_month": "2026-09-01"
     }
   ],

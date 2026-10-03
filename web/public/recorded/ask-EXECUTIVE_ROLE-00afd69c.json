@@ -13,9 +13,9 @@
     }
   },
   "definition": "Share of received purchase order lines that arrived on or before the supplier's promised date.",
-  "degraded": true,
-  "degraded_reason": "the agent is switched off in this environment",
   "engine": "duckdb",
+  "fallback": true,
+  "fallback_reason": "the agent is switched off in this environment",
   "latency_ms": 3,
   "lineage": {
     "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
@@ -86,66 +86,66 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "ff695bc69966",
-  "result_checksum": "bc43f3bf5696783c",
+  "request_id": "3154ff0f3dfd",
+  "result_checksum": "170fc45acc36a269",
   "role": "EXECUTIVE_ROLE",
   "row_count": 40,
   "rows": [
     {
       "supplier_name": "Abbott Motion Systems Ltd",
-      "supplier_on_time_receipt": 0.8939393939393939
+      "supplier_on_time_receipt": 0.893939393939
     },
     {
       "supplier_name": "Bauer & S\u00f6hne Antriebstechnik GmbH",
-      "supplier_on_time_receipt": 0.7962962962962963
+      "supplier_on_time_receipt": 0.796296296296
     },
     {
       "supplier_name": "Bengaluru Drives Pvt Ltd",
-      "supplier_on_time_receipt": 0.8698630136986302
+      "supplier_on_time_receipt": 0.869863013699
     },
     {
       "supplier_name": "Cascade Power Electronics Inc",
-      "supplier_on_time_receipt": 0.8208955223880597
+      "supplier_on_time_receipt": 0.820895522388
     },
     {
       "supplier_name": "Chennai Circuit Works Pvt Ltd",
-      "supplier_on_time_receipt": 0.8427672955974843
+      "supplier_on_time_receipt": 0.842767295597
     },
     {
       "supplier_name": "Corrugated Solutions of Kent Ltd",
-      "supplier_on_time_receipt": 0.8357142857142857
+      "supplier_on_time_receipt": 0.835714285714
     },
     {
       "supplier_name": "Dongguan Lianfa Plastics Co Ltd",
-      "supplier_on_time_receipt": 0.9230769230769231
+      "supplier_on_time_receipt": 0.923076923077
     },
     {
       "supplier_name": "Empaques del Norte SA de CV",
-      "supplier_on_time_receipt": 0.9209039548022598
+      "supplier_on_time_receipt": 0.920903954802
     },
     {
       "supplier_name": "Ensambles Electr\u00f3nicos de Monterrey SA de CV",
-      "supplier_on_time_receipt": 0.7945205479452054
+      "supplier_on_time_receipt": 0.794520547945
     },
     {
       "supplier_name": "Great Plains Packaging Inc",
-      "supplier_on_time_receipt": 0.9343434343434344
+      "supplier_on_time_receipt": 0.934343434343
     },
     {
       "supplier_name": "Grupo Plastimex SA de CV",
-      "supplier_on_time_receipt": 0.9406392694063926
+      "supplier_on_time_receipt": 0.940639269406
     },
     {
       "supplier_name": "Gujarat Polychem Pvt Ltd",
-      "supplier_on_time_receipt": 0.9153225806451613
+      "supplier_on_time_receipt": 0.915322580645
     },
     {
       "supplier_name": "Halvorsen Fasteners Ltd",
-      "supplier_on_time_receipt": 0.8535353535353535
+      "supplier_on_time_receipt": 0.853535353535
     },
     {
       "supplier_name": "Hartmann Pr\u00e4zisionsteile GmbH",
-      "supplier_on_time_receipt": 0.9294117647058824
+      "supplier_on_time_receipt": 0.929411764706
     },
     {
       "supplier_name": "Haryana Cartons Pvt Ltd",
@@ -153,39 +153,39 @@
     },
     {
       "supplier_name": "Hokuriku Resin KK",
-      "supplier_on_time_receipt": 0.8297872340425532
+      "supplier_on_time_receipt": 0.829787234043
     },
     {
       "supplier_name": "Industrias Met\u00e1licas del Baj\u00edo SA de CV",
-      "supplier_on_time_receipt": 0.8714285714285714
+      "supplier_on_time_receipt": 0.871428571429
     },
     {
       "supplier_name": "Jurong Precision Engineering Pte Ltd",
-      "supplier_on_time_receipt": 0.8855721393034826
+      "supplier_on_time_receipt": 0.885572139303
     },
     {
       "supplier_name": "Kallang Motion Pte Ltd",
-      "supplier_on_time_receipt": 0.916256157635468
+      "supplier_on_time_receipt": 0.916256157635
     },
     {
       "supplier_name": "Kansai Denshi Kogyo KK",
-      "supplier_on_time_receipt": 0.8805970149253731
+      "supplier_on_time_receipt": 0.880597014925
     },
     {
       "supplier_name": "Kessler Elektronik GmbH",
-      "supplier_on_time_receipt": 0.9156626506024096
+      "supplier_on_time_receipt": 0.915662650602
     },
     {
       "supplier_name": "Lakeshore Components Inc",
-      "supplier_on_time_receipt": 0.8838383838383839
+      "supplier_on_time_receipt": 0.883838383838
     },
     {
       "supplier_name": "Marina Packaging Pte Ltd",
-      "supplier_on_time_receipt": 0.812807881773399
+      "supplier_on_time_receipt": 0.812807881773
     },
     {
       "supplier_name": "Nagoya Drive Systems KK",
-      "supplier_on_time_receipt": 0.8333333333333334
+      "supplier_on_time_receipt": 0.833333333333
     },
     {
       "supplier_name": "Ningbo Zhenhai Fastener Co Ltd",
@@ -193,63 +193,63 @@
     },
     {
       "supplier_name": "Nordwerk Hydraulik GmbH",
-      "supplier_on_time_receipt": 0.8905472636815921
+      "supplier_on_time_receipt": 0.890547263682
     },
     {
       "supplier_name": "Pennine Polymers Ltd",
-      "supplier_on_time_receipt": 0.8181818181818182
+      "supplier_on_time_receipt": 0.818181818182
     },
     {
       "supplier_name": "Pune Forge & Fasteners Pvt Ltd",
-      "supplier_on_time_receipt": 0.8354430379746836
+      "supplier_on_time_receipt": 0.835443037975
     },
     {
       "supplier_name": "Redwood Bearing Co",
-      "supplier_on_time_receipt": 0.9271844660194175
+      "supplier_on_time_receipt": 0.927184466019
     },
     {
       "supplier_name": "Rheinfels Kunststoffe GmbH",
-      "supplier_on_time_receipt": 0.8333333333333334
+      "supplier_on_time_receipt": 0.833333333333
     },
     {
       "supplier_name": "Sakura Seimitsu KK",
-      "supplier_on_time_receipt": 0.9058823529411765
+      "supplier_on_time_receipt": 0.905882352941
     },
     {
       "supplier_name": "Shenzhen Huaxin Electronics Co Ltd",
-      "supplier_on_time_receipt": 0.8421052631578947
+      "supplier_on_time_receipt": 0.842105263158
     },
     {
       "supplier_name": "Straits Polymer Pte Ltd",
-      "supplier_on_time_receipt": 0.8333333333333334
+      "supplier_on_time_receipt": 0.833333333333
     },
     {
       "supplier_name": "Suzhou Yongda Precision Motion Co Ltd",
-      "supplier_on_time_receipt": 0.9344262295081968
+      "supplier_on_time_receipt": 0.934426229508
     },
     {
       "supplier_name": "Thames Valley Controls Ltd",
-      "supplier_on_time_receipt": 0.8448275862068966
+      "supplier_on_time_receipt": 0.844827586207
     },
     {
       "supplier_name": "Tohoku Fastening KK",
-      "supplier_on_time_receipt": 0.9267015706806283
+      "supplier_on_time_receipt": 0.926701570681
     },
     {
       "supplier_name": "Transmisiones Quer\u00e9taro SA de CV",
-      "supplier_on_time_receipt": 0.910377358490566
+      "supplier_on_time_receipt": 0.910377358491
     },
     {
       "supplier_name": "Tri-County Fastener Supply Inc",
-      "supplier_on_time_receipt": 0.8548387096774194
+      "supplier_on_time_receipt": 0.854838709677
     },
     {
       "supplier_name": "Tuas Power Modules Pte Ltd",
-      "supplier_on_time_receipt": 0.9173913043478261
+      "supplier_on_time_receipt": 0.917391304348
     },
     {
       "supplier_name": "Xiamen Heng'an Packaging Co Ltd",
-      "supplier_on_time_receipt": 0.9152542372881356
+      "supplier_on_time_receipt": 0.915254237288
     }
   ],
   "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",

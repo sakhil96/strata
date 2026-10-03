@@ -12,10 +12,10 @@
   Cortex Search over notes; MCP server; operational task loop; dynamic table for delivery events.
 - FastAPI service with query, ask, compare, before-after, meta, glossary, lineage, audit, status and
   operations; strict CSP with per-page hashes.
-- STRATA front end: ten pages, design tokens, degraded and empty states, public mirror build.
+- STRATA front end: ten pages, design tokens, fallback and empty states, public mirror build.
 - Seven evaluation suites with a report; Playwright and axe at three widths.
 - Hash-locked dependencies, SBOMs, image scan, release gate, SPCS deploy and rollback.
 - Cortex Code plugin: skills, commands, subagents, guard hooks, MCP config.
 
 ### Security
-- Lifted the cryptography pin; locks resolved for the image platform (see DECISIONS.md).
+- Lifted the cryptography pin; locks resolved for the image platform (see docs/DECISIONS.md).

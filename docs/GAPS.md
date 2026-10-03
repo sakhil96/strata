@@ -25,7 +25,7 @@ means the artefact can be written and validated locally but only proven on Snowf
 
 - `ontology/ontology.yaml` began with the compiler's generated-file header although it is the source.
 - `GOVERNED_QUERY._build_where` interpolated filter values into SQL without validation.
-- STATUS.md and the previous turn's summary marked Days 10 to 14 complete; they were not.
+- docs/STATUS.md and the previous turn's summary marked Days 10 to 14 complete; they were not.
 - No Node toolchain on this machine; we used a portable Node 22 in /tmp for builds.
 
 ## Closure

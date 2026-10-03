@@ -54,5 +54,5 @@ Run before merging any change under `web/`. Items marked (auto) fail CI.
 - [ ] Asymmetric 7/5 or 8/4 layout; no centred stacks of equal cards
 - [ ] No shadows, gradients, glass, glow, pill buttons or icon decoration from the bans list
 - [ ] Hover changes colour or underline only; motion respects reduced motion
-- [ ] Loading, empty, degraded and error states shown for every resource
+- [ ] Loading, empty, fallback and error states shown for every resource
 - [ ] Screenshots refreshed with `make screenshots` when a page changes

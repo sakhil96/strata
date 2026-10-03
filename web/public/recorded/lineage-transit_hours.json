@@ -1,5 +1,5 @@
 {
-  "expression": "MEDIAN(shipments.transit_hours)",
+  "expression": "MEDIAN(shipments.transit_hours_elapsed)",
   "metric": "transit_hours",
   "path": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "columns": [
-        "transit_hours"
+        "transit_hours_elapsed"
       ],
       "layer": "semantic",
       "objects": [
