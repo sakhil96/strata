@@ -320,6 +320,30 @@ def glossary(registry: semantic.Registry) -> list[dict[str, Any]]:
     return entries
 
 
+def metrics_doc(registry: semantic.Registry) -> str:
+    lines = ["# Governed metrics", "",
+             "Compiled from ontology/metrics.yaml by ontology/compile.py; the expression is the one every",
+             "semantic view carries, and suite 1 checks it against truth.", ""]
+    for name, m in registry.metrics.items():
+        lines += [f"## {m['title']} (`{name}`)" + (f", variant of `{m['parent']}`" if m["parent"] else ""), "",
+                  m["definition"], "",
+                  f"- Formula: {m['formula_text']}",
+                  f"- Numerator: {m['numerator']}",
+                  f"- Denominator: {m['denominator']}",
+                  f"- Grain {m['grain']}; dated by {m['date_basis']}; window {m['window']}; unit {m['unit']}",
+                  f"- Expression: `{m['semantic']['expr']}`",
+                  f"- Owner {m['owner']}; steward {m['steward']}; version {m['version']}, {m['status']}", ""]
+    lines += ["## Landed cost components", "",
+              "`landed_usd` in fct_po_line is material (unit cost x received qty x FX on the PO date) + inbound",
+              "freight shared by received weight + duty + insurance "
+              f"({registry.constants['insurance_rate']} x material) + handling "
+              f"(USD {registry.constants['handling_usd_per_unit']} per unit). Duty is the per-part rate from",
+              "erp/material_tariffs in force on the inbound shipment's depart date, times material value, for",
+              "imports only. The rate table comes from the data generator; HTS_2026 is reference data and is not",
+              "read by the model.", ""]
+    return "\n".join(lines)
+
+
 def glossary_load_sql(env: str) -> str:
     db = f"SCM_{env.upper()}"
     return "\n".join([
@@ -494,6 +518,7 @@ def main(targets: tuple[str, ...], env: str, version: int) -> None:
         write(DBT_SCHEMA, dbt_schema(ontology, registry))
     if "glossary" in chosen:
         write(GENERATED / "glossary.json", json.dumps(glossary(registry), indent=2, sort_keys=True) + "\n")
+        write(ROOT / "docs" / "metrics.md", metrics_doc(registry))
         write(SEMANTIC_DIR / "load_glossary.sql", glossary_load_sql(env))
     if "ossie" in chosen:
         write(GENERATED / "ossie_model.yaml", dump(ossie(registry, env)))

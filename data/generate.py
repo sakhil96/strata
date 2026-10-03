@@ -845,11 +845,19 @@ def main() -> int:
     write(truth, "truth_metrics.parquet")
 
     monthly = truth[truth.grouping == "month"]
-    headline = {metric: (g.numerator.sum() / g.denominator.sum() if g.numerator.notna().all() else g.value.median())
+    # Inventory metrics are positions: the year's figure is its closing month, as GOVERNED_QUERY reads it.
+    positions = {"days_of_inventory", "doi_units", "inventory_turns", "dio_financial", "stockout_rate"}
+    headline = {metric: (g.sort_values("month").value.iloc[-1] if metric in positions
+                         else g.numerator.sum() / g.denominator.sum() if g.numerator.notna().all()
+                         else g.value.median())
                 for metric, g in monthly.groupby("metric")}
     card = {
         "seed": SEED, "fiscal_year": f"{FY_START} to {AS_OF}", "as_of": str(AS_OF),
         "tariff_step": str(TARIFF_STEP),
+        "duty_source": ("erp/material_tariffs: a per-part rate table written by this generator, with "
+                        "effective_from/effective_to; the rate applied is the one in force on the inbound "
+                        "shipment's depart date. reference/hts_2026.csv lists the headings that stepped and "
+                        "is not read by the landed-cost model."),
         "rows": {k: len(v) for k, v in world.items()} | {"truth_metrics": len(truth)},
         "fy_headline": {k: round(float(v), 4) for k, v in headline.items()},
     }
