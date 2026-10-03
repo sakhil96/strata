@@ -467,6 +467,10 @@ tables:
   - name: po_line_id
     expr: po_line_id
     data_type: VARCHAR
+  - name: supplier_unit_cost
+    expr: UNIT_COST
+    data_type: NUMBER(38,6)
+    description: 'Restricted: shown to SCM_ADMIN, PROCUREMENT_ROLE; null for every other role.'
   time_dimensions:
   - name: period_month
     synonyms:

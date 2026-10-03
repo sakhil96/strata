@@ -1,0 +1,1707 @@
+{
+  "resolved": 50,
+  "exact": 48,
+  "refused": 10,
+  "governed": 50,
+  "refusals": 10,
+  "outcomes": [
+    {
+      "id": "q01",
+      "question": "What is on-time delivery for FY2026?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q02",
+      "question": "What is OTD by plant for Q2?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [
+          "plant_id"
+        ],
+        "time": {
+          "start": "2026-01-01",
+          "end": "2026-03-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "plant_id"
+        ],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-03-01",
+          "start": "2026-01-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q03",
+      "question": "How did suppliers do against their promised dates this quarter?",
+      "expected": {
+        "metrics": [
+          "supplier_on_time_receipt"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-07-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "supplier_on_time_receipt"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-07-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q04",
+      "question": "What is our delivery rate by region?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q05",
+      "question": "What is carrier on-time for APAC?",
+      "expected": {
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "APAC"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "APAC"
+            ]
+          }
+        ],
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q06",
+      "question": "What is on-time to request by month?",
+      "expected": {
+        "metrics": [
+          "on_time_to_request"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "on_time_to_request"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q07",
+      "question": "What is OTIF this year?",
+      "expected": {
+        "metrics": [
+          "otif"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "otif"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q08",
+      "question": "Show me perfect delivery rate by segment",
+      "expected": {
+        "metrics": [
+          "otif"
+        ],
+        "dimensions": [
+          "segment"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "segment"
+        ],
+        "filters": [],
+        "metrics": [
+          "otif"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q09",
+      "question": "What is fill rate for control electronics?",
+      "expected": {
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Control electronics"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Control electronics"
+            ]
+          }
+        ],
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q10",
+      "question": "What share of orders were completely filled on the first shipment?",
+      "expected": {
+        "metrics": [
+          "order_fill_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "order_fill_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q11",
+      "question": "How many days of inventory do we have?",
+      "expected": {
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q12",
+      "question": "What is DOI by plant?",
+      "expected": {
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "dimensions": [
+          "plant_id"
+        ],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "plant_id"
+        ],
+        "filters": [],
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q13",
+      "question": "What is days inventory outstanding on the finance basis by month?",
+      "expected": {
+        "metrics": [
+          "dio_financial"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "dio_financial"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": false
+    },
+    {
+      "id": "q14",
+      "question": "What is landed cost per unit this quarter?",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-07-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-07-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q15",
+      "question": "How did landed cost move by month across the July tariff step?",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-06-01",
+          "start": "2026-04-01"
+        }
+      },
+      "exact": false
+    },
+    {
+      "id": "q16",
+      "question": "What is median supplier lead time?",
+      "expected": {
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q17",
+      "question": "What is inventory turnover?",
+      "expected": {
+        "metrics": [
+          "inventory_turns"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "inventory_turns"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q18",
+      "question": "What is the stockout rate for the US region?",
+      "expected": {
+        "metrics": [
+          "stockout_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "US"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "US"
+            ]
+          }
+        ],
+        "metrics": [
+          "stockout_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q19",
+      "question": "What is freight cost per unit by carrier type?",
+      "expected": {
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "dimensions": [
+          "carrier_type"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "carrier_type"
+        ],
+        "filters": [],
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q20",
+      "question": "What is order fulfilment cycle time?",
+      "expected": {
+        "metrics": [
+          "order_fulfilment_cycle_days"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "order_fulfilment_cycle_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q21",
+      "question": "Which suppliers have the worst on-time receipt?",
+      "expected": {
+        "metrics": [
+          "supplier_on_time_receipt"
+        ],
+        "dimensions": [
+          "supplier_name"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "supplier_name"
+        ],
+        "filters": [],
+        "metrics": [
+          "supplier_on_time_receipt"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q22",
+      "question": "Show DOI and inventory turns by plant at year end",
+      "expected": {
+        "metrics": [
+          "days_of_inventory",
+          "inventory_turns"
+        ],
+        "dimensions": [
+          "plant_id"
+        ],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "plant_id"
+        ],
+        "filters": [],
+        "metrics": [
+          "days_of_inventory",
+          "inventory_turns"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q23",
+      "question": "Show OTD trend by month for FY2026",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q24",
+      "question": "What was fill rate in Q1?",
+      "expected": {
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2025-12-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "time": {
+          "end": "2025-12-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q25",
+      "question": "What is OTD for the Healthcare segment?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Healthcare"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Healthcare"
+            ]
+          }
+        ],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q26",
+      "question": "Landed cost by supplier country",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [
+          "supplier_country"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "supplier_country"
+        ],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q27",
+      "question": "What is transit time by carrier?",
+      "expected": {
+        "metrics": [
+          "transit_hours"
+        ],
+        "dimensions": [
+          "carrier_name"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "carrier_name"
+        ],
+        "filters": [],
+        "metrics": [
+          "transit_hours"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q28",
+      "question": "Show me lead time variability by supplier",
+      "expected": {
+        "metrics": [
+          "lead_time_variability"
+        ],
+        "dimensions": [
+          "supplier_name"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "supplier_name"
+        ],
+        "filters": [],
+        "metrics": [
+          "lead_time_variability"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q29",
+      "question": "What is line fill rate?",
+      "expected": {
+        "metrics": [
+          "line_fill_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "line_fill_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q30",
+      "question": "DOI in units for the Tuas plant",
+      "expected": {
+        "metrics": [
+          "doi_units"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "PLT-SG01"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "PLT-SG01"
+            ]
+          }
+        ],
+        "metrics": [
+          "doi_units"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q31",
+      "question": "What is OTD for mechanical parts?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "category",
+            "operator": "=",
+            "values": [
+              "Mechanical"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "category",
+            "operator": "=",
+            "values": [
+              "Mechanical"
+            ]
+          }
+        ],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q32",
+      "question": "OTIF by month",
+      "expected": {
+        "metrics": [
+          "otif"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "otif"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q33",
+      "question": "Supplier lead time by plant",
+      "expected": {
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "dimensions": [
+          "plant_id"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "plant_id"
+        ],
+        "filters": [],
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q34",
+      "question": "Freight cost trend by month",
+      "expected": {
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q35",
+      "question": "Inventory turns by category",
+      "expected": {
+        "metrics": [
+          "inventory_turns"
+        ],
+        "dimensions": [
+          "category"
+        ],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "category"
+        ],
+        "filters": [],
+        "metrics": [
+          "inventory_turns"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q36",
+      "question": "Stockout rate trend",
+      "expected": {
+        "metrics": [
+          "stockout_rate"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "stockout_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q37",
+      "question": "OTD for the retail segment in Q4",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-07-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Retail"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Retail"
+            ]
+          }
+        ],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-07-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q38",
+      "question": "How is all-in cost trending by month?",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q39",
+      "question": "What is our cycle time for government customers?",
+      "expected": {
+        "metrics": [
+          "order_fulfilment_cycle_days"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Government"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Government"
+            ]
+          }
+        ],
+        "metrics": [
+          "order_fulfilment_cycle_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q40",
+      "question": "Fill rate by plant",
+      "expected": {
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "dimensions": [
+          "plant_id"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "plant_id"
+        ],
+        "filters": [],
+        "metrics": [
+          "unit_fill_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q41",
+      "question": "What is carrier on-time for air carriers?",
+      "expected": {
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "AIR"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "AIR"
+            ]
+          }
+        ],
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q42",
+      "question": "Landed cost before the July tariff step",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-04-01",
+          "end": "2026-06-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-06-01",
+          "start": "2026-04-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q43",
+      "question": "Landed cost after the July tariff step",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-08-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-08-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q44",
+      "question": "Days of inventory for packaging",
+      "expected": {
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Packaging"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Packaging"
+            ]
+          }
+        ],
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q45",
+      "question": "Carrier on-time by carrier",
+      "expected": {
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "dimensions": [
+          "carrier_name"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "carrier_name"
+        ],
+        "filters": [],
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q46",
+      "question": "OTIF for the industrial segment",
+      "expected": {
+        "metrics": [
+          "otif"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Industrial"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "segment",
+            "operator": "=",
+            "values": [
+              "Industrial"
+            ]
+          }
+        ],
+        "metrics": [
+          "otif"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q47",
+      "question": "Compare supplier lead time by region",
+      "expected": {
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q48",
+      "question": "What is the landed cost for engineering polymers?",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Engineering polymers"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Engineering polymers"
+            ]
+          }
+        ],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q49",
+      "question": "Inventory turns for the McDonough DC",
+      "expected": {
+        "metrics": [
+          "inventory_turns"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "DC-US01"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "DC-US01"
+            ]
+          }
+        ],
+        "metrics": [
+          "inventory_turns"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q50",
+      "question": "OTD and OTIF by region",
+      "expected": {
+        "metrics": [
+          "on_time_delivery",
+          "otif"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery",
+          "otif"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "exact": true
+    },
+    {
+      "id": "q51",
+      "refused": true
+    },
+    {
+      "id": "q52",
+      "refused": true
+    },
+    {
+      "id": "q53",
+      "refused": true
+    },
+    {
+      "id": "q54",
+      "refused": true
+    },
+    {
+      "id": "q55",
+      "refused": true
+    },
+    {
+      "id": "q56",
+      "refused": true
+    },
+    {
+      "id": "q57",
+      "refused": true
+    },
+    {
+      "id": "q58",
+      "refused": true
+    },
+    {
+      "id": "q59",
+      "refused": true
+    },
+    {
+      "id": "q60",
+      "refused": true
+    }
+  ]
+}

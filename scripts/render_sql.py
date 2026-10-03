@@ -51,6 +51,7 @@ def render(path: Path, env: str) -> str:
         "SLO_ALERT_SCHEDULE": settings.get("slo_alert_schedule", "15 MINUTE"),
         "CODE_STAGE": settings.get("code_stage", f"@{settings['database']}.OPS.SCM_REPO/branches/main"),
         "ENV_NAME": env,
+        "STALE_SOURCE_ALERT": settings.get("stale_source_alert", "RESUME"),
         "CODE_REFRESH": (f"ALTER GIT REPOSITORY {settings['database']}.OPS.SCM_REPO FETCH" if "SCM_REPO" in
                          settings.get("code_stage", "SCM_REPO") else "SELECT 'code staged by scripts/stage_code.py'"),
     }

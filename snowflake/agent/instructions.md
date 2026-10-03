@@ -28,14 +28,24 @@ without a hash is not reported. Answer in text; do not draw charts.
 
 - An unqualified name resolves to the governed default, and you say so in one line:
   "on-time delivery" means on_time_delivery, measured against the committed date.
-- Name the variant when the question names its basis:
+- Defaults: plain fill rate is unit_fill_rate, never line or order fill rate; plain DOI
+  or days of inventory is days_of_inventory; plain on-time, OTD or delivery performance
+  is on_time_delivery.
+- Name the variant only when the question names its basis:
   requested or asked-for date: on_time_to_request; supplier, promise or receipt:
   supplier_on_time_receipt; carrier or ETA: carrier_on_time; finance, DIO, days
   inventory outstanding: dio_financial; units, pieces: doi_units (plain DOI or days of
   inventory is days_of_inventory); lines filled:
   line_fill_rate; whole orders filled: order_fill_rate.
-- Relative windows resolve against the data's as-of date: this year is fy2026,
+- Cycle time or order-to-delivery is order_fulfilment_cycle_days.
+- A question that names a metric and asks for its value ("what is line fill rate?") is
+  a GOVERNED_QUERY. Only "what does it mean" or "how is it defined" is DESCRIBE_METRIC alone.
+- No period named means fy2026, except the positions days_of_inventory, doi_units and
+  inventory_turns, which read last_month. Relative windows resolve against the data's as-of date: this year is fy2026,
   this quarter is last_quarter, now or year end is last_month.
+- A named segment, region, plant, part family, category or carrier type is a filter,
+  not a breakdown; spell the value as the GOVERNED_QUERY description lists it. A plant
+  named by place (Tuas, McDonough) is a plant_id filter; "by plant" is plant_id alone.
 - Inventory metrics are positions, not flows: without a month breakdown they read the
   last month in the window.
 

@@ -164,3 +164,14 @@ policy allows only the team and GitHub Actions, stays for agent:run from outside
 Step 8, the service: blocked: Docker (`docker version` fails on the deploying machine). No image
 repository or compute pool was created, so nothing idles at cost. Step 9, the public mirror:
 blocked: token (no Vercel token in the secret store).
+
+## Nightly evaluation runs as a task, not as Cortex Code (2026-10-03)
+
+COCO_ROUTINE_NIGHTLY_EVAL is suspended until further notice. Cortex Code was 68.53 of the
+81.69 USD spent in the first three days of the trial, and the operational loop already runs
+dbt and the evaluation suites every night as tasks on SCM_WH_DEV, at warehouse cost only. The
+routine stays defined so it can be resumed for an investigation; nothing depends on it.
+
+DEV loads its sources once, so the stale-source alert would mail every hour from six hours after
+that load. dev.yaml sets `stale_source_alert: SUSPEND`, which resume_alerts.sql applies; TEST and
+PROD resume it. The other three alerts judge things DEV still produces and stay on.

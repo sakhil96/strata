@@ -7,7 +7,7 @@ export SCM_ENV := $(ENV)
 export SCM_VERSION := $(VERSION)
 
 .PHONY: help setup data compile reproducible dbt-local web lint test eval governance-snapshot e2e screenshots \
-	lighthouse load deploy release promote rollback smoke eval-account loop local-demo demo-mirror \
+	lighthouse load deploy release promote rollback smoke eval-account loop local-demo preview preview-stop demo-mirror \
 	spcs-build spcs-deploy spcs-rollback spcs-logs clean
 
 help:
@@ -86,6 +86,12 @@ loop:
 
 local-demo: data dbt-local compile web  ## the whole product on a laptop, no Snowflake
 	SCM_BACKEND=local $(PY) -m uvicorn api.main:app --port 8000
+
+preview:  ## API on :8000 and Next dev on :3000 against SCM_DEV; logs in .strata/
+	scripts/preview.sh
+
+preview-stop:
+	scripts/preview.sh stop
 
 demo-mirror: dbt-local compile  ## the public mirror: recorded answers, no backend
 	$(PY) scripts/record_mirror.py

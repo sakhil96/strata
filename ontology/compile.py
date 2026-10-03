@@ -111,6 +111,7 @@ def check_registry(registry: semantic.Registry, env: str) -> list[str]:
 def semantic_view(registry: semantic.Registry, view: str, persona: str | None, env: str, version: int,
                   verified: list[dict[str, Any]]) -> dict[str, Any]:
     db = f"SCM_{env.upper()}"
+    exposed = exposed_columns(load_entitlements(), view)
     tables = []
     for name, spec in registry.tables.items():
         logical: dict[str, Any] = {
@@ -129,6 +130,7 @@ def semantic_view(registry: semantic.Registry, view: str, persona: str | None, e
         for pk in spec["primary_key"]:
             if pk not in {d["name"] for d in dims} and pk != spec.get("period"):
                 dims.append({"name": pk, "expr": pk, "data_type": "VARCHAR"})
+        dims += exposed.get(spec["base_table"], [])
         if dims:
             logical["dimensions"] = dims
         if "period" in spec:
@@ -266,7 +268,22 @@ def load_entitlements() -> dict[str, Any]:
         unknown = set(rule["show"]) - set(ent["roles"])
         if unknown:
             raise click.ClickException(f"{column}: unknown roles {sorted(unknown)}")
+        views = set(rule.get("expose", {}).get("in", [])) - set(VIEWS)
+        if views:
+            raise click.ClickException(f"{column}: unknown semantic views {sorted(views)}")
     return ent
+
+
+def exposed_columns(ent: dict[str, Any], view: str) -> dict[str, list[dict[str, Any]]]:
+    by_table: dict[str, list[dict[str, Any]]] = {}
+    for column, rule in sorted(ent["columns"].items()):
+        expose = rule.get("expose")
+        if expose and view in expose["in"]:
+            table, col = column.split(".")
+            by_table.setdefault(table, []).append({
+                "name": expose["as"], "expr": col, "data_type": "NUMBER(38,6)" if rule["otherwise"] == "null" else "VARCHAR",
+                "description": f"{rule['sensitivity'].title()}: shown to {', '.join(rule['show'])}; {rule['otherwise']} for every other role."})
+    return by_table
 
 
 def _scope_rows(ent: dict[str, Any]) -> list[tuple[str, str, str]]:

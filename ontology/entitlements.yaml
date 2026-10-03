@@ -30,5 +30,8 @@ columns:
   DIM_SUPPLIER.BANK_ACCOUNT: {sensitivity: RESTRICTED, show: [SCM_ADMIN, PROCUREMENT_ROLE], otherwise: masked}
   DIM_CUSTOMER.CONTACT_NAME: {sensitivity: CONFIDENTIAL, show: [SCM_ADMIN, EXECUTIVE_ROLE], otherwise: masked}
   DIM_CUSTOMER.CONTACT_EMAIL: {sensitivity: CONFIDENTIAL, show: [SCM_ADMIN, EXECUTIVE_ROLE], otherwise: masked}
-  FCT_PO_LINE.UNIT_COST: {sensitivity: RESTRICTED, show: [SCM_ADMIN, PROCUREMENT_ROLE], otherwise: "null"}
+  # Exposed so the rule is visible: buyers read the agreed cost, logistics reads null through
+  # the same dimension. No metric reads it, so no expression or hash moves.
+  FCT_PO_LINE.UNIT_COST: {sensitivity: RESTRICTED, show: [SCM_ADMIN, PROCUREMENT_ROLE], otherwise: "null",
+                          expose: {as: supplier_unit_cost, in: [PROCUREMENT_SV, LOGISTICS_SV]}}
   FCT_SHIPMENT.FREIGHT_CHARGE: {sensitivity: RESTRICTED, show: [SCM_ADMIN, PROCUREMENT_ROLE], otherwise: "null"}

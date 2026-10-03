@@ -71,6 +71,32 @@ def test_instructions_file_and_agent_spec_say_the_same_things():
         assert refusal in text and refusal in orchestration
 
 
+def test_every_metric_with_variants_names_its_default_to_the_agent(registry):
+    text = INSTRUCTIONS.read_text().lower()
+    orchestration = agent_spec()["instructions"]["orchestration"].lower()
+    families = {name for name, m in registry.metrics.items() if m.get("variants")}
+    assert families == {"on_time_delivery", "unit_fill_rate", "days_of_inventory"}
+    for name in families:
+        assert f"is {name}" in text and f"is {name}" in orchestration, name
+
+
+def test_the_agent_reads_positions_at_the_last_month_as_the_registry_windows_say(registry):
+    positions = sorted(n for n, m in registry.metrics.items() if m["window"] in ("point_in_time", "trailing_90_days"))
+    assert positions == ["days_of_inventory", "doi_units", "inventory_turns"]
+    orchestration = " ".join(agent_spec()["instructions"]["orchestration"].split())
+    text = " ".join(INSTRUCTIONS.read_text().split())
+    phrase = "days_of_inventory, doi_units and inventory_turns, which read last_month"
+    assert phrase in orchestration and phrase in text
+
+
+def test_the_query_tool_lists_every_governed_metric_and_dimension(registry):
+    spec = agent_spec()
+    tool = next(t["tool_spec"] for t in spec["tools"] if t["tool_spec"]["name"] == "GOVERNED_QUERY")
+    described = tool["input_schema"]["properties"]["query"]["description"]
+    for name in [*registry.metrics, *registry.dimensions]:
+        assert re.search(rf"\b{name}\b", described), name
+
+
 def test_no_physical_table_names_reach_the_agent():
     spec_text = yaml.safe_dump(agent_spec()["instructions"]) + INSTRUCTIONS.read_text()
     for forbidden in ("RAW.", "CONFORMED.", "STAGING.", "FCT_", "DIM_", "STG_"):
@@ -210,8 +236,8 @@ ROLES_FOR_COLUMNS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXE
 
 
 def test_on_the_account_every_column_rule_evaluates_as_the_registry_says_for_every_role(account):
-    # Personas cannot select from SEMANTIC_BASE, and no semantic view carries a governed column, so
-    # the rule is reached only by the owner. This evaluates, under each role, the exact CASE the
+    # Personas cannot select from SEMANTIC_BASE, and only supplier_unit_cost reaches a semantic view,
+    # so most rules are reached only by the owner. This evaluates, under each role, the exact CASE the
     # compiled secure view carries, with a literal standing in for the column, and compares the
     # outcome with GOV.COLUMN_VISIBILITY.
     cursor, db = account
@@ -233,3 +259,58 @@ def test_on_the_account_every_column_rule_evaluates_as_the_registry_says_for_eve
             seen = cursor.fetchone()[0]
             outcome = "show" if seen == "visible" else "masked" if seen == "***" else "null"
             assert outcome == loaded[(column, role)], (role, column, outcome)
+
+
+def _metric_exprs(body):
+    # The account reads names back in upper case; expressions come back as written.
+    return {m["name"].lower(): m["expr"] for t in body["tables"] for m in t.get("metrics", [])}
+
+
+def _exposures():
+    return {(column, view): rule["expose"]["as"] for column, rule in ENTITLEMENTS["columns"].items()
+            if "expose" in rule for view in rule["expose"]["in"]}
+
+
+def test_only_the_procurement_and_logistics_views_expose_supplier_unit_cost():
+    assert _exposures() == {("FCT_PO_LINE.UNIT_COST", "PROCUREMENT_SV"): "supplier_unit_cost",
+                            ("FCT_PO_LINE.UNIT_COST", "LOGISTICS_SV"): "supplier_unit_cost"}
+    for path in SEMANTIC_DIR.glob("*_v1.yaml"):
+        body = yaml.safe_load(path.read_text())
+        exposed = {d["name"] for t in body["tables"] for d in t.get("dimensions", []) if d["expr"] == "UNIT_COST"}
+        expected = {"supplier_unit_cost"} if path.stem in ("procurement_sv_v1", "logistics_sv_v1") else set()
+        assert exposed == expected, path.name
+
+
+def test_exposing_a_governed_column_leaves_every_metric_expression_as_the_governed_view_has_it():
+    def metrics(name):
+        return _metric_exprs(yaml.safe_load((SEMANTIC_DIR / f"{name}_v1.yaml").read_text()))
+
+    governed = metrics("scm_governed")
+    assert len(governed) == 19
+    for view in ("planning_sv", "procurement_sv", "logistics_sv", "executive_sv"):
+        assert metrics(view) == governed, view
+
+
+@pytest.mark.parametrize("role, view, shown", [("PROCUREMENT_ROLE", "PROCUREMENT_SV_V1", True),
+                                               ("LOGISTICS_ROLE", "LOGISTICS_SV_V1", False)])
+def test_on_the_account_supplier_unit_cost_shows_or_nulls_as_the_registry_says(account, role, view, shown):
+    cursor, db = account
+    assert (role in ENTITLEMENTS["columns"]["FCT_PO_LINE.UNIT_COST"]["show"]) is shown
+    _as(cursor, role)
+    cursor.execute(f"SELECT COUNT(*), COUNT(supplier_unit_cost) FROM SEMANTIC_VIEW({db}.SEMANTIC.{view} "
+                   "DIMENSIONS po_lines.po_line_id, po_lines.supplier_unit_cost)")
+    lines, costed = cursor.fetchone()
+    assert lines > 0
+    assert costed == (lines if shown else 0), (role, lines, costed)
+
+
+def test_on_the_account_the_deployed_views_round_trip_with_the_governed_expressions(account):
+    cursor, db = account
+    _as(cursor, "SCM_DEPLOY")
+    for name in ("scm_governed", "procurement_sv", "logistics_sv"):
+        cursor.execute("SELECT SYSTEM$READ_YAML_FROM_SEMANTIC_VIEW(%s)", (f"{db}.SEMANTIC.{name.upper()}_V1",))
+        deployed = yaml.safe_load(cursor.fetchone()[0])
+        committed = yaml.safe_load((SEMANTIC_DIR / f"{name}_v1.yaml").read_text())
+        assert _metric_exprs(deployed) == _metric_exprs(committed) and len(_metric_exprs(deployed)) == 19, name
+        dims = {d["name"].lower() for t in deployed["tables"] for d in t.get("dimensions", [])}
+        assert ("supplier_unit_cost" in dims) is (name != "scm_governed"), name

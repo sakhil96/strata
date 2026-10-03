@@ -20,4 +20,6 @@ warehouse_size: XSMALL
 auto_suspend_secs: 60
 monitor_credit_quota: 40
 slo_alert_schedule: 60 MINUTE
+# Sources load once here and never again, so freshness has nothing to judge after day one.
+stale_source_alert: SUSPEND
 code_stage: '@SCM_DEV.OPS.ARTEFACTS/code'

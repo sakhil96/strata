@@ -45,5 +45,30 @@ cannot see RAW or CONFORMED.
 | Numbers match an independent truth | `eval/test_metric_identity.py`, every metric × month × plant × region × segment × family |
 | Legacy numbers disagree for stated reasons | Before/after page; `api/legacy.py` |
 | The agent cannot answer outside the procedures | Governance page; `eval/test_governance.py` |
+| A governed column is masked by role (the masking demonstration) | See below |
 | Refusals for raw SQL, table access, injection | Ask page; `eval/questions.yaml` refusals |
 | Builds are reproducible | `make reproducible` |
+
+## The masking demonstration
+
+`ontology/entitlements.yaml` shows FCT_PO_LINE.UNIT_COST to SCM_ADMIN and PROCUREMENT_ROLE and
+returns null to everyone else. The column is exposed as `po_lines.supplier_unit_cost` in exactly two
+semantic views, PROCUREMENT_SV_V1 and LOGISTICS_SV_V1, so the rule can be seen from both sides of
+the same dimension:
+
+```sql
+USE ROLE PROCUREMENT_ROLE;   -- every line carries a cost
+SELECT COUNT(*), COUNT(supplier_unit_cost) FROM SEMANTIC_VIEW(SCM_DEV.SEMANTIC.PROCUREMENT_SV_V1
+  DIMENSIONS po_lines.po_line_id, po_lines.supplier_unit_cost);
+USE ROLE LOGISTICS_ROLE;     -- the same lines, every cost null
+SELECT COUNT(*), COUNT(supplier_unit_cost) FROM SEMANTIC_VIEW(SCM_DEV.SEMANTIC.LOGISTICS_SV_V1
+  DIMENSIONS po_lines.po_line_id, po_lines.supplier_unit_cost);
+```
+
+Standard edition: controls realised as compiled secure views, so the rule is the CASE in
+SEMANTIC_BASE.FCT_PO_LINE; on Enterprise it is the tag-based masking policy MASK_FCT_PO_LINE_UNIT_COST.
+No metric reads the column, so the 19 metric expressions and every persona hash are unchanged.
+The governance suite (suite 4) checks it: `test_only_the_procurement_and_logistics_views_expose_supplier_unit_cost`,
+`test_exposing_a_governed_column_leaves_every_metric_expression_as_the_governed_view_has_it`, and on
+the account `test_on_the_account_supplier_unit_cost_shows_or_nulls_as_the_registry_says` and
+`test_on_the_account_the_deployed_views_round_trip_with_the_governed_expressions`.
