@@ -22,7 +22,7 @@ class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         entry = {"ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"), "level": record.levelname,
                  "logger": record.name, "event": record.getMessage()}
-        for key in ("request_id", "method", "path", "status", "latency_ms", "user", "mode"):
+        for key in ("request_id", "method", "path", "status", "latency_ms", "user", "mode", "tools"):
             if hasattr(record, key):
                 entry[key] = getattr(record, key)
         return json.dumps(entry)

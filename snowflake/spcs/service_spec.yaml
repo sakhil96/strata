@@ -1,5 +1,6 @@
 # Rendered by scripts/spcs.py: {{DB_LOWER}}, {{ENV}}, {{ENV_UPPER}} and {{TAG}} (short git sha) are substituted.
 # No secrets: the container authenticates with the SPCS session token at /snowflake/session/token.
+# The pinned users are the account's endpoint-check users; everyone else chooses a persona on the dial.
 spec:
   containers:
     - name: strata
@@ -8,9 +9,13 @@ spec:
         SCM_ENV: "{{ENV}}"
         SCM_BACKEND: snowflake
         SNOWFLAKE_WAREHOUSE: "SCM_WH_{{ENV_UPPER}}"
+        SCM_AGENT: "on"
+        SCM_AGENT_TIMEOUT_S: "240"
+        SCM_USER_PERSONAS: '{"STRATA_CHECK_PROCUREMENT": "PROCUREMENT_ROLE", "STRATA_CHECK_LOGISTICS": "LOGISTICS_ROLE", "STRATA_CHECK_EMEA": "EMEA_PLANNING_ROLE"}'
+      # /health checks Snowflake and takes over two seconds; the probe needs the process answering.
       readinessProbe:
         port: 8000
-        path: /health
+        path: /live
       resources:
         requests:
           cpu: "0.5"
@@ -25,8 +30,3 @@ spec:
   logExporters:
     eventTableConfig:
       logLevel: INFO
-  platformMonitor:
-    metricConfig:
-      groups:
-        - system
-        - network

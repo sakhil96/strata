@@ -37,7 +37,12 @@ USE ROLE SECURITYADMIN;
 
 GRANT USAGE ON DATABASE {{DB}} TO ROLE SCM_DEPLOY;
 GRANT USAGE ON DATABASE {{DB}} TO ROLE SCM_READER;
-GRANT USAGE ON ALL SCHEMAS IN DATABASE {{DB}} TO ROLE SCM_READER;
+-- Readers get the schemas they read, not RAW, STAGING, CONFORMED or SEMANTIC_BASE.
+GRANT USAGE ON SCHEMA {{DB}}.AGENT TO ROLE SCM_READER;
+GRANT USAGE ON SCHEMA {{DB}}.AUDIT TO ROLE SCM_READER;
+GRANT USAGE ON SCHEMA {{DB}}.EVAL TO ROLE SCM_READER;
+GRANT USAGE ON SCHEMA {{DB}}.OPS TO ROLE SCM_READER;
+GRANT USAGE ON SCHEMA {{DB}}.SEMANTIC TO ROLE SCM_READER;
 -- Personas read the semantic layer only. Semantic views run with owner's rights, so no persona
 -- needs SELECT on CONFORMED; without masking (Standard edition) that grant would expose contact
 -- and bank columns. Cortex Analyst needs base-table SELECT, so it stays an owner-side tool.

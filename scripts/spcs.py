@@ -13,10 +13,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "snowflake" / "spcs" / "service_spec.yaml"
+ENDPOINT_ROLES = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE",
+                  "JUDGE_ROLE"]
 
 
 def snow_sql(sql: str, connection: str) -> str:
-    return subprocess.run(["snow", "sql", "-q", sql, "-c", connection, "--format", "csv"],
+    return subprocess.run(["snow", "sql", "-q", sql, "-c", connection, "--role", "SCM_SPCS_ROLE", "--format", "csv"],
                           check=True, capture_output=True, text=True).stdout
 
 
@@ -32,6 +34,10 @@ def apply(env: str, tag: str, connection: str) -> None:
     else:
         snow_sql(f"CREATE SERVICE {db}.AGENT.STRATA_SERVICE IN COMPUTE POOL SCM_POOL_{env.upper()} "
                  f"FROM SPECIFICATION $${spec}$$ QUERY_WAREHOUSE = SCM_WH_{env.upper()}", connection)
+    # Without the service role the ingress cannot resolve the endpoint for a user, and the token
+    # exchange answers 395042 rather than a privilege error.
+    for role in ENDPOINT_ROLES:
+        snow_sql(f"GRANT SERVICE ROLE {db}.AGENT.STRATA_SERVICE!ALL_ENDPOINTS_USAGE TO ROLE {role}", connection)
 
 
 def main() -> int:

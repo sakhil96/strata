@@ -9,8 +9,8 @@ from snowflake.snowpark import Session
 import semantic
 
 
-def run(session: Session, name: str) -> dict[str, Any]:
-    db = session.get_current_database().strip('"')
+def run(session: Session, name: str, db: str | None = None) -> dict[str, Any]:
+    db = db or session.get_current_database().strip('"')
     rows = session.sql(f"SELECT entry FROM {db}.SEMANTIC.GLOSSARY WHERE metric_name = ?",
                        params=[(name or "").strip().lower()]).collect()
     if rows:

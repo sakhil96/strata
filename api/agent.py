@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 import httpx
 
 TIMEOUT_S = float(os.getenv("SCM_AGENT_TIMEOUT_S", "20"))
+log = logging.getLogger("strata.agent")
 
 
 class AgentUnavailable(RuntimeError):
@@ -99,11 +101,26 @@ def governed_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return found
 
 
+def tool_outcomes(payload: dict[str, Any]) -> list[dict[str, str]]:
+    outcomes = []
+    for item in payload.get("content", []):
+        if item.get("type") != "tool_result":
+            continue
+        result = item.get("tool_result", {})
+        text = " ".join(str(part.get("text") or part.get("json") or "") for part in result.get("content", []))
+        outcomes.append({"name": str(result.get("name")), "status": str(result.get("status")),
+                         "error": text[:160] if "error" in text.lower() else ""})
+    return outcomes
+
+
 def parse(payload: dict[str, Any]) -> dict[str, Any]:
     """The answer contract is whatever GOVERNED_QUERY returned; the agent's prose rides alongside."""
     prose = [item.get("text", "") for item in payload.get("content", []) if item.get("type") == "text"]
     results = governed_results(payload)
     text = "\n".join(prose).strip()
+    if not results:
+        # Names and statuses only: enough to tell a privilege error from a wrong tool, no result data.
+        log.info("agent_no_governed_answer", extra={"tools": tool_outcomes(payload)})
     refusal = None
     if not results and text.lower().startswith(("i can't", "i cannot", "refus", "that request cannot")):
         refusal = "agent_refused"

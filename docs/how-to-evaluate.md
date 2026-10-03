@@ -1,6 +1,35 @@
 # How to evaluate STRATA
 
-Three ways in, from least to most setup.
+## Evaluator access
+
+The live app runs in Snowpark Container Services on the SCM_DEV environment.
+
+| | |
+|---|---|
+| Account URL | https://dzvlnoz-zv32033.snowflakecomputing.com |
+| App (service endpoint) | https://mbloac-dzvlnoz-zv32033.snowflakecomputing.app |
+| Users | `HACK2SKILL_EVALUATOR_1`, `HACK2SKILL_EVALUATOR_2`; login names and temporary passwords are sent to the organisers separately |
+| Role | `JUDGE_ROLE`, the default; no secondary roles |
+
+First sign-in, as the Snowflake docs describe it:
+
+1. Open the account URL and sign in with the login name and temporary password. The password is set to
+   expire on first use, so Snowsight asks for a new one straight away.
+2. Snowsight then asks you to enrol in multi-factor authentication: a passkey (recommended), an
+   authenticator app with one-time codes, or Duo. Password sign-in to Snowsight needs a second factor
+   for every human user, so this step cannot be skipped.
+3. Open the app URL and sign in through the same account, with the new password and second factor.
+
+In the app you may switch among all personas on the dial, EMEA planning included; every answer shows
+the role and the semantic view it ran on. JUDGE_ROLE is read-only: SELECT on the five semantic views,
+read access to EVAL and AUDIT, USAGE on SCM_AGENT and the XSMALL warehouse SCM_WH_DEV, and nothing in
+RAW, STAGING, CONFORMED or SEMANTIC_BASE. Its one write is the audit row GOVERNED_QUERY appends
+for each answer it gives you, which is what makes your questions show on the Governance page.
+
+The app can take about half a minute to answer the first request after a quiet spell while the
+service resumes.
+
+Three other ways in, from least to most setup.
 
 ## 1. The public mirror (no install)
 

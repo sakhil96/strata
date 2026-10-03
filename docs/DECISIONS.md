@@ -249,3 +249,28 @@ at. Options: (1) a PAT for SCM_SERVICE_USER, scoped to SCM_SERVICE_ROLE and the 
 as a SPCS secret, with a short expiry and a rotation drill; (2) keep the API outside SPCS and serve
 only the static web build from it; (3) use the resolver, which needs no agent, inside the service and
 leave the agent for the local and DEV runs, saying so on the About page. None is chosen yet.
+
+## The service on SCM_DEV: spec, endpoint access and idle cost (2026-10-03)
+
+This settles the question left open above. agent:run accepts the SPCS session token: Ask from the
+endpoint resolves through SCM_AGENT and answers on the persona's view (path `agent`), so the container
+holds no key or PAT. Persona execution uses the signed-in user from Sf-Context-Current-User, pinned
+through SCM_USER_PERSONAS for the three endpoint-check users; everyone else chooses on the dial.
+
+- `platformMonitor` is out of `snowflake/spcs/service_spec.yaml`. With it, CREATE SERVICE failed with
+  a Snowflake internal error (incident 1307069); without it the service starts. Metrics are not needed
+  for the SLOs, which read AUDIT.ANSWERS.
+- The readiness probe reads `/live`, not `/health`. `/health` opens a Snowflake session and takes over
+  two seconds, which the probe treated as unready.
+- The governed procedures take their database from the DDL, not the session. A session that agent:run
+  opens from inside SPCS has no current database, and `get_current_database()` returned None, so every
+  agent tool call failed and Ask fell back to the resolver. `create_procs.sql` wraps each handler
+  inline with the rendered `{{DB}}`; RECORD_REFUSAL qualifies AUDIT.ANSWERS for the same reason.
+- `scripts/spcs.py` grants the service role `STRATA_SERVICE!ALL_ENDPOINTS_USAGE` to the five persona
+  roles on every apply. Without it the token exchange answers 395042, "could not find the service",
+  rather than a privilege error.
+- Idle cost. AUTO_RESUME on the service wakes it on an ingress request. AUTO_SUSPEND_SECS on a
+  service is a preview feature and the docs say it is not supported on services with a public
+  endpoint, because only service-function traffic counts as activity. So the service does not
+  suspend itself: we suspend it with `ALTER SERVICE ... SUSPEND` when no one is evaluating, and the
+  pool's AUTO_SUSPEND_SECS = 300 then stops the node. The first request after that wakes both.

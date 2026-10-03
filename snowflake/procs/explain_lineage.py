@@ -11,10 +11,10 @@ import semantic
 LAYERS = (("RAW", "source"), ("STAGING", "staging"), ("CONFORMED", "conformed"))
 
 
-def lineage_for(session: Session, registry: semantic.Registry, metric: str) -> dict[str, Any]:
+def lineage_for(session: Session, registry: semantic.Registry, metric: str, db: str | None = None) -> dict[str, Any]:
     m = registry.metrics[metric]
     table = m["semantic"]["table"]
-    db = session.get_current_database().strip('"')
+    db = db or session.get_current_database().strip('"')
     base = f"{db}.CONFORMED.{registry.tables[table]['base_table']}"
     # GET_LINEAGE is Enterprise edition; on Standard the compiled path is the whole answer and the
     # response says so rather than failing the governed answer it is attached to.
@@ -43,10 +43,10 @@ def lineage_for(session: Session, registry: semantic.Registry, metric: str) -> d
     }
 
 
-def run(session: Session, metric: str) -> dict[str, Any]:
+def run(session: Session, metric: str, db: str | None = None) -> dict[str, Any]:
     registry = semantic.load_registry(semantic.REGISTRY_PATH)
     name = (metric or "").strip().lower()
     if name not in registry.metrics:
         return {"error": "unknown_metrics", "message": f"{metric!r} is not a governed metric",
                 "suggestions": {metric: semantic.closest(name, list(registry.metrics))}}
-    return lineage_for(session, registry, name)
+    return lineage_for(session, registry, name, db)

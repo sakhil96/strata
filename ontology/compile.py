@@ -39,6 +39,8 @@ VIEWS = {
     "EXECUTIVE_SV": "EXECUTIVE_ROLE",
 }
 VIEW_GRANTEE = {"SCM_GOVERNED": "SCM_READER", **{v: r for v, r in VIEWS.items() if r}}
+# Reviewers read every persona's view directly; the governed one reaches them through SCM_READER.
+REVIEWER = "JUDGE_ROLE"
 PERSONA_FOCUS = {
     None: "Answer for any role. Prefer the governed default metric unless the question names a variant.",
     "PLANNING_ROLE": "Planners think in plants, families and months; default to plant_id and period_month.",
@@ -247,10 +249,11 @@ def versioning_sql(env: str, version: int) -> str:
     lines = [f"-- {HEADER}",
              f"-- Promote V{version}. Rollback is this file compiled with --version {version - 1}.",
              "USE ROLE SCM_ADMIN;", ""]
-    for view, role in VIEW_GRANTEE.items():
-        lines.append(f"GRANT SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{version} TO ROLE {role};")
-        for older in range(1, version):
-            lines.append(f"REVOKE SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{older} FROM ROLE {role};")
+    for view, persona in VIEW_GRANTEE.items():
+        for role in [persona] if persona == "SCM_READER" else [persona, REVIEWER]:
+            lines.append(f"GRANT SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{version} TO ROLE {role};")
+            for older in range(1, version):
+                lines.append(f"REVOKE SELECT ON SEMANTIC VIEW {db}.SEMANTIC.{view}_V{older} FROM ROLE {role};")
     lines.append("")
     lines.append(f"UPDATE {db}.SEMANTIC.ACTIVE_VERSION SET version = {version}, promoted_at = CURRENT_TIMESTAMP();")
     return "\n".join(lines) + "\n"

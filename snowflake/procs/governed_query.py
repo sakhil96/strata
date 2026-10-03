@@ -34,11 +34,12 @@ def _declared(session: Session, kind: str, qualified: str) -> set[str]:
     return {r["name"].lower() for r in rows}
 
 
-def run(session: Session, view: str, query: str, question: str = "") -> dict[str, Any]:
+def run(session: Session, view: str, query: str, question: str = "", db: str | None = None) -> dict[str, Any]:
     # One JSON string rather than ARRAY and OBJECT arguments: agent procedure tools on a warehouse
     # accept only scalar argument types.
     started = time.perf_counter()
-    db = session.get_current_database().strip('"')
+    # A session opened by agent:run from inside SPCS has no current database, so the DDL passes its own.
+    db = db or session.get_current_database().strip('"')
     view = (view or "").strip().upper()
     if not VIEW_NAME.match(view):
         _audit(session, db, question, None, None, None, None, 0, started, refusal="unknown_view")
@@ -102,7 +103,7 @@ def run(session: Session, view: str, query: str, question: str = "") -> dict[str
         "metric_name": ", ".join(canonical["metrics"]), "metrics": metric_cards,
         "definition": " ".join(c["definition"] for c in metric_cards), "canonical_query": canonical,
         "semantic_query_hash": digest, "sql": sql, "view": view, "engine": "snowflake",
-        "lineage": lineage_for(session, registry, canonical["metrics"][0]),
+        "lineage": lineage_for(session, registry, canonical["metrics"][0], db),
         "role": session.get_current_role().strip('"'), "user": session.sql("SELECT CURRENT_USER()").collect()[0][0],
         "rows": rows, "row_count": len(rows), "truncated": truncated, "result_checksum": checksum,
         "latency_ms": latency_ms, "notes": [], "request_id": session.query_tag or "",
