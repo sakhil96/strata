@@ -1,0 +1,63 @@
+# Held out from tuning: worded the way a judge asks, with no phrasing and no filter value taken
+# from questions.yaml. Scored once per agent change and never used to edit the agent spec.
+questions:
+- id: h01
+  question: How often are we late to customers?
+  query:
+    metrics: [on_time_delivery]
+    time: {range: fy2026}
+- id: h02
+  question: What's our stock cover at the Dutch DC?
+  query:
+    metrics: [days_of_inventory]
+    filters: [{dimension: plant_id, operator: "=", value: DC-NL01}]
+    time: {range: last_month}
+- id: h03
+  question: What did a unit bought into EMEA cost us to land last quarter?
+  query:
+    metrics: [landed_cost_per_unit]
+    filters: [{dimension: region, operator: "=", value: EMEA}]
+    time: {range: last_quarter}
+- id: h04
+  question: Which carrier lets us down most when we ship by sea?
+  query:
+    metrics: [carrier_on_time]
+    dimensions: [carrier_name]
+    filters: [{dimension: carrier_type, operator: "=", value: OCEAN}]
+    time: {range: fy2026}
+- id: h05
+  question: Once we place a purchase order, how long until the goods turn up?
+  query:
+    metrics: [supplier_lead_time_days]
+    time: {range: fy2026}
+- id: h06
+  question: How many order lines leave Joliet complete on the first truck?
+  query:
+    metrics: [line_fill_rate]
+    filters: [{dimension: plant_id, operator: "=", value: PLT-US01}]
+    time: {range: fy2026}
+- id: h07
+  question: How often do we run dry on power electronics?
+  query:
+    metrics: [stockout_rate]
+    filters: [{dimension: part_family, operator: "=", value: Power electronics}]
+    time: {range: fy2026}
+- id: h08
+  question: What does it cost us to move one unit by parcel?
+  query:
+    metrics: [freight_cost_per_unit]
+    filters: [{dimension: carrier_type, operator: "=", value: PARCEL}]
+    time: {range: fy2026}
+- id: h09
+  question: How fast is our electrical stock turning over?
+  query:
+    metrics: [inventory_turns]
+    filters: [{dimension: category, operator: "=", value: Electrical}]
+    time: {range: last_month}
+- id: h10
+  question: How long does a road shipment sit in transit, month by month?
+  query:
+    metrics: [transit_hours]
+    dimensions: [period_month]
+    filters: [{dimension: carrier_type, operator: "=", value: ROAD}]
+    time: {range: fy2026}

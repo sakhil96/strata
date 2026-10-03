@@ -193,3 +193,15 @@ a week-to-date row. eval/report.py writes every suite and the total to EVAL.EVAL
 against an account, and the governance page reads the latest batch there and the agent card from
 DESCRIBE AGENT. The committed governance snapshot keeps only grants and policies, with {{DB}}
 left as a placeholder, so nothing committed names an environment or a model it does not run.
+
+## A held-out question set, scored and not tuned against (2026-10-03)
+
+eval/questions_heldout.yaml holds ten questions in a judge's wording with no phrasing or filter value
+from eval/questions.yaml. The first pass scored 10 of 10 exact and nothing in the agent spec was
+changed for it. What we would change next, and did not here: the GOVERNED_QUERY description lists
+every filter value and plant name, which is why unseen values like EMEA, OCEAN or Joliet resolve;
+that list should be generated from the dimension tables by the compiler rather than written by hand,
+or it drifts the first time a plant is added. Synonyms the held-out set leaned on ("stock cover",
+"run dry", "lets us down", "land") belong in the registry's synonyms so the resolver fallback gets
+them too, not only the agent. The set should grow with each judge's own questions, and a question
+that fails goes into the tuned set only after it has been scored here once.

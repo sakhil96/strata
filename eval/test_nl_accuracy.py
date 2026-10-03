@@ -83,3 +83,45 @@ def test_agent_meets_the_same_floors_through_agent_run(registry):
         {"resolved": resolved, "exact": exact, "refused": refused, "governed": len(GOVERNED),
          "refusals": len(REFUSALS), "outcomes": outcomes}, indent=2, default=str) + "\n")
     assert resolved / len(GOVERNED) >= 0.90 and exact / len(GOVERNED) >= 0.85 and refused == len(REFUSALS)
+
+
+HELDOUT = yaml.safe_load((Path(__file__).parent / "questions_heldout.yaml").read_text())["questions"]
+
+
+def _filter_values(items):
+    return {str(v) for i in items for f in i.get("query", {}).get("filters", [])
+            for v in (f.get("values") or [f.get("value")])}
+
+
+def test_the_held_out_set_shares_no_phrasing_and_no_filter_value_with_the_tuned_set():
+    tuned = {i["question"].strip().lower() for i in ITEMS}
+    assert len(HELDOUT) == 10
+    assert not {i["question"].strip().lower() for i in HELDOUT} & tuned
+    assert not _filter_values(HELDOUT) & _filter_values(ITEMS)
+
+
+def test_every_held_out_query_is_a_governed_query_that_returns_rows(registry, warehouse):
+    for item in HELDOUT:
+        assert semantic.execute_local(warehouse, registry, item["query"])["rows"], item["id"]
+
+
+@pytest.mark.skipif(os.getenv("SCM_HELDOUT") != "on", reason="needs account: one agent:run pass over the held-out set")
+def test_the_agent_on_the_held_out_set_is_recorded_not_tuned(registry):
+    import json
+
+    from api import agent
+
+    outcomes = []
+    for item in HELDOUT:
+        reply = agent.run(item["question"], "EXECUTIVE_ROLE", "EVAL_RUNNER", None, None)
+        canonical = (reply["answer"] or {}).get("canonical_query")
+        expected = semantic.canonicalise(registry, item["query"])
+        outcomes.append({"id": item["id"], "question": item["question"], "expected": expected, "got": canonical,
+                         "resolved": bool(canonical) and canonical["metrics"] == expected["metrics"],
+                         "exact": canonical == expected})
+    report = Path(__file__).parent / "report"
+    report.mkdir(exist_ok=True)
+    (report / "heldout.json").write_text(json.dumps(
+        {"resolved": sum(o["resolved"] for o in outcomes), "exact": sum(o["exact"] for o in outcomes),
+         "questions": len(outcomes), "outcomes": outcomes}, indent=2, default=str) + "\n")
+    assert len(outcomes) == len(HELDOUT)

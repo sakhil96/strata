@@ -49,6 +49,21 @@ cannot see RAW or CONFORMED.
 | Refusals for raw SQL, table access, injection | Ask page; `eval/questions.yaml` refusals |
 | Builds are reproducible | `make reproducible` |
 
+## Words to governed query: tuned set and held-out set
+
+| Set | Questions | Metric resolved | Exact query | Refusals |
+|---|---|---|---|---|
+| `eval/questions.yaml`, tuned against | 50 + 10 refusals | 50 / 50 (100%) | 48 / 50 (96%) | 10 / 10 |
+| `eval/questions_heldout.yaml`, never tuned against | 10 | 10 / 10 (100%) | 10 / 10 (100%) | — |
+
+Both through agent:run as EXECUTIVE_ROLE on SCM_DEV, 2026-10-03; per-question outcomes in
+`eval/report/agent_floor.json` and `eval/report/heldout.json`. The held-out questions reuse no
+phrasing and no filter value from the tuned set. Read the 10 / 10 with two caveats: ten questions
+bound the true rate only from about 72% upward (95% Wilson), and the agent's tool description lists
+every filter value and plant name, so the held-out set avoids the tuned questions' values but not
+the spec's. A judge's own wording is the real held-out test: `SCM_HELDOUT=on pytest eval/test_nl_accuracy.py`
+after adding questions to the file.
+
 ## The masking demonstration
 
 `ontology/entitlements.yaml` shows FCT_PO_LINE.UNIT_COST to SCM_ADMIN and PROCUREMENT_ROLE and

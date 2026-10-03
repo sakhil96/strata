@@ -1,0 +1,423 @@
+{
+  "resolved": 10,
+  "exact": 10,
+  "questions": 10,
+  "outcomes": [
+    {
+      "id": "h01",
+      "question": "How often are we late to customers?",
+      "expected": {
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "on_time_delivery"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h02",
+      "question": "What's our stock cover at the Dutch DC?",
+      "expected": {
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "DC-NL01"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "DC-NL01"
+            ]
+          }
+        ],
+        "metrics": [
+          "days_of_inventory"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h03",
+      "question": "What did a unit bought into EMEA cost us to land last quarter?",
+      "expected": {
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-07-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "EMEA"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "region",
+            "operator": "=",
+            "values": [
+              "EMEA"
+            ]
+          }
+        ],
+        "metrics": [
+          "landed_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-07-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h04",
+      "question": "Which carrier lets us down most when we ship by sea?",
+      "expected": {
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "dimensions": [
+          "carrier_name"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "OCEAN"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [
+          "carrier_name"
+        ],
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "OCEAN"
+            ]
+          }
+        ],
+        "metrics": [
+          "carrier_on_time"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h05",
+      "question": "Once we place a purchase order, how long until the goods turn up?",
+      "expected": {
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": []
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [],
+        "metrics": [
+          "supplier_lead_time_days"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h06",
+      "question": "How many order lines leave Joliet complete on the first truck?",
+      "expected": {
+        "metrics": [
+          "line_fill_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "PLT-US01"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "plant_id",
+            "operator": "=",
+            "values": [
+              "PLT-US01"
+            ]
+          }
+        ],
+        "metrics": [
+          "line_fill_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h07",
+      "question": "How often do we run dry on power electronics?",
+      "expected": {
+        "metrics": [
+          "stockout_rate"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Power electronics"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "part_family",
+            "operator": "=",
+            "values": [
+              "Power electronics"
+            ]
+          }
+        ],
+        "metrics": [
+          "stockout_rate"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h08",
+      "question": "What does it cost us to move one unit by parcel?",
+      "expected": {
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "PARCEL"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "PARCEL"
+            ]
+          }
+        ],
+        "metrics": [
+          "freight_cost_per_unit"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h09",
+      "question": "How fast is our electrical stock turning over?",
+      "expected": {
+        "metrics": [
+          "inventory_turns"
+        ],
+        "dimensions": [],
+        "time": {
+          "start": "2026-09-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "category",
+            "operator": "=",
+            "values": [
+              "Electrical"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [],
+        "filters": [
+          {
+            "dimension": "category",
+            "operator": "=",
+            "values": [
+              "Electrical"
+            ]
+          }
+        ],
+        "metrics": [
+          "inventory_turns"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2026-09-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    },
+    {
+      "id": "h10",
+      "question": "How long does a road shipment sit in transit, month by month?",
+      "expected": {
+        "metrics": [
+          "transit_hours"
+        ],
+        "dimensions": [
+          "period_month"
+        ],
+        "time": {
+          "start": "2025-10-01",
+          "end": "2026-09-01"
+        },
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "ROAD"
+            ]
+          }
+        ]
+      },
+      "got": {
+        "dimensions": [
+          "period_month"
+        ],
+        "filters": [
+          {
+            "dimension": "carrier_type",
+            "operator": "=",
+            "values": [
+              "ROAD"
+            ]
+          }
+        ],
+        "metrics": [
+          "transit_hours"
+        ],
+        "time": {
+          "end": "2026-09-01",
+          "start": "2025-10-01"
+        }
+      },
+      "resolved": true,
+      "exact": true
+    }
+  ]
+}
