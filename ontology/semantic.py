@@ -19,6 +19,8 @@ import yaml
 
 REGISTRY_PATH = Path(__file__).resolve().parent / "metrics.yaml"
 FY_START = date(2025, 10, 1)
+# The July 2026 tariff step: across_tariff_step spans three months either side, July itself the step month.
+TARIFF_STEP = date(2026, 7, 24)
 AS_OF = date(2026, 9, 30)
 PERIOD = "period_month"
 INHERITED = (
@@ -104,13 +106,15 @@ def fiscal_range(label: str) -> tuple[date, date]:
         return quarters["q4"]
     if label == "last_month":
         return date(AS_OF.year, AS_OF.month, 1), date(AS_OF.year, AS_OF.month, 1)
+    if label == "across_tariff_step":
+        return date(2026, 4, 1), date(2026, 9, 1)
     if label == "pre_tariff_step":
         return date(2026, 4, 1), date(2026, 6, 1)
     if label == "post_tariff_step":
         return date(2026, 8, 1), date(2026, 9, 1)
     raise SemanticError("unknown_time_range", f"time range {label!r} is not one we resolve",
                         valid=sorted([*quarters, "fy2026", "last_quarter", "last_month",
-                                      "pre_tariff_step", "post_tariff_step"]))
+                                      "across_tariff_step", "pre_tariff_step", "post_tariff_step"]))
 
 
 def _month(text: str) -> date:

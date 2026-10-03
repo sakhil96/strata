@@ -162,7 +162,7 @@ questions:
     dimensions:
     - period_month
     time:
-      range: fy2026
+      range: across_tariff_step
     filters: []
 - id: q16
   question: What is median supplier lead time?

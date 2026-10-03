@@ -1157,7 +1157,7 @@ verified_queries:
 - name: q15
   question: How did landed cost move by month across the July tariff step?
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n\
-    \    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month"
+    \    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month"
   verified_at: 1790812800
   verified_by: Procurement Analytics Lead
   use_as_onboarding_question: false

@@ -60,37 +60,37 @@ model:
       description: Plants and distribution centres.
       primary_key: [plant_id]
       dimensions:
-        plant_id: {synonyms: [plant, site, facility]}
-        region: {synonyms: [geography, theatre]}
-        plant_name: {}
+        plant_id: {title: Plant, synonyms: [plant, site, facility]}
+        region: {title: Region, synonyms: [geography, theatre]}
+        plant_name: {title: Plant name}
     customers:
       base_table: DIM_CUSTOMER
       description: Ship-to customers with their segment.
       primary_key: [customer_id]
       dimensions:
-        segment: {synonyms: [market segment, customer segment]}
-        account_name: {synonyms: [account]}
+        segment: {title: Segment, synonyms: [market segment, customer segment]}
+        account_name: {title: Account, synonyms: [account]}
     parts:
       base_table: DIM_PART
       description: Parts with their product family and category.
       primary_key: [part_id]
       dimensions:
-        part_family: {synonyms: [family, product family]}
-        category: {synonyms: [product category]}
+        part_family: {title: Part family, synonyms: [family, product family]}
+        category: {title: Category, synonyms: [product category]}
     suppliers:
       base_table: DIM_SUPPLIER
       description: Suppliers resolved to one golden key.
       primary_key: [supplier_id]
       dimensions:
-        supplier_name: {synonyms: [vendor]}
-        supplier_country: {synonyms: [supplier country]}
+        supplier_name: {title: Supplier, synonyms: [vendor]}
+        supplier_country: {title: Supplier country, synonyms: [supplier country]}
     carriers:
       base_table: DIM_CARRIER
       description: Freight carriers.
       primary_key: [carrier_id]
       dimensions:
-        carrier_name: {synonyms: [haulier, forwarder]}
-        carrier_type: {synonyms: [mode]}
+        carrier_name: {title: Carrier, synonyms: [haulier, forwarder]}
+        carrier_type: {title: Carrier type, synonyms: [mode]}
 
 metrics:
 

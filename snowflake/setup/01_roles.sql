@@ -43,8 +43,22 @@ GRANT ROLE SCM_SERVICE_ROLE TO ROLE SCM_DEPLOY;
 CREATE USER IF NOT EXISTS SCM_SERVICE_USER
     TYPE = SERVICE
     DEFAULT_ROLE = SCM_SERVICE_ROLE
+    DEFAULT_SECONDARY_ROLES = ()
     COMMENT = 'Service account for the Strata container and CI';
 GRANT ROLE SCM_SERVICE_ROLE TO USER SCM_SERVICE_USER;
+
+-- The API answers as the caller's persona with USE ROLE, so the service must be able to assume
+-- the four personas. They sit on their own role granted to the user, not under SCM_SERVICE_ROLE:
+-- a role inherits what it is granted, and SCM_SERVICE_ROLE is what agent:run runs as, so holding
+-- them there would put PROCUREMENT_ROLE's columns in every agent session. No secondary roles by
+-- default, for the same reason. The mapping from caller to persona is in docs/governance.md.
+CREATE ROLE IF NOT EXISTS SCM_SERVICE_PERSONAS COMMENT = 'Personas the Strata service may assume, one at a time';
+GRANT ROLE PLANNING_ROLE TO ROLE SCM_SERVICE_PERSONAS;
+GRANT ROLE PROCUREMENT_ROLE TO ROLE SCM_SERVICE_PERSONAS;
+GRANT ROLE LOGISTICS_ROLE TO ROLE SCM_SERVICE_PERSONAS;
+GRANT ROLE EXECUTIVE_ROLE TO ROLE SCM_SERVICE_PERSONAS;
+GRANT ROLE SCM_SERVICE_PERSONAS TO USER SCM_SERVICE_USER;
+ALTER USER SCM_SERVICE_USER SET DEFAULT_SECONDARY_ROLES = ();
 
 -- A regional planner, scoped to EMEA plants in entitlements.yaml.
 CREATE ROLE IF NOT EXISTS EMEA_PLANNING_ROLE COMMENT = 'Planning persona scoped to EMEA plants';

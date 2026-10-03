@@ -5,6 +5,7 @@ lives in eval/account/ and runs only with SCM_BACKEND=snowflake."""
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -326,3 +327,39 @@ def test_nothing_committed_names_an_environment_or_a_model_the_spec_does_not_run
         recorded = (ROOT / "web" / "public" / "recorded" / f"{name}.json").read_text()
         assert not re.search(r"SCM_PROD\b", recorded), name
         assert set(re.findall(r"claude-[\w.-]+", recorded)) <= {model}, name
+
+
+SERVICE_PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE"]
+
+
+def test_the_service_assumes_personas_through_its_own_role_never_through_its_default_role():
+    roles = (ROOT / "snowflake" / "setup" / "01_roles.sql").read_text()
+    for persona in SERVICE_PERSONAS:
+        assert f"GRANT ROLE {persona} TO ROLE SCM_SERVICE_PERSONAS;" in roles, persona
+        assert f"GRANT ROLE {persona} TO ROLE SCM_SERVICE_ROLE;" not in roles, persona
+    assert "GRANT ROLE SCM_SERVICE_PERSONAS TO USER SCM_SERVICE_USER;" in roles
+    assert "GRANT ROLE SCM_SERVICE_PERSONAS TO ROLE" not in roles
+    assert "DEFAULT_SECONDARY_ROLES = ()" in roles
+
+
+@pytest.mark.skipif(not os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH"), reason="needs account: the service user's key")
+def test_on_the_account_the_service_user_assumes_exactly_the_four_personas(account):
+    import snowflake.connector
+    from cryptography.hazmat.primitives import serialization
+
+    _, db = account
+    key = serialization.load_pem_private_key(Path(os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"]).read_bytes(), password=None)
+    with snowflake.connector.connect(account=os.environ["SNOWFLAKE_ACCOUNT"], host=os.environ["SNOWFLAKE_HOST"],
+                                     user=os.getenv("SNOWFLAKE_USER", "SCM_SERVICE_USER"), private_key=key,
+                                     database=db) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT CURRENT_ROLE(), " + ", ".join(f"IS_ROLE_IN_SESSION('{r}')" for r in SERVICE_PERSONAS))
+        default, *in_session = cur.fetchone()
+        assert default == "SCM_SERVICE_ROLE" and not any(in_session)
+        for persona in SERVICE_PERSONAS:
+            _as(cur, persona)
+            cur.execute("SELECT CURRENT_ROLE()")
+            assert cur.fetchone()[0] == persona
+        for other in ("SCM_DEPLOY", "SCM_ADMIN", "JUDGE_ROLE", "EMEA_PLANNING_ROLE"):
+            with pytest.raises(snowflake.connector.errors.ProgrammingError):
+                _as(cur, other)

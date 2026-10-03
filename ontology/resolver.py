@@ -33,6 +33,7 @@ DIMENSION_WORDS = {
 }
 TIME_WORDS = [
     (r"\bq1\b", "q1"), (r"\bq2\b", "q2"), (r"\bq3\b", "q3"), (r"\bq4\b", "q4"),
+    (r"(across|around|either side of|over) the (july )?tariff", "across_tariff_step"),
     (r"before the (july )?tariff|pre[- ]tariff", "pre_tariff_step"),
     (r"after the (july )?tariff|post[- ]tariff", "post_tariff_step"),
     (r"this quarter|last quarter", "last_quarter"), (r"last month|this month|year end|year-end", "last_month"),

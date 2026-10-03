@@ -348,9 +348,34 @@
       "role": "SCM_READER"
     },
     {
+      "object": "EXECUTIVE_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
+      "object": "LOGISTICS_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
+      "object": "PLANNING_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
+      "object": "PROCUREMENT_ROLE",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
       "object": "SCM_READER",
       "privilege": "ROLE",
       "role": "SCM_SERVICE_ROLE"
+    },
+    {
+      "object": "SCM_SERVICE_PERSONAS",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_USER"
     },
     {
       "object": "SCM_SERVICE_ROLE",

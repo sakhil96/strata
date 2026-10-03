@@ -53,11 +53,38 @@ roles, so a scope on it would widen every persona.
 
 No semantic view exposes a governed column; the rules protect any future view that does.
 
+## The service's identity
+
+The API answers as the caller's persona: every governed query runs `USE SECONDARY ROLES NONE` and
+`USE ROLE <persona>` before calling the procedure, so the persona's semantic view, row scope and
+column rules apply and nothing else does. The service may assume only the roles in this table.
+
+| Caller, from Sf-Context-Current-User and the persona dial | Role the service assumes | Semantic view |
+|---|---|---|
+| Planning user | PLANNING_ROLE | PLANNING_SV_V1 |
+| Procurement user | PROCUREMENT_ROLE | PROCUREMENT_SV_V1 |
+| Logistics user | LOGISTICS_ROLE | LOGISTICS_SV_V1 |
+| Executive user | EXECUTIVE_ROLE | EXECUTIVE_SV_V1 |
+| No persona chosen | `SCM_DEFAULT_ROLE`, one of the four | its view |
+
+The four roles are granted to SCM_SERVICE_PERSONAS, which is granted to SCM_SERVICE_USER alone and
+to no role. They are deliberately not under SCM_SERVICE_ROLE: a role inherits what it is granted,
+`IS_ROLE_IN_SESSION` sees inherited roles, and SCM_SERVICE_ROLE is what agent:run runs as, so
+holding the personas there would let every agent session read PROCUREMENT_ROLE's unmasked supplier
+unit cost and bank account. The service user has no default secondary roles for the same reason.
+SCM_DEPLOY, SCM_ADMIN, JUDGE_ROLE and EMEA_PLANNING_ROLE are refused to it.
+
+The API accepts only these four personas and JUDGE_ROLE in `X-Persona`, which the service cannot
+assume. Locally and on DEV the dial chooses freely among the four; binding a signed-in user to one
+persona follows Sf-Context-Current-User once the service runs in SPCS, which is not yet deployed.
+
 ## Proof
 
 - `eval/test_governance.py`, account tests: each persona's plants through its semantic view equal
   its registry scope, with EMEA_PLANNING_ROLE seeing only EMEA plants; CONFORMED, RAW and
   SEMANTIC_BASE are denied; every column rule evaluates under each role as `GOV.COLUMN_VISIBILITY`
   says; every view in `SEMANTIC_BASE` is secure.
+- `eval/test_governance.py`: the service assumes the four personas through SCM_SERVICE_PERSONAS and
+  nothing else, with no persona in its default session.
 - `eval/test_persona_consistency.py`: 20 cases × 3 roles, identical rows and hashes
   (`eval/report/persona_account.md`), and every numeric agent answer reconciled to the audit trail.
