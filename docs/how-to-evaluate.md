@@ -41,7 +41,7 @@ cannot see RAW or CONFORMED.
 
 | Claim | Where to look |
 |---|---|
-| One definition, three vocabularies, one number | Compare page; `eval/test_persona_consistency.py` |
+| One definition, three vocabularies, one number | Compare page; `eval/test_persona_consistency.py`; on SCM_DEV, `eval/report/persona_account.md`: 20 cases × 3 roles through GOVERNED_QUERY, identical rows and hashes, hashes equal to the local engine's |
 | Numbers match an independent truth | `eval/test_metric_identity.py`, every metric × month × plant × region × segment × family |
 | Legacy numbers disagree for stated reasons | Before/after page; `api/legacy.py` |
 | The agent cannot answer outside the procedures | Governance page; `eval/test_governance.py` |

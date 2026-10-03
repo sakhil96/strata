@@ -1,0 +1,252 @@
+[
+  {
+    "case": "pc01",
+    "metric": "on_time_delivery",
+    "dimensions": [],
+    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+    "rows": 1,
+    "value": {
+      "on_time_delivery": 0.837553
+    },
+    "identical": true
+  },
+  {
+    "case": "pc02",
+    "metric": "on_time_delivery",
+    "dimensions": [
+      "region"
+    ],
+    "hash": "6b5d262575056d3eef33ad5051b2878a8185d51c8859f3f1086fb86ae11d3bc7",
+    "rows": 3,
+    "value": {
+      "on_time_delivery": 0.839038,
+      "region": "APAC"
+    },
+    "identical": true
+  },
+  {
+    "case": "pc03",
+    "metric": "on_time_delivery",
+    "dimensions": [],
+    "hash": "9ae321e0c3a1c3e8feee16fa959cd7756a5cf62066f1fc67f81dc7e0046242af",
+    "rows": 1,
+    "value": {
+      "on_time_delivery": 0.849644
+    },
+    "identical": true
+  },
+  {
+    "case": "pc04",
+    "metric": "otif",
+    "dimensions": [
+      "period_month"
+    ],
+    "hash": "97065a079a8800ed814d46458c3ea6b691dd9a35e8648033c05603442d6abbb0",
+    "rows": 12,
+    "value": {
+      "otif": 0.786017,
+      "period_month": "2025-10-01"
+    },
+    "identical": true
+  },
+  {
+    "case": "pc05",
+    "metric": "otif",
+    "dimensions": [],
+    "hash": "a2f9de0886843880f26023755e648dd57882098cfdc73d85305410d77690f42c",
+    "rows": 1,
+    "value": {
+      "otif": 0.771547
+    },
+    "identical": true
+  },
+  {
+    "case": "pc06",
+    "metric": "unit_fill_rate",
+    "dimensions": [],
+    "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
+    "rows": 1,
+    "value": {
+      "unit_fill_rate": 0.979227
+    },
+    "identical": true
+  },
+  {
+    "case": "pc07",
+    "metric": "unit_fill_rate",
+    "dimensions": [
+      "plant_id"
+    ],
+    "hash": "a94b6d10bc5ad0c8dcca15329b0cd9d5255f213558adb9ca4a3061da0ceaefb0",
+    "rows": 5,
+    "value": {
+      "plant_id": "DC-NL01",
+      "unit_fill_rate": 0.980841
+    },
+    "identical": true
+  },
+  {
+    "case": "pc08",
+    "metric": "days_of_inventory",
+    "dimensions": [],
+    "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
+    "rows": 1,
+    "value": {
+      "days_of_inventory": 18.51012370581926
+    },
+    "identical": true
+  },
+  {
+    "case": "pc09",
+    "metric": "days_of_inventory",
+    "dimensions": [
+      "plant_id"
+    ],
+    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
+    "rows": 5,
+    "value": {
+      "days_of_inventory": 18.69653152799946,
+      "plant_id": "DC-NL01"
+    },
+    "identical": true
+  },
+  {
+    "case": "pc10",
+    "metric": "landed_cost_per_unit",
+    "dimensions": [],
+    "hash": "383f7f85ec5d788ae8b0a27864a37ccd03434b4b4937d9cb9e8f1a4b9dc6e684",
+    "rows": 1,
+    "value": {
+      "landed_cost_per_unit": 155.4954801122229
+    },
+    "identical": true
+  },
+  {
+    "case": "pc11",
+    "metric": "landed_cost_per_unit",
+    "dimensions": [
+      "period_month"
+    ],
+    "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
+    "rows": 12,
+    "value": {
+      "landed_cost_per_unit": 128.7284417668984,
+      "period_month": "2025-10-01"
+    },
+    "identical": true
+  },
+  {
+    "case": "pc12",
+    "metric": "inventory_turns",
+    "dimensions": [
+      "category"
+    ],
+    "hash": "2c7fc57676ec57d1cef1cbd6348340dc46d5364dac797a5317724f989c057406",
+    "rows": 3,
+    "value": {
+      "category": "Electrical",
+      "inventory_turns": 19.53355922202167
+    },
+    "identical": true
+  },
+  {
+    "case": "pc13",
+    "metric": "supplier_lead_time_days",
+    "dimensions": [
+      "region"
+    ],
+    "hash": "0b2e974bf5e9c6954f055767925d6edcf88b26dc77aaaf76d6b2bf2affb768d0",
+    "rows": 3,
+    "value": {
+      "region": "APAC",
+      "supplier_lead_time_days": 47.0
+    },
+    "identical": true
+  },
+  {
+    "case": "pc14",
+    "metric": "stockout_rate",
+    "dimensions": [],
+    "hash": "66f0b19855ea4e9ab8ea093fed70dd57b6b7e766df923456ccbe2a69ec054be0",
+    "rows": 1,
+    "value": {
+      "stockout_rate": 0.010215
+    },
+    "identical": true
+  },
+  {
+    "case": "pc15",
+    "metric": "stockout_rate",
+    "dimensions": [
+      "period_month"
+    ],
+    "hash": "ece7631d7414ea076d8c1c3decf6e46a844057eaaf7e05a5673c1785eace5cd0",
+    "rows": 12,
+    "value": {
+      "period_month": "2025-10-01",
+      "stockout_rate": 0.008978
+    },
+    "identical": true
+  },
+  {
+    "case": "pc16",
+    "metric": "freight_cost_per_unit",
+    "dimensions": [
+      "carrier_type"
+    ],
+    "hash": "d1acb17e72e0607e2a5347587a8176de3acd71e8b1fdaa05f922b67c11c4f085",
+    "rows": 4,
+    "value": {
+      "carrier_type": "AIR",
+      "freight_cost_per_unit": 7.507251793937302
+    },
+    "identical": true
+  },
+  {
+    "case": "pc17",
+    "metric": "order_fulfilment_cycle_days",
+    "dimensions": [],
+    "hash": "32e7a9c5bf52f505a848883dc6c9214e4e91ab7e1ce4c88f55ae2a15d4cca44f",
+    "rows": 1,
+    "value": {
+      "order_fulfilment_cycle_days": 14.0
+    },
+    "identical": true
+  },
+  {
+    "case": "pc18",
+    "metric": "order_fulfilment_cycle_days",
+    "dimensions": [],
+    "hash": "a82805a3d1a941f338a07e210a13939ae6d1c26cd6be1d13c57fedd4d1254332",
+    "rows": 1,
+    "value": {
+      "order_fulfilment_cycle_days": 14.0
+    },
+    "identical": true
+  },
+  {
+    "case": "pc19",
+    "metric": "transit_hours",
+    "dimensions": [
+      "carrier_name"
+    ],
+    "hash": "636d33d0511b10fce60bb2090ddd75ed809d92a13179ca5080be6f0c2bbaebac",
+    "rows": 12,
+    "value": {
+      "carrier_name": "Atlas Air Cargo",
+      "transit_hours": 54.5
+    },
+    "identical": true
+  },
+  {
+    "case": "pc20",
+    "metric": "transit_hours",
+    "dimensions": [],
+    "hash": "34581ff38643ee194e523d58de2c1261f5d5e194838d43ac2574ddf242c868f3",
+    "rows": 1,
+    "value": {
+      "transit_hours": 53.75
+    },
+    "identical": true
+  }
+]
