@@ -136,3 +136,34 @@ def test_landed_cost_steps_up_after_the_tariff_change(warehouse, registry):
         return rows[0]["landed_cost_per_unit"]
 
     assert landed("post_tariff_step") > landed("pre_tariff_step")
+
+
+CANONICAL = ["on_time_delivery", "unit_fill_rate", "otif", "days_of_inventory", "landed_cost_per_unit"]
+
+
+@pytest.mark.parametrize("metric", CANONICAL)
+def test_on_the_account_fy2026_and_each_month_equal_truth_through_a_persona_view(account, metric):
+    import json
+
+    cursor, db = account
+    cursor.execute("USE SECONDARY ROLES NONE")
+    cursor.execute("USE ROLE PROCUREMENT_ROLE")
+
+    def governed(dimensions):
+        query = {"metrics": [metric], "dimensions": dimensions, "time": {"range": "fy2026"}, "filters": []}
+        cursor.execute(f"CALL {db}.AGENT.GOVERNED_QUERY('PROCUREMENT_SV_V1', %s, 'identity on the account')",
+                       (json.dumps(query),))
+        return json.loads(cursor.fetchone()[0])["rows"]
+
+    cursor.execute("USE ROLE SCM_DEPLOY")
+    cursor.execute(f"SELECT TO_CHAR(month, 'YYYY-MM-DD'), numerator, denominator, value FROM {db}.EVAL.TRUTH_METRICS "
+                   "WHERE metric = %s AND grouping = 'month' AND month BETWEEN '2025-10-01' AND '2026-09-01'", (metric,))
+    truth = {m: (n, d, v) for m, n, d, v in cursor.fetchall()}
+    cursor.execute("USE ROLE PROCUREMENT_ROLE")
+    position = metric == "days_of_inventory"
+    expected_fy = truth["2026-09-01"][2] if position else sum(t[0] for t in truth.values()) / sum(t[1] for t in truth.values())
+    assert governed([])[0][metric] == pytest.approx(expected_fy, abs=5e-7)
+    monthly = {r["period_month"][:10]: r[metric] for r in governed(["period_month"])}
+    assert monthly.keys() == truth.keys()
+    for month, value in monthly.items():
+        assert value == pytest.approx(truth[month][2], abs=5e-7), month

@@ -139,3 +139,12 @@ governed answer. Suite 3 reconciles every numeric agent answer with an audit row
 
 GOVERNED_QUERY takes the query as one JSON string because agent procedure tools on a warehouse
 accept only scalar arguments.
+
+## Positions read the window's closing month, pinned in the query (2026-10-03)
+
+Inventory metrics are NON ADDITIVE BY period_month with a descending sort, so a query without a
+month breakdown should read the latest month. On the DEV account the semantic view returned the
+earliest month instead (FY2026 days_of_inventory 65.42, October's value, against 18.51 for
+September). render_semantic_sql now pins such a query to the window's closing month, and the
+local engine uses the same rule; the canonical query and its hash are unchanged. Suite 1 checks
+the five canonical metrics against truth through a persona view on the account.

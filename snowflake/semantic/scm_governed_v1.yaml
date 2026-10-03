@@ -1110,14 +1110,14 @@ verified_queries:
 - name: q11
   question: How many days of inventory do we have?
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month\
-    \ BETWEEN '2026-09-01' AND '2026-09-01'\n)"
+    \ = '2026-09-01'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: true
 - name: q12
   question: What is DOI by plant?
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n\
-    \    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY plant_id"
+    \    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1152,14 +1152,14 @@ verified_queries:
 - name: q17
   question: What is inventory turnover?
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.inventory_turns\n    WHERE inventory.period_month\
-    \ BETWEEN '2026-09-01' AND '2026-09-01'\n)"
+    \ = '2026-09-01'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
 - name: q18
   question: What is the stockout rate for the US region?
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.stockout_rate\n    WHERE inventory.period_month\
-    \ BETWEEN '2025-10-01' AND '2026-09-01'\n      AND plants.region = 'US'\n)"
+    \ = '2026-09-01'\n      AND plants.region = 'US'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1187,8 +1187,7 @@ verified_queries:
 - name: q22
   question: Show DOI and inventory turns by plant at year end
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory,\
-    \ inventory.inventory_turns\n    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER\
-    \ BY plant_id"
+    \ inventory.inventory_turns\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1247,7 +1246,7 @@ verified_queries:
 - name: q30
   question: DOI in units for the Tuas plant
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.doi_units\n    WHERE inventory.period_month\
-    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND plants.plant_id = 'PLT-SG01'\n)"
+    \ = '2026-09-01'\n      AND plants.plant_id = 'PLT-SG01'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1285,7 +1284,7 @@ verified_queries:
 - name: q35
   question: Inventory turns by category
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    DIMENSIONS parts.category\n    METRICS inventory.inventory_turns\n\
-    \    WHERE inventory.period_month BETWEEN '2026-09-01' AND '2026-09-01'\n)\nORDER BY category"
+    \    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY category"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1350,7 +1349,7 @@ verified_queries:
 - name: q44
   question: Days of inventory for packaging
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month\
-    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND parts.part_family = 'Packaging'\n)"
+    \ = '2026-09-01'\n      AND parts.part_family = 'Packaging'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false
@@ -1386,7 +1385,7 @@ verified_queries:
 - name: q49
   question: Inventory turns for the McDonough DC
   sql: "SELECT * FROM SEMANTIC_VIEW(\n    SCM_GOVERNED_V1\n    METRICS inventory.inventory_turns\n    WHERE inventory.period_month\
-    \ BETWEEN '2026-09-01' AND '2026-09-01'\n      AND plants.plant_id = 'DC-US01'\n)"
+    \ = '2026-09-01'\n      AND plants.plant_id = 'DC-US01'\n)"
   verified_at: 1790812800
   verified_by: Inventory Manager
   use_as_onboarding_question: false

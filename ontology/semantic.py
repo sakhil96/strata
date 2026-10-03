@@ -213,8 +213,15 @@ def render_semantic_sql(registry: Registry, canonical: dict[str, Any], view: str
         lines.append("    DIMENSIONS " + ", ".join(_qualify(registry, d, anchor) for d in canonical["dimensions"]))
     lines.append("    METRICS " + ", ".join(
         f"{registry.metrics[m]['semantic']['table']}.{m}" for m in canonical["metrics"]))
-    where = [f"{t}.{PERIOD} BETWEEN '{canonical['time']['start']}' AND '{canonical['time']['end']}'"
-             for t in tables]
+    where = []
+    for t in tables:
+        # A position (NON ADDITIVE BY period_month) asked for without a month breakdown reads the
+        # window's closing month. That is pinned here rather than left to the view's own
+        # "latest period" choice, which on the account returned the earliest month instead.
+        if registry.tables[t].get("non_additive_by") == PERIOD and PERIOD not in canonical["dimensions"]:
+            where.append(f"{t}.{PERIOD} = '{canonical['time']['end']}'")
+        else:
+            where.append(f"{t}.{PERIOD} BETWEEN '{canonical['time']['start']}' AND '{canonical['time']['end']}'")
     for f in canonical["filters"]:
         col = _qualify(registry, f["dimension"], anchor)
         if f["operator"] == "in":
@@ -254,11 +261,11 @@ def _local_table_sql(registry: Registry, canonical: dict[str, Any], fact: str, m
             where.append(f"{col(f['dimension'])} {f['operator']} ?")
             params.append(f["values"][0])
 
-    # NON ADDITIVE BY period_month: without a month dimension, inventory reads the last month in the window.
+    # NON ADDITIVE BY period_month: without a month dimension, inventory reads the window's closing
+    # month, the same rule render_semantic_sql gives the semantic view.
     if spec.get("non_additive_by") == PERIOD and PERIOD not in canonical["dimensions"]:
-        where.append(f"{fact}.{spec['period']} = (SELECT MAX({spec['period']}) FROM CONFORMED.{spec['base_table']} "
-                     f"WHERE {spec['period']} BETWEEN ? AND ?)")
-        params.extend([canonical["time"]["start"], canonical["time"]["end"]])
+        where.append(f"{fact}.{spec['period']} = ?")
+        params.append(canonical["time"]["end"])
 
     select = [f"{col(d)} AS {d}" for d in canonical["dimensions"]]
     select += [f"{registry.metrics[m]['semantic']['expr']} AS {m}" for m in metrics]
