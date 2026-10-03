@@ -5,25 +5,7 @@
 USE ROLE SCM_DEPLOY;
 USE SCHEMA {{DB}}.AGENT;
 
-CREATE TABLE IF NOT EXISTS {{DB}}.AUDIT.ANSWERS (
-    ts TIMESTAMP_LTZ NOT NULL,
-    username STRING NOT NULL,
-    role_used STRING NOT NULL,
-    question STRING,
-    metric_names STRING,
-    canonical_query VARIANT,
-    semantic_query_hash STRING,
-    sql_executed STRING,
-    result_checksum STRING,
-    row_count NUMBER,
-    latency_ms NUMBER,
-    refusal STRING,
-    path STRING
-) DATA_RETENTION_TIME_IN_DAYS = 90
-  CHANGE_TRACKING = TRUE
-  COMMENT = 'One row for every governed answer and every refusal';
-
-GRANT INSERT ON TABLE {{DB}}.AUDIT.ANSWERS TO ROLE SCM_READER;
+-- AUDIT.ANSWERS is created by setup/10_ops.sql; the SLO views read it.
 
 CREATE OR REPLACE PROCEDURE {{DB}}.AGENT.GOVERNED_QUERY(
     VIEW STRING, METRICS ARRAY, DIMENSIONS ARRAY, TIME_WINDOW OBJECT, FILTERS ARRAY, QUESTION STRING DEFAULT ''

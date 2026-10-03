@@ -41,6 +41,14 @@ CREATE USER IF NOT EXISTS SCM_SERVICE_USER
     COMMENT = 'Service account for the Strata container and CI';
 GRANT ROLE SCM_READER TO USER SCM_SERVICE_USER;
 
+-- Deploy identity for loads, dbt and releases from CI and the deploying workstation. Key-pair
+-- only; its public key is set by runbooks/rotate-keys.md.
+CREATE USER IF NOT EXISTS SCM_CI_USER
+    TYPE = SERVICE
+    DEFAULT_ROLE = SCM_DEPLOY
+    COMMENT = 'Key-pair identity for loads, dbt and deploys';
+GRANT ROLE SCM_DEPLOY TO USER SCM_CI_USER;
+
 -- Reviewers get one read-only role: every persona view, the audit trail and the evaluation
 -- results, no masked columns unmasked, no warehouse larger than XSMALL, nothing writable.
 CREATE ROLE IF NOT EXISTS JUDGE_ROLE

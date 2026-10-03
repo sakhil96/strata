@@ -11,6 +11,7 @@ CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_OWNER COMMENT = 'Metric owner f
 CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_STEWARD COMMENT = 'Metric steward from the registry';
 CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_VERSION COMMENT = 'Metric version from the registry';
 
+-- @enterprise
 -- CONFIDENTIAL: contact names and emails, readable by admin and executive.
 -- RESTRICTED: bank details and commercial cost, readable by admin and procurement only.
 CREATE MASKING POLICY IF NOT EXISTS {{DB}}.CONFORMED.MASK_BY_SENSITIVITY_STRING AS (val STRING) RETURNS STRING ->
@@ -33,6 +34,8 @@ ALTER TAG {{DB}}.CONFORMED.SENSITIVITY SET
     MASKING POLICY {{DB}}.CONFORMED.MASK_BY_SENSITIVITY_STRING,
     MASKING POLICY {{DB}}.CONFORMED.MASK_BY_SENSITIVITY_NUMBER;
 
+-- @end
+
 -- Who may see which plant. Rows are maintained through runbooks/revoke-access.md, never ad hoc.
 CREATE TABLE IF NOT EXISTS {{DB}}.CONFORMED.USER_PLANT_SCOPE (
     role_name STRING NOT NULL,
@@ -52,6 +55,7 @@ USING (
 ON t.role_name = s.role_name AND t.plant_id = s.plant_id
 WHEN NOT MATCHED THEN INSERT VALUES (s.role_name, s.plant_id, 'baseline', CURRENT_DATE());
 
+-- @enterprise
 CREATE ROW ACCESS POLICY IF NOT EXISTS {{DB}}.CONFORMED.PLANT_ACCESS AS (plant STRING) RETURNS BOOLEAN ->
     IS_ROLE_IN_SESSION('SCM_ADMIN')
     OR IS_ROLE_IN_SESSION('EXECUTIVE_ROLE')
@@ -59,3 +63,4 @@ CREATE ROW ACCESS POLICY IF NOT EXISTS {{DB}}.CONFORMED.PLANT_ACCESS AS (plant S
         SELECT 1 FROM {{DB}}.CONFORMED.USER_PLANT_SCOPE s
         WHERE s.plant_id = plant AND IS_ROLE_IN_SESSION(s.role_name)
     );
+-- @end

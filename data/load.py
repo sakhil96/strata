@@ -2,7 +2,7 @@
 
 Each file is PUT to the RAW stage, its table is created from the file's own schema, and it is
 copied in with a checksum recorded in OPS.LOAD_LOG. Running it twice reloads the same rows:
-tables are truncated before the copy, and the log keeps every attempt.
+tables are replaced before the copy, and the log keeps every attempt.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import click
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "out"
+REFERENCE = ROOT / "reference"
 SYSTEMS = ("erp", "tms", "portal", "iot", "content")
 
 
@@ -33,6 +34,9 @@ def plan(out: Path = OUT) -> list[Load]:
         for path in sorted((out / system).glob("*.parquet")):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             loads.append(Load(system, path, path.stem.upper(), digest))
+    # gscpi.csv is fetched locally and never committed, so it loads only where it was fetched.
+    for path in sorted(REFERENCE.glob("*.csv")):
+        loads.append(Load("reference", path, path.stem.upper(), hashlib.sha256(path.read_bytes()).hexdigest()))
     truth = out / "truth_metrics.parquet"
     if truth.exists():
         loads.append(Load("eval", truth, "TRUTH_METRICS", hashlib.sha256(truth.read_bytes()).hexdigest()))
@@ -44,12 +48,15 @@ def statements(load: Load, db: str) -> list[tuple[str, tuple]]:
     stage = f"@{db}.RAW.SOURCE_DATA/{load.system}"
     table = f"{db}.{schema}.{load.table}"
     location = f"{stage}/{load.path.name}"
+    fmt = f"{db}.RAW.CSV_FILES" if load.path.suffix == ".csv" else f"{db}.RAW.PARQUET_FILES"
     return [
         (f"PUT 'file://{load.path.as_posix()}' {stage} AUTO_COMPRESS = FALSE OVERWRITE = TRUE", ()),
-        (f"CREATE TABLE IF NOT EXISTS {table} USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) "
-         f"FROM TABLE(INFER_SCHEMA(LOCATION => '{location}', FILE_FORMAT => '{db}.RAW.PARQUET_FILES')))", ()),
-        (f"TRUNCATE TABLE {table}", ()),
-        (f"COPY INTO {table} FROM {location} FILE_FORMAT = (FORMAT_NAME = '{db}.RAW.PARQUET_FILES') "
+        # IGNORE_CASE upper-cases the inferred names; Parquet's lower-case columns would otherwise
+        # become quoted identifiers that no unquoted model reference can reach.
+        (f"CREATE OR REPLACE TABLE {table} USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) "
+         f"WITHIN GROUP (ORDER BY order_id) FROM TABLE(INFER_SCHEMA(LOCATION => '{location}', "
+         f"FILE_FORMAT => '{fmt}', IGNORE_CASE => TRUE)))", ()),
+        (f"COPY INTO {table} FROM {location} FILE_FORMAT = (FORMAT_NAME = '{fmt}') "
          "MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE ON_ERROR = ABORT_STATEMENT", ()),
         (f"INSERT INTO {db}.OPS.LOAD_LOG (file_name, table_name, row_count, checksum) "
          f"SELECT %s, %s, COUNT(*), %s FROM {table}", (f"{load.system}/{load.path.name}", load.table, load.checksum)),
@@ -71,7 +78,9 @@ def main(env: str, connection: str | None, dry_run: bool) -> None:
     loads = plan()
     if not loads:
         raise click.ClickException("nothing to load; run `make data` first")
-    setup = [(f"CREATE FILE FORMAT IF NOT EXISTS {db}.RAW.PARQUET_FILES TYPE = PARQUET", ())]
+    setup = [(f"CREATE OR REPLACE FILE FORMAT {db}.RAW.PARQUET_FILES TYPE = PARQUET USE_LOGICAL_TYPE = TRUE", ()),
+             (f"CREATE OR REPLACE FILE FORMAT {db}.RAW.CSV_FILES TYPE = CSV PARSE_HEADER = TRUE "
+              "FIELD_OPTIONALLY_ENCLOSED_BY = '\"' ERROR_ON_COLUMN_COUNT_MISMATCH = TRUE", ())]
     if dry_run:
         for sql, params in setup + [s for load in loads for s in statements(load, db)]:
             click.echo(f"{sql};" + (f"  -- {params}" if params else ""))

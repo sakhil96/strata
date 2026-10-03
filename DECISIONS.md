@@ -81,3 +81,35 @@ The spec lists Cortex Analyst among the agent's tools and also says numbers come
 GOVERNED_QUERY. Both hold: the agent may call Analyst to explore phrasing, but `api/agent.py` parses
 numbers only from GOVERNED_QUERY results, and the governance suite fails if any other tool's output
 reaches an answer.
+
+## Deployment account baseline (2026-10-02)
+
+Account XZ02973 (ZV32033), organisation DZVLNOZ, region GCP_ME_CENTRAL2, **Standard edition**,
+created 2026-09-20, free-usage balance USD 378.20 at the start of the DEV run. The trial expiry is
+not exposed to SQL; if it is the usual 30-day trial it ends around 2026-10-20 (unverified).
+Cortex cross-region inference is ANY_REGION; SPCS is enabled.
+
+Standard edition has no masking policies, row access policies, GET_LINEAGE or Time Travel beyond
+one day. We deploy degraded rather than stop: plant scope is enforced by secure views over
+USER_PLANT_SCOPE, contact and bank columns never reach a persona-facing object, EXPLAIN_LINEAGE
+returns the compiled path, and retention is one day. None of this proves the spec's policy
+requirements; STATUS.md says so. Re-run setup on an Enterprise account to close it.
+
+The repository is not on GitHub yet, so dbt is deployed with `snow dbt deploy` from the working
+tree instead of from a Git repository object. The image build needs Docker and the public mirror
+needs a Vercel token; neither is available on the deploying machine.
+
+## Personas read semantic views only (2026-10-03)
+
+Semantic views run with owner's rights, so SCM_READER holds SELECT on the views in SEMANTIC and
+nothing in CONFORMED, STAGING or RAW. On Standard edition, where no masking policy can hide contact
+and bank columns, this is what keeps them from persona roles. The cost: Cortex Analyst requires
+SELECT on base tables for the calling role, so the agent's Analyst tool works only for SCM_DEPLOY
+and above. It was exploration-only already; numbers still come from GOVERNED_QUERY.
+
+## Loader types follow the Parquet logical types (2026-10-03)
+
+The first dbt run on Snowflake failed in 11 models: INFER_SCHEMA kept Parquet's lower-case names
+as quoted identifiers, and microsecond timestamps arrived as NUMBER. The loader now infers with
+IGNORE_CASE and a USE_LOGICAL_TYPE file format, and replaces each RAW table on load. Replacing RAW
+tables means FCT_DELIVERY_EVENT must be recreated after a reload.

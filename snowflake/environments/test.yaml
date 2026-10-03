@@ -13,3 +13,10 @@ schemas:
   - EVAL
   - OPS
 semantic_view_version: 1
+edition: enterprise
+retention_days: 14
+long_retention_days: 90
+warehouse_size: XSMALL
+auto_suspend_secs: 60
+monitor_credit_quota: 100
+slo_alert_schedule: 60 MINUTE
