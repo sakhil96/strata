@@ -13,7 +13,9 @@ FROM python:3.11-slim-bookworm@sha256:2333bd330d12de02514770b3585cad313644316047
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 SCM_BACKEND=snowflake SCM_WEB_OUT=/app/web/out
 WORKDIR /app
 COPY requirements.lock ./
-RUN pip install --require-hashes --no-deps -r requirements.lock && useradd --uid 10001 --no-create-home strata
+# The base image ships build tooling the service never runs; Trivy blocks its HIGH findings.
+RUN pip install --require-hashes --no-deps -r requirements.lock && pip uninstall -y -q wheel setuptools \
+    && useradd --uid 10001 --no-create-home strata
 COPY api/ api/
 COPY ontology/semantic.py ontology/resolver.py ontology/metrics.yaml ontology/
 COPY ontology/generated/glossary.json ontology/generated/glossary.json
