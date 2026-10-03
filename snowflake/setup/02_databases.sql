@@ -15,6 +15,11 @@ CREATE SCHEMA IF NOT EXISTS {{DB}}.STAGING
 CREATE SCHEMA IF NOT EXISTS {{DB}}.CONFORMED
     COMMENT = 'Conformed dimensions and facts'
     DATA_RETENTION_TIME_IN_DAYS = {{LONG_RETENTION}};
+CREATE SCHEMA IF NOT EXISTS {{DB}}.GOV
+    COMMENT = 'Entitlement registry: row scope and column rules per role';
+CREATE SCHEMA IF NOT EXISTS {{DB}}.SEMANTIC_BASE
+    WITH MANAGED ACCESS
+    COMMENT = 'Secure views over CONFORMED: what the semantic views read';
 CREATE SCHEMA IF NOT EXISTS {{DB}}.SEMANTIC
     COMMENT = 'Semantic views, glossary and governed layer';
 CREATE SCHEMA IF NOT EXISTS {{DB}}.AGENT

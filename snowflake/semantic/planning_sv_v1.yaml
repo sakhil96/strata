@@ -6,7 +6,7 @@ tables:
   description: Sales order lines dated by actual delivery date.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_SALES_ORDER_LINE
   primary_key:
     columns:
@@ -157,7 +157,7 @@ tables:
   description: Sales order lines dated by customer-requested date.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_SALES_ORDER_LINE
   primary_key:
     columns:
@@ -290,7 +290,7 @@ tables:
   description: Outbound shipments dated by proof of delivery.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_SHIPMENT
   primary_key:
     columns:
@@ -384,7 +384,7 @@ tables:
   description: Shipment lines dated by departure, carrying allocated freight.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_SHIPMENT_LINE
   primary_key:
     columns:
@@ -451,7 +451,7 @@ tables:
   description: Purchase order lines dated by goods receipt.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_PO_LINE
   primary_key:
     columns:
@@ -604,7 +604,7 @@ tables:
   description: Month-end inventory position per storage location and part.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: FCT_INVENTORY_MONTH
   primary_key:
     columns:
@@ -820,7 +820,7 @@ tables:
   description: Plants and distribution centres.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: DIM_PLANT
   primary_key:
     columns:
@@ -847,7 +847,7 @@ tables:
   description: Ship-to customers with their segment.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: DIM_CUSTOMER
   primary_key:
     columns:
@@ -871,7 +871,7 @@ tables:
   description: Parts with their product family and category.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: DIM_PART
   primary_key:
     columns:
@@ -895,7 +895,7 @@ tables:
   description: Suppliers resolved to one golden key.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: DIM_SUPPLIER
   primary_key:
     columns:
@@ -918,7 +918,7 @@ tables:
   description: Freight carriers.
   base_table:
     database: SCM_DEV
-    schema: CONFORMED
+    schema: SEMANTIC_BASE
     table: DIM_CARRIER
   primary_key:
     columns:

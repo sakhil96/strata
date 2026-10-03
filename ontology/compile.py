@@ -24,7 +24,7 @@ DATABRICKS_DIR = ROOT / "ontology" / "generated" / "databricks"
 QUESTIONS = ROOT / "eval" / "questions.yaml"
 
 HEADER = "Generated from ontology/*.yaml by compile.py; edit the registry, not this file."
-TARGETS = ("snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks", "linkml", "er")
+TARGETS = ("snowflake-semantic", "vqr", "governance", "dbt", "glossary", "ossie", "cube", "databricks", "linkml", "er")
 LINKML = (("gen-pydantic", "scm_ontology_pydantic.py"), ("gen-json-schema", "scm_ontology.schema.json"),
           ("gen-owl", "scm_ontology.owl.nt"), ("gen-erdiagram", "er_diagram.md"))
 ER_ROWS = (("Supplier", "SupplierPartAgreement", "Part", "TariffCode"),
@@ -47,7 +47,6 @@ PERSONA_FOCUS = {
     "EXECUTIVE_ROLE": "Executives want the headline for the fiscal year and the trend by month.",
 }
 FACT_TYPES = {"transit_hours_elapsed": "NUMBER(18,4)", "cycle_days": "NUMBER(9,0)", "lead_days": "NUMBER(9,0)"}
-ROW_POLICY_MODELS = ("FCT_SALES_ORDER_LINE", "FCT_SHIPMENT", "FCT_SHIPMENT_LINE", "FCT_PO_LINE", "FCT_INVENTORY_MONTH")
 DBT_RELATIONSHIPS = (
     ("fct_sales_order_line", "customer_id", "dim_customer", "customer_id"),
     ("fct_sales_order_line", "part_id", "dim_part", "part_id"),
@@ -117,7 +116,7 @@ def semantic_view(registry: semantic.Registry, view: str, persona: str | None, e
         logical: dict[str, Any] = {
             "name": name,
             "description": spec["description"],
-            "base_table": {"database": db, "schema": "CONFORMED", "table": spec["base_table"]},
+            "base_table": {"database": db, "schema": "SEMANTIC_BASE", "table": spec["base_table"]},
             "primary_key": {"columns": list(spec["primary_key"])},
         }
         dims = []
@@ -255,28 +254,129 @@ def versioning_sql(env: str, version: int) -> str:
     return "\n".join(lines) + "\n"
 
 
-def policies_sql(ontology: dict[str, Any], env: str) -> str:
+ENTITLEMENTS_PATH = ROOT / "ontology" / "entitlements.yaml"
+POLICY_DIR = ROOT / "snowflake" / "policies"
+
+
+def load_entitlements() -> dict[str, Any]:
+    ent = yaml.safe_load(ENTITLEMENTS_PATH.read_text())
+    for column, rule in ent["columns"].items():
+        if rule["otherwise"] not in ("masked", "null"):
+            raise click.ClickException(f"{column}: otherwise must be masked or null")
+        unknown = set(rule["show"]) - set(ent["roles"])
+        if unknown:
+            raise click.ClickException(f"{column}: unknown roles {sorted(unknown)}")
+    return ent
+
+
+def _scope_rows(ent: dict[str, Any]) -> list[tuple[str, str, str]]:
+    rows = []
+    for role, spec in sorted(ent["roles"].items()):
+        scope = spec["scope"]
+        if scope == "*":
+            rows.append((role, "all", "*"))
+        else:
+            for kind, values in sorted(scope.items()):
+                rows += [(role, kind, v) for v in sorted(values)]
+    return rows
+
+
+def _literal(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def entitlements_sql(ent: dict[str, Any], env: str) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}", "-- The entitlement registry as tables: what the secure views and the policies read.",
+             "USE ROLE SCM_DEPLOY;", "",
+             f"CREATE TABLE IF NOT EXISTS {db}.GOV.ENTITLEMENTS (role_name STRING, scope_kind STRING, scope_value STRING);",
+             f"CREATE TABLE IF NOT EXISTS {db}.GOV.COLUMN_VISIBILITY (table_name STRING, column_name STRING, "
+             "sensitivity STRING, role_name STRING, rule STRING);",
+             "BEGIN TRANSACTION;",
+             f"DELETE FROM {db}.GOV.ENTITLEMENTS;",
+             f"INSERT INTO {db}.GOV.ENTITLEMENTS VALUES"]
+    lines.append(",\n".join(f"    ({_literal(r)}, {_literal(k)}, {_literal(v)})" for r, k, v in _scope_rows(ent)) + ";")
+    lines.append(f"DELETE FROM {db}.GOV.COLUMN_VISIBILITY;")
+    visibility = []
+    for column, rule in sorted(ent["columns"].items()):
+        table, col = column.split(".")
+        for role in sorted(ent["roles"]):
+            visibility.append((table, col, rule["sensitivity"], role, "show" if role in rule["show"] else rule["otherwise"]))
+    lines.append(f"INSERT INTO {db}.GOV.COLUMN_VISIBILITY VALUES")
+    lines.append(",\n".join("    (" + ", ".join(_literal(v) for v in row) + ")" for row in visibility) + ";")
+    lines += ["COMMIT;", ""]
+    return "\n".join(lines)
+
+
+def _row_filter(db: str, alias: str, region_expr: str) -> str:
+    return (f"EXISTS (SELECT 1 FROM {db}.GOV.ENTITLEMENTS e WHERE IS_ROLE_IN_SESSION(e.role_name) AND ("
+            f"e.scope_kind = 'all' OR (e.scope_kind = 'plant' AND e.scope_value = {alias}.plant_id) "
+            f"OR (e.scope_kind = 'region' AND e.scope_value = {region_expr})))")
+
+
+def secure_views_sql(ent: dict[str, Any], registry: semantic.Registry, env: str) -> str:
+    """One secure view per table the semantic views read: Standard edition's controls, compiled."""
     db = f"SCM_{env.upper()}"
     lines = [f"-- {HEADER}",
-             "-- Masking is tag-based: 04_policies.sql attaches one string and one number policy to the",
-             "-- SENSITIVITY tag, and each policy reads the tag value. Tagging a column is the whole binding.",
-             "USE ROLE SCM_ADMIN;", ""]
-    for cls, spec in ontology["classes"].items():
-        model = CLASS_MODEL.get(cls)
-        for attr, meta in (spec.get("attributes") or {}).items():
-            level = (meta.get("annotations") or {}).get("sensitivity")
-            if level and model:
-                lines.append(f"ALTER TABLE {db}.CONFORMED.{model.upper()} MODIFY COLUMN {attr} "
-                             f"SET TAG {db}.CONFORMED.SENSITIVITY = '{level}';")
-    lines.append("")
-    lines.append("-- Persona roles see the plants USER_PLANT_SCOPE grants them; admin and executive see all.")
-    lines.append("-- Row access is Enterprise edition; render_sql.py drops the block on Standard.")
-    lines.append("-- @enterprise")
-    for model in ROW_POLICY_MODELS:
-        lines.append(f"ALTER TABLE {db}.CONFORMED.{model} DROP ALL ROW ACCESS POLICIES;")
-        lines.append(f"ALTER TABLE {db}.CONFORMED.{model} ADD ROW ACCESS POLICY {db}.CONFORMED.PLANT_ACCESS ON (plant_id);")
-    lines.append("-- @end")
+             "-- Standard edition: controls realised as compiled secure views. Rows are scoped by",
+             "-- GOV.ENTITLEMENTS through IS_ROLE_IN_SESSION; governed columns follow entitlements.yaml.",
+             "USE ROLE SCM_DEPLOY;", ""]
+    for table in sorted({spec["base_table"] for spec in registry.tables.values()}):
+        governed = {c.split(".")[1]: r for c, r in ent["columns"].items() if c.split(".")[0] == table}
+        cols = ["t.*" + (f" EXCLUDE ({', '.join(sorted(governed))})" if governed else "")]
+        for col, rule in sorted(governed.items()):
+            shown = " OR ".join(f"IS_ROLE_IN_SESSION({_literal(r)})" for r in rule["show"])
+            hidden = "'***'" if rule["otherwise"] == "masked" else "NULL"
+            cols.append(f"CASE WHEN {shown} THEN t.{col} ELSE {hidden} END AS {col}")
+        body = f"SELECT {', '.join(cols)}\nFROM {db}.CONFORMED.{table} t"
+        if table in ent["scoped_by_plant"]:
+            if table == "DIM_PLANT":
+                body += f"\nWHERE {_row_filter(db, 't', 't.region')}"
+            else:
+                body += (f"\nLEFT JOIN {db}.CONFORMED.DIM_PLANT sp ON sp.plant_id = t.plant_id"
+                         f"\nWHERE {_row_filter(db, 't', 'sp.region')}")
+        lines += [f"CREATE OR REPLACE SECURE VIEW {db}.SEMANTIC_BASE.{table}",
+                  f"  COMMENT = 'Governed read of CONFORMED.{table}'", "AS", body + ";", ""]
+    return "\n".join(lines)
+
+
+def tags_sql(ent: dict[str, Any], env: str) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}", "-- Sensitivity tags on the conformed columns; both editions. Reapplied after every dbt build,",
+             "-- which replaces the tables. Runs as SCM_DEPLOY, which owns the tables and holds APPLY on the",
+             "-- tag; it switches no role, so the nightly task can execute it from the code stage.", ""]
+    for column, rule in sorted(ent["columns"].items()):
+        table, col = column.split(".")
+        lines.append(f"ALTER TABLE {db}.CONFORMED.{table} MODIFY COLUMN {col} "
+                     f"SET TAG {db}.CONFORMED.SENSITIVITY = '{rule['sensitivity']}';")
     return "\n".join(lines) + "\n"
+
+
+def enterprise_policies_sql(ent: dict[str, Any], env: str) -> str:
+    db = f"SCM_{env.upper()}"
+    lines = [f"-- {HEADER}", "-- Enterprise edition: the same registry as row access and tag-based masking on CONFORMED.",
+             "-- @enterprise", "USE ROLE SCM_ADMIN;", "",
+             f"CREATE OR REPLACE ROW ACCESS POLICY {db}.GOV.PLANT_ACCESS AS (plant STRING) RETURNS BOOLEAN ->",
+             f"    EXISTS (SELECT 1 FROM {db}.GOV.ENTITLEMENTS e LEFT JOIN {db}.CONFORMED.DIM_PLANT p ON p.plant_id = plant",
+             "            WHERE IS_ROLE_IN_SESSION(e.role_name) AND (e.scope_kind = 'all'",
+             "              OR (e.scope_kind = 'plant' AND e.scope_value = plant)",
+             "              OR (e.scope_kind = 'region' AND e.scope_value = p.region)));", ""]
+    # One masking policy per governed column, carrying the same rule as the secure views.
+    for column, rule in sorted(ent["columns"].items()):
+        table, col = column.split(".")
+        sql_type, hidden = ("STRING", "'***'") if rule["otherwise"] == "masked" else ("FLOAT", "NULL")
+        shown = " OR ".join(f"IS_ROLE_IN_SESSION({_literal(r)})" for r in rule["show"])
+        name = f"{db}.GOV.MASK_{table}_{col}"
+        lines += [f"CREATE OR REPLACE MASKING POLICY {name} AS (val {sql_type}) RETURNS {sql_type} ->",
+                  f"    CASE WHEN {shown} THEN val ELSE {hidden} END;",
+                  f"ALTER TABLE {db}.CONFORMED.{table} MODIFY COLUMN {col} UNSET MASKING POLICY;",
+                  f"ALTER TABLE {db}.CONFORMED.{table} MODIFY COLUMN {col} SET MASKING POLICY {name};", ""]
+    for table in ent["scoped_by_plant"]:
+        if table != "DIM_PLANT":
+            lines.append(f"ALTER TABLE {db}.CONFORMED.{table} DROP ALL ROW ACCESS POLICIES;")
+            lines.append(f"ALTER TABLE {db}.CONFORMED.{table} ADD ROW ACCESS POLICY {db}.GOV.PLANT_ACCESS ON (plant_id);")
+    lines += ["-- @end", ""]
+    return "\n".join(lines)
 
 
 def dbt_schema(ontology: dict[str, Any], registry: semantic.Registry) -> str:
@@ -512,8 +612,12 @@ def main(targets: tuple[str, ...], env: str, version: int) -> None:
         write(SEMANTIC_DIR / "deploy.sql", deploy_sql(env, version))
         write(SEMANTIC_DIR / "dry_run.sql", dry_run_sql(env, version))
         write(SEMANTIC_DIR / "versioning.sql", versioning_sql(env, version))
-    if "policies" in chosen:
-        write(SEMANTIC_DIR / "policies.sql", policies_sql(ontology, env))
+    if "governance" in chosen:
+        ent = load_entitlements()
+        write(POLICY_DIR / "standard" / "entitlements.sql", entitlements_sql(ent, env))
+        write(POLICY_DIR / "standard" / "secure_views.sql", secure_views_sql(ent, registry, env))
+        write(POLICY_DIR / "tags.sql", tags_sql(ent, env))
+        write(POLICY_DIR / "enterprise" / "policies.sql", enterprise_policies_sql(ent, env))
     if "dbt" in chosen:
         write(DBT_SCHEMA, dbt_schema(ontology, registry))
     if "glossary" in chosen:

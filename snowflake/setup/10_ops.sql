@@ -1,5 +1,10 @@
 -- Operational tables and the status views the API reads. {{DB}} per environment.
 
+USE ROLE ACCOUNTADMIN;
+-- The loop runs as SCM_DEPLOY: it executes its own tasks and reads ACCOUNT_USAGE for the weekly cost.
+GRANT EXECUTE TASK ON ACCOUNT TO ROLE SCM_DEPLOY;
+GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE SCM_DEPLOY;
+
 USE ROLE SCM_DEPLOY;
 
 CREATE TABLE IF NOT EXISTS {{DB}}.AUDIT.ANSWERS (

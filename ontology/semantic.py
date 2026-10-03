@@ -297,10 +297,23 @@ def local_sql(registry: Registry, canonical: dict[str, Any]) -> tuple[str, list[
     return sql, params
 
 
+SIGNIFICANT = 12
+
+
+def governed_value(value: Any) -> Any:
+    """A float sum is not ordered, so the last digits of the same query can differ between runs and
+    roles; a governed number is the value at 12 significant digits, in both engines."""
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, float) or (hasattr(value, "as_integer_ratio") and not isinstance(value, (int, bool))):
+        return float(f"{float(value):.{SIGNIFICANT}g}")
+    return value
+
+
 def execute_local(connection: Any, registry: Registry, query: dict[str, Any]) -> dict[str, Any]:
     canonical = canonicalise(registry, query)
     sql, params = local_sql(registry, canonical)
     cursor = connection.execute(sql, params)
     columns = [c[0] for c in cursor.description]
-    rows = [dict(zip(columns, (v.isoformat() if isinstance(v, date) else v for v in r), strict=False)) for r in cursor.fetchall()]
+    rows = [dict(zip(columns, (governed_value(v) for v in r), strict=False)) for r in cursor.fetchall()]
     return {"canonical_query": canonical, "semantic_query_hash": query_hash(canonical), "rows": rows}

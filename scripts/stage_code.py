@@ -1,4 +1,4 @@
-"""PUT the committed procedure code to OPS.ARTEFACTS/code, for environments without a Git repository object.
+"""PUT the committed procedure code and the loop's SQL to OPS.ARTEFACTS/code, for environments without a Git repository object.
 
 Refuses a dirty tree for these files, so what runs in Snowflake is what is committed.
 """
@@ -13,7 +13,8 @@ import click
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ("ontology/semantic.py", "ontology/metrics.yaml", "snowflake/procs/governed_query.py",
-         "snowflake/procs/describe_metric.py", "snowflake/procs/explain_lineage.py")
+         "snowflake/procs/describe_metric.py", "snowflake/procs/explain_lineage.py",
+         "snowflake/semantic/load_glossary.sql", "snowflake/policies/tags.sql")
 
 
 @click.command()

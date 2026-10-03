@@ -85,8 +85,7 @@ def run(session: Session, view: str, query: str, question: str = "") -> dict[str
         log.error("governed_query_failed", extra={"hash": digest})
         return {"error": "query_failed", "message": f"The semantic view rejected the query: {exc.__class__.__name__}",
                 "sql": sql}
-    rows = [{k.lower(): (v.isoformat() if hasattr(v, "isoformat") else (float(v) if hasattr(v, "as_integer_ratio") else v))
-             for k, v in r.as_dict().items()} for r in frame]
+    rows = [{k.lower(): semantic.governed_value(v) for k, v in r.as_dict().items()} for r in frame]
     truncated = len(rows) > ROW_CAP
     rows = rows[:ROW_CAP]
     checksum = hashlib.sha256(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()[:16]

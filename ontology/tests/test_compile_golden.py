@@ -37,7 +37,11 @@ def test_glossary_matches_committed_json(registry):
 
 def test_dbt_schema_and_policies_match(registry, ontology):
     assert compiler.dbt_schema(ontology, registry) == compiler.DBT_SCHEMA.read_text()
-    assert compiler.policies_sql(ontology, "dev") == (compiler.SEMANTIC_DIR / "policies.sql").read_text()
+    ent = compiler.load_entitlements()
+    assert compiler.tags_sql(ent, "dev") == (compiler.POLICY_DIR / "tags.sql").read_text()
+    assert compiler.secure_views_sql(ent, registry, "dev") == (compiler.POLICY_DIR / "standard" / "secure_views.sql").read_text()
+    assert compiler.entitlements_sql(ent, "dev") == (compiler.POLICY_DIR / "standard" / "entitlements.sql").read_text()
+    assert compiler.enterprise_policies_sql(ent, "dev") == (compiler.POLICY_DIR / "enterprise" / "policies.sql").read_text()
 
 
 def test_cube_and_ossie_match(registry):
@@ -75,7 +79,7 @@ def test_prod_refuses_draft_metrics(registry):
 def test_cli_rewrites_committed_outputs_unchanged():
     from click.testing import CliRunner
 
-    targets = ["snowflake-semantic", "vqr", "policies", "dbt", "glossary", "ossie", "cube", "databricks"]
+    targets = ["snowflake-semantic", "vqr", "governance", "dbt", "glossary", "ossie", "cube", "databricks"]
     watched = sorted(p for d in (compiler.SEMANTIC_DIR, compiler.CUBE_DIR, compiler.DATABRICKS_DIR) for p in d.rglob("*")
                      if p.is_file())
     before = {p: p.read_bytes() for p in watched}

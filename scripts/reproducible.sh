@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 [ -d .venv/bin ] && export PATH="$PWD/.venv/bin:$PATH"
 PY="${PY:-$( [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3 )}"
-outputs="data/out ontology/generated snowflake/semantic dbt/models/conformed/schema.yml cube/model docs/er_diagram.svg"
+outputs="data/out ontology/generated snowflake/semantic snowflake/policies docs/metrics.md dbt/models/conformed/schema.yml cube/model docs/er_diagram.svg"
 digest() { find $outputs -type f ! -name '*.pyc' -print0 | sort -z | xargs -0 shasum -a 256; }
 "$PY" data/generate.py >/dev/null && "$PY" ontology/compile.py >/dev/null
 digest > /tmp/strata-run-1.sha

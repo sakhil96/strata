@@ -35,11 +35,21 @@ GRANT ROLE SCM_ADMIN TO ROLE SYSADMIN;
 -- Service user for the SPCS container (key-pair auth, no password)
 -- Key-pair only: TYPE = SERVICE users cannot hold a password. The public key is set by
 -- runbooks/rotate-keys.md, never in this file.
+-- The service user's own role carries its entitlement; SCM_READER, which every persona inherits,
+-- carries none (ontology/entitlements.yaml).
+CREATE ROLE IF NOT EXISTS SCM_SERVICE_ROLE COMMENT = 'The Strata service and its agent calls';
+GRANT ROLE SCM_READER TO ROLE SCM_SERVICE_ROLE;
+GRANT ROLE SCM_SERVICE_ROLE TO ROLE SCM_DEPLOY;
 CREATE USER IF NOT EXISTS SCM_SERVICE_USER
     TYPE = SERVICE
-    DEFAULT_ROLE = SCM_READER
+    DEFAULT_ROLE = SCM_SERVICE_ROLE
     COMMENT = 'Service account for the Strata container and CI';
-GRANT ROLE SCM_READER TO USER SCM_SERVICE_USER;
+GRANT ROLE SCM_SERVICE_ROLE TO USER SCM_SERVICE_USER;
+
+-- A regional planner, scoped to EMEA plants in entitlements.yaml.
+CREATE ROLE IF NOT EXISTS EMEA_PLANNING_ROLE COMMENT = 'Planning persona scoped to EMEA plants';
+GRANT ROLE SCM_READER TO ROLE EMEA_PLANNING_ROLE;
+GRANT ROLE EMEA_PLANNING_ROLE TO ROLE SCM_DEPLOY;
 
 -- Deploy identity for loads, dbt and releases from CI and the deploying workstation. Key-pair
 -- only; its public key is set by runbooks/rotate-keys.md.

@@ -92,7 +92,7 @@
     "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
     "rows": 1,
     "value": {
-      "days_of_inventory": 18.51012370581926
+      "days_of_inventory": 18.5101237058
     },
     "identical": true
   },
@@ -105,7 +105,7 @@
     "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
     "rows": 5,
     "value": {
-      "days_of_inventory": 18.69653152799946,
+      "days_of_inventory": 18.696531528,
       "plant_id": "DC-NL01"
     },
     "identical": true
@@ -117,7 +117,7 @@
     "hash": "383f7f85ec5d788ae8b0a27864a37ccd03434b4b4937d9cb9e8f1a4b9dc6e684",
     "rows": 1,
     "value": {
-      "landed_cost_per_unit": 155.4954801122229
+      "landed_cost_per_unit": 155.495480112
     },
     "identical": true
   },
@@ -130,7 +130,7 @@
     "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
     "rows": 12,
     "value": {
-      "landed_cost_per_unit": 128.7284417668984,
+      "landed_cost_per_unit": 128.728441767,
       "period_month": "2025-10-01"
     },
     "identical": true
@@ -145,7 +145,7 @@
     "rows": 3,
     "value": {
       "category": "Electrical",
-      "inventory_turns": 19.53355922202167
+      "inventory_turns": 19.533559222
     },
     "identical": true
   },
@@ -170,7 +170,7 @@
     "hash": "66f0b19855ea4e9ab8ea093fed70dd57b6b7e766df923456ccbe2a69ec054be0",
     "rows": 1,
     "value": {
-      "stockout_rate": 0.010215
+      "stockout_rate": 0.031944
     },
     "identical": true
   },
@@ -198,7 +198,7 @@
     "rows": 4,
     "value": {
       "carrier_type": "AIR",
-      "freight_cost_per_unit": 7.507251793937302
+      "freight_cost_per_unit": 7.50725179394
     },
     "identical": true
   },

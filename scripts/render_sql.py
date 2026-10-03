@@ -22,11 +22,14 @@ GROUPS = {
     "repo": ["snowflake/git_repo.sql", "snowflake/dbt_project.sql"],
     "objects": ["snowflake/dynamic_tables/*.sql", "snowflake/procs/create_procs.sql", "snowflake/search/*.sql",
                 "snowflake/semantic/load_glossary.sql"],
-    "views": ["snowflake/semantic/deploy.sql", "snowflake/semantic/policies.sql"],
+    "governance": ["snowflake/policies/tags.sql", "snowflake/policies/standard/entitlements.sql",
+                   "snowflake/policies/standard/secure_views.sql", "snowflake/policies/enterprise/policies.sql"],
+    "views": ["snowflake/semantic/deploy.sql"],
     "promote": ["snowflake/semantic/versioning.sql"],
     "agent": ["snowflake/agent/create_agent.sql", "snowflake/agent/create_steward_agent.sql",
               "snowflake/agent/create_explore_agent.sql"],
     "loop": ["snowflake/tasks/operational_loop.sql"],
+    "resume": ["snowflake/tasks/resume_loop.sql", "snowflake/tasks/resume_alerts.sql"],
     "service": ["snowflake/spcs/compute_pool.sql", "snowflake/spcs/deploy.sql"],
 }
 
@@ -47,6 +50,9 @@ def render(path: Path, env: str) -> str:
         "ORIGIN_CIDR": os.environ.get("STRATA_ORIGIN_CIDR", ""),
         "SLO_ALERT_SCHEDULE": settings.get("slo_alert_schedule", "15 MINUTE"),
         "CODE_STAGE": settings.get("code_stage", f"@{settings['database']}.OPS.SCM_REPO/branches/main"),
+        "ENV_NAME": env,
+        "CODE_REFRESH": (f"ALTER GIT REPOSITORY {settings['database']}.OPS.SCM_REPO FETCH" if "SCM_REPO" in
+                         settings.get("code_stage", "SCM_REPO") else "SELECT 'code staged by scripts/stage_code.py'"),
     }
     for key, value in tokens.items():
         text = text.replace("{{" + key + "}}", value)
@@ -71,6 +77,10 @@ def main(group: str, env: str, connection: str | None, dry_run: bool) -> None:
             target = out / path.name
             target.write_text(render(path, env))
             click.echo(f"  {path.relative_to(ROOT)} -> {target.relative_to(ROOT)}")
+            statements = [ln for ln in target.read_text().splitlines() if ln.strip() and not ln.strip().startswith("--")]
+            if not statements:
+                click.echo("    nothing for this edition")
+                continue
             if not dry_run:
                 subprocess.run([os.environ.get("SNOW", "snow"), "sql", "-c", connection or f"scm_{env}", "-f", str(target)],
                                check=True)

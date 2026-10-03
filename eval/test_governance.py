@@ -123,19 +123,42 @@ def test_compile_refuses_a_metric_missing_a_required_field(tmp_path):
         semantic.load_registry(broken)
 
 
-def test_sensitive_columns_are_tagged_and_masked_by_tag():
-    policies = (SEMANTIC_DIR / "policies.sql").read_text()
-    for column in ("bank_account", "contact_email", "unit_cost", "freight_charge"):
-        assert re.search(rf"MODIFY COLUMN {column} SET TAG .*SENSITIVITY", policies), column
-    setup = (ROOT / "snowflake" / "setup" / "04_policies.sql").read_text()
-    assert "SYSTEM$GET_TAG_ON_CURRENT_COLUMN" in setup
-    assert "ALTER TAG {{DB}}.CONFORMED.SENSITIVITY SET" in setup
+POLICIES = ROOT / "snowflake" / "policies"
+ENTITLEMENTS = yaml.safe_load((ROOT / "ontology" / "entitlements.yaml").read_text())
 
 
-def test_every_conformed_fact_with_a_plant_carries_the_row_access_policy():
-    policies = (SEMANTIC_DIR / "policies.sql").read_text()
-    for fact in ("FCT_SALES_ORDER_LINE", "FCT_SHIPMENT", "FCT_SHIPMENT_LINE", "FCT_PO_LINE", "FCT_INVENTORY_MONTH"):
-        assert f"{fact} ADD ROW ACCESS POLICY" in policies
+def test_every_governed_column_is_tagged_and_ruled_in_both_editions():
+    tags = (POLICIES / "tags.sql").read_text()
+    views = (POLICIES / "standard" / "secure_views.sql").read_text()
+    enterprise = (POLICIES / "enterprise" / "policies.sql").read_text()
+    for column in ("DIM_SUPPLIER.BANK_ACCOUNT", "DIM_SUPPLIER.CONTACT_EMAIL", "FCT_PO_LINE.UNIT_COST", "FCT_SHIPMENT.FREIGHT_CHARGE"):
+        table, col = column.split(".")
+        assert re.search(rf"CONFORMED.{table} MODIFY COLUMN {col} SET TAG .*SENSITIVITY", tags), column
+        assert re.search(rf"END AS {col}\b", views), column
+        assert f"MASK_{table}_{col}" in enterprise, column
+
+
+def test_semantic_views_read_only_secure_views():
+    views = (POLICIES / "standard" / "secure_views.sql").read_text()
+    created = set(re.findall(r"CREATE OR REPLACE (SECURE )?VIEW \S+\.SEMANTIC_BASE\.(\w+)", views))
+    assert all(secure for secure, _ in created)
+    for path in SEMANTIC_DIR.glob("*_v1.yaml"):
+        for table in yaml.safe_load(path.read_text())["tables"]:
+            assert table["base_table"]["schema"] == "SEMANTIC_BASE", (path.name, table["name"])
+            assert ("SECURE ", table["base_table"]["table"]) in created
+
+
+def test_every_plant_scoped_table_is_filtered_by_the_entitlement_registry():
+    views = (POLICIES / "standard" / "secure_views.sql").read_text()
+    for table in ENTITLEMENTS["scoped_by_plant"]:
+        body = views.split(f"SEMANTIC_BASE.{table}\n", 1)[1].split(";", 1)[0]
+        assert "GOV.ENTITLEMENTS e WHERE IS_ROLE_IN_SESSION(e.role_name)" in body, table
+
+
+def test_personas_share_one_scope_and_no_inherited_role_carries_one():
+    roles = ENTITLEMENTS["roles"]
+    assert {roles[r]["scope"] == "*" for r in ("PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE")} == {True}
+    assert "SCM_READER" not in roles
 
 
 def test_procedures_run_with_callers_rights_and_bind_their_parameters():
@@ -151,3 +174,62 @@ def test_setup_files_hold_no_passwords():
         text = path.read_text()
         assert not re.search(r"PASSWORD\s*=\s*'(?!set-via-cli)[^']+'", text), path
         assert "MUST_CHANGE_PASSWORD" not in text, path
+
+
+PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE"]
+
+
+def _as(cursor, role):
+    cursor.execute("USE SECONDARY ROLES NONE")
+    cursor.execute("USE ROLE IDENTIFIER(%s)", (role,))
+
+
+@pytest.mark.parametrize("role", PERSONAS)
+def test_on_the_account_each_role_sees_its_registry_scope_and_nothing_underneath(account, role):
+    import snowflake.connector
+
+    cursor, db = account
+    scope = ENTITLEMENTS["roles"][role]["scope"]
+    _as(cursor, "SCM_DEPLOY")
+    cursor.execute(f"SELECT plant_id, region FROM {db}.CONFORMED.DIM_PLANT")
+    plants = dict(cursor.fetchall())
+    expected = sorted(plants) if scope == "*" else sorted(p for p, r in plants.items() if r in scope.get("region", [])
+                                                         or p in scope.get("plant", []))
+    view = {"EMEA_PLANNING_ROLE": "PLANNING_SV_V1"}.get(role, role.replace("_ROLE", "_SV_V1"))
+    _as(cursor, role)
+    cursor.execute(f"SELECT * FROM SEMANTIC_VIEW({db}.SEMANTIC.{view} DIMENSIONS plants.plant_id "
+                   "METRICS delivered_lines.on_time_delivery) ORDER BY 1")
+    assert [r[0] for r in cursor.fetchall()] == expected
+    for forbidden in ("CONFORMED.FCT_SALES_ORDER_LINE", "RAW.SUPPLIER_MASTER", "SEMANTIC_BASE.DIM_SUPPLIER"):
+        with pytest.raises(snowflake.connector.errors.ProgrammingError):
+            cursor.execute(f"SELECT 1 FROM {db}.{forbidden} LIMIT 1")
+
+
+ROLES_FOR_COLUMNS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE",
+                     "SCM_SERVICE_ROLE"]
+
+
+def test_on_the_account_every_column_rule_evaluates_as_the_registry_says_for_every_role(account):
+    # Personas cannot select from SEMANTIC_BASE, and no semantic view carries a governed column, so
+    # the rule is reached only by the owner. This evaluates, under each role, the exact CASE the
+    # compiled secure view carries, with a literal standing in for the column, and compares the
+    # outcome with GOV.COLUMN_VISIBILITY.
+    cursor, db = account
+    _as(cursor, "SCM_DEPLOY")
+    cursor.execute("SHOW VIEWS IN SCHEMA IDENTIFIER(%s)", (f"{db}.SEMANTIC_BASE",))
+    secure = {r[1]: r[8] for r in cursor.fetchall()}
+    assert len(secure) == 10 and all(v == "true" for v in secure.values()), secure
+    cursor.execute(f"SELECT table_name || '.' || column_name, role_name, rule FROM {db}.GOV.COLUMN_VISIBILITY")
+    loaded = {(c, r): rule for c, r, rule in cursor.fetchall()}
+    views = (POLICIES / "standard" / "secure_views.sql").read_text()
+    for role in ROLES_FOR_COLUMNS:
+        _as(cursor, role)
+        for column in ENTITLEMENTS["columns"]:
+            table, col = column.split(".")
+            body = views.split(f"SEMANTIC_BASE.{table}\n", 1)[1].split(";", 1)[0]
+            case = re.search(rf"(CASE WHEN (?:(?!\bEND\b).)*? END) AS {col}\b", body).group(1)
+            case = case.replace(f"t.{col}", "'visible'")
+            cursor.execute(f"SELECT {case}")
+            seen = cursor.fetchone()[0]
+            outcome = "show" if seen == "visible" else "masked" if seen == "***" else "null"
+            assert outcome == loaded[(column, role)], (role, column, outcome)
