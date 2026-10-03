@@ -66,6 +66,26 @@ re-run after the service-identity change: 39 of 39.
 | `ruff check .` | clean |
 | `npm run build`, `npm run lint`, Playwright | not re-run; no front-end change since 78 of 78 |
 
+## Ask governance fixes (2026-10-03)
+
+- A: Ask runs each canonical query the agent settles on through GOVERNED_QUERY as the caller's persona.
+  EMEA_PLANNING_ROLE answers on PLANNING_SV_V1 with EMEA plants only; DEV governance and persona
+  suites: 64 passed (includes the EMEA Ask-equals-Builder test), 20 persona hashes identical to before.
+- B: the lead sentence comes from the persona's own result (api/narrate.py); the agent's reading is at
+  most two sentences and is dropped if it holds an amount, a hash or talk of its instructions.
+- C: `across_tariff_step` (Apr to Sep 2026) returns one series, hash 12b54789, July low $148.46. The 19
+  metric expressions are unchanged in all five views; only q15's verified query window moved.
+- D: linear chart with a dot per month, marker only inside the domain, "Apr 2026" dates, registry
+  titles with units in table headers, ledger role/view and both latencies. Four Try questions as
+  planning, procurement, logistics and EMEA at 1440 and 390 looked at. Playwright with axe: 78 passed
+  at 390, 1024 and 1440. Web build and lint pass. Ten of the fifty questions (the misses q09 q24 q29
+  q39 q40 q41 q42 q43, plus q13 and q15) through agent:run: all ten resolve, 10/10 exact after one fix
+  to the tariff wording (q43 had taken the across window).
+- E: stopped at step 15; see docs/DECISIONS.md. Docker Desktop's server runs, but calling agent:run
+  from inside SPCS probably needs a key or PAT in the container.
+- Known: status line reads "DATA AS OF UNKNOWN" (freshness source not wired); a 40-bar chart is
+  replaced by the table alone.
+
 ## Preview findings (2026-10-03, `make preview` against SCM_DEV)
 
 All ten pages render against live data with no page errors and no failed /api calls. The three

@@ -19,7 +19,8 @@ export function Numeral({
   const ref = useRef<HTMLSpanElement>(null);
   const seen = useInView(ref, { once: true });
   const still = useReducedMotion();
-  const [shown, setShown] = useState<number | null>(0);
+  // The real value until the count-up runs, so a numeral never seen on screen never reads as zero.
+  const [shown, setShown] = useState<number | null>(value ?? null);
   const counted = useRef(false);
 
   useEffect(() => {

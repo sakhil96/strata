@@ -1,4 +1,5 @@
-export type Persona = "PLANNING_ROLE" | "PROCUREMENT_ROLE" | "LOGISTICS_ROLE" | "EXECUTIVE_ROLE" | "JUDGE_ROLE";
+export type Persona =
+  "PLANNING_ROLE" | "PROCUREMENT_ROLE" | "LOGISTICS_ROLE" | "EXECUTIVE_ROLE" | "EMEA_PLANNING_ROLE" | "JUDGE_ROLE";
 
 export interface TimeWindow {
   range?: string;
@@ -72,6 +73,10 @@ export interface Answer {
   fallback?: boolean;
   fallback_reason?: string | null;
   narrative?: string;
+  lead?: string | null;
+  reading?: string | null;
+  answers?: Answer[];
+  total_ms?: number;
   request_id: string;
 }
 
@@ -161,7 +166,7 @@ export interface MetaMetric {
 export interface Meta {
   version: number;
   metrics: MetaMetric[];
-  dimensions: Record<string, { table: string; synonyms: string[] }>;
+  dimensions: Record<string, { table: string; title?: string; synonyms: string[] }>;
   windows: string[];
   values: Record<string, string[]>;
 }

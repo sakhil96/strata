@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { PERSONA_LABEL, period, shortHash } from "@/lib/format";
+import { PERSONA_LABEL, joined, period, shortHash } from "@/lib/format";
 import type { Answer } from "@/lib/types";
 
 function Line({ label, children, mono = true }: { label: string; children: React.ReactNode; mono?: boolean }) {
@@ -49,16 +49,18 @@ export function Ledger({ answer, placeholderless = false }: { answer: Answer | n
         <Line label="Steward" mono={false}>
           {primary.steward} for {primary.owner}
         </Line>
-        <Line label="Role">
-          {PERSONA_LABEL[answer.role] ?? answer.role} · {answer.view}
-        </Line>
+        <Line label="Role">{joined(answer.role, PERSONA_LABEL[answer.role], answer.view)}</Line>
         <Line label="Hash">
           <span title={answer.semantic_query_hash} className="text-ore">
             {shortHash(answer.semantic_query_hash)}
           </span>
         </Line>
         <Line label="Latency">
-          {answer.latency_ms} ms · {answer.engine}
+          {joined(
+            `query ${answer.latency_ms} ms`,
+            answer.total_ms !== undefined ? `answer ${answer.total_ms} ms` : null,
+            answer.engine,
+          )}
         </Line>
       </dl>
       <div className="mt-2">

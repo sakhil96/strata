@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Persona = Literal["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "JUDGE_ROLE"]
+Persona = Literal["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE", "JUDGE_ROLE"]
 Name = Field(pattern=r"^[a-z][a-z0-9_]{1,63}$")
 
 

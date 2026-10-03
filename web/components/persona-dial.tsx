@@ -6,7 +6,7 @@ import { PERSONA_LABEL } from "@/lib/format";
 import { DIAL, usePersona } from "@/lib/persona";
 
 export function PersonaDial() {
-  const { persona, signedInAs, setPersona } = usePersona();
+  const { persona, signedInAs, pinned, setPersona } = usePersona();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   function onKey(event: KeyboardEvent, index: number) {
@@ -32,6 +32,7 @@ export function PersonaDial() {
             type="button"
             role="radio"
             aria-checked={active}
+            aria-disabled={pinned && !active ? true : undefined}
             tabIndex={active ? 0 : -1}
             onClick={() => setPersona(role)}
             onKeyDown={(e) => onKey(e, i)}

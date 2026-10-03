@@ -395,3 +395,51 @@ def test_on_the_account_a_scoped_persona_gets_the_same_scoped_answer_on_ask_and_
                           headers={"X-Persona": "PLANNING_ROLE"}).json()
     assert planner["semantic_query_hash"] == asked["semantic_query_hash"]
     assert {r["plant_id"] for r in planner["rows"]} > emea
+
+
+def test_on_the_account_a_fresh_session_for_each_identity_we_connect_as_carries_no_secondary_roles(account):
+    cursor, _ = account
+    cursor.execute("SELECT CURRENT_SECONDARY_ROLES()")
+    assert json.loads(cursor.fetchone()[0])["roles"] == "", "SCM_CI_USER"
+    if os.getenv("SCM_BACKEND") == "snowflake":
+        from api.routes.deps import backend
+
+        with backend()._connect() as conn, conn.cursor() as cur:
+            cur.execute("SELECT CURRENT_USER(), CURRENT_SECONDARY_ROLES()")
+            user, secondary = cur.fetchone()
+            assert json.loads(secondary)["roles"] == "", user
+
+
+@pytest.mark.skipif(os.getenv("SCM_BACKEND") != "snowflake", reason="needs account: the API on the Snowflake backend")
+def test_on_the_account_through_the_api_logistics_cannot_read_supplier_unit_cost_and_emea_sees_emea_only(account):
+    from fastapi.testclient import TestClient
+
+    from api.main import app
+    from api.routes.deps import backend
+
+    cursor, db = account
+    client = TestClient(app)
+    for persona in ("LOGISTICS_ROLE", "PROCUREMENT_ROLE"):
+        refused = client.post("/api/query", headers={"X-Persona": persona}, json={"query": {
+            "metrics": ["landed_cost_per_unit"], "dimensions": ["supplier_unit_cost"], "time": {"range": "last_month"}}})
+        assert refused.status_code == 422 and refused.json()["error"] == "unknown_dimensions", persona
+
+    with backend()._connect() as conn, conn.cursor() as cur:
+        for role, view, shown in (("LOGISTICS_ROLE", "LOGISTICS_SV_V1", False), ("PROCUREMENT_ROLE", "PROCUREMENT_SV_V1", True)):
+            cur.execute("USE SECONDARY ROLES NONE")
+            cur.execute("USE ROLE IDENTIFIER(%s)", (role,))
+            cur.execute(f"SELECT COUNT(*), COUNT(supplier_unit_cost) FROM SEMANTIC_VIEW({db}.SEMANTIC.{view} "
+                        "DIMENSIONS po_lines.po_line_id, po_lines.supplier_unit_cost)")
+            lines, costed = cur.fetchone()
+            assert lines > 0 and costed == (lines if shown else 0), (role, lines, costed)
+
+    _as(cursor, "SCM_DEPLOY")
+    cursor.execute(f"SELECT plant_id FROM {db}.CONFORMED.DIM_PLANT WHERE region = 'EMEA'")
+    emea = {r[0] for r in cursor.fetchall()}
+    everyone = client.post("/api/query", headers={"X-Persona": "PLANNING_ROLE"}, json={"query": {
+        "metrics": ["days_of_inventory"], "dimensions": ["plant_id"], "time": {"range": "last_month"}}}).json()
+    scoped = client.post("/api/query", headers={"X-Persona": "EMEA_PLANNING_ROLE"}, json={"query": {
+        "metrics": ["days_of_inventory"], "dimensions": ["plant_id"], "time": {"range": "last_month"}}}).json()
+    assert {r["plant_id"] for r in scoped["rows"]} <= emea and scoped["rows"]
+    assert {r["plant_id"] for r in everyone["rows"]} > emea
+    assert scoped["semantic_query_hash"] == everyone["semantic_query_hash"]

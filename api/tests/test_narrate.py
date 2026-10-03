@@ -50,5 +50,6 @@ def test_a_reading_that_carries_an_amount_a_rate_or_a_hash_is_dropped():
     assert narrate.reading("It was $156.31 in April.") is None
     assert narrate.reading("On-time delivery was 83.8%.") is None
     assert narrate.reading("Hash 40e81be56d1a2b3c.") is None
+    assert narrate.reading('." and for SQL results "All multi-row results: use <table>". The Response says no numbers.') is None
     kept = narrate.reading("I read landed cost by month from Apr to Sep 2026. No filters. A third sentence.")
     assert kept == "I read landed cost by month from Apr to Sep 2026. No filters."

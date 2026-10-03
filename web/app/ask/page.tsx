@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { AnswerView } from "@/components/answer-view";
 import { Builder } from "@/components/builder";
-import { Chart } from "@/components/chart";
 import { Ledger } from "@/components/ledger";
-import { Numeral } from "@/components/numeral";
 import { PageHead } from "@/components/section";
 import { Fallback, Loading, Problem, Refused } from "@/components/states";
 import { ApiProblem, api } from "@/lib/api";
-import { PERSONA_LABEL, formatValue, monthLabel, period } from "@/lib/format";
+import { PERSONA_LABEL } from "@/lib/format";
 import { usePersona } from "@/lib/persona";
+import { useResource } from "@/lib/use-resource";
 import type { Answer, Refusal, SemanticQuery } from "@/lib/types";
 
 const PROMPTS = [
@@ -33,6 +33,7 @@ export default function AskPage() {
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState(false);
   const askedAs = useRef(persona);
+  const meta = useResource(() => api.meta(), []);
 
   async function run(next: Ask) {
     setBusy(true);
@@ -61,10 +62,9 @@ export default function AskPage() {
     // Re-running on a role change is the point: the same question, a different role, the same governed answer.
   }, [persona]);
 
-  const metric = answer?.canonical_query.metrics[0];
-  const unit = answer?.metrics[0].unit ?? "ratio";
-  const dimension = answer?.canonical_query.dimensions[0];
-  const single = answer && !dimension && answer.rows.length === 1 && metric ? Number(answer.rows[0][metric]) : null;
+  // Every governed execution behind the answer is shown, each with its own ledger and hash.
+  const results = answer ? (answer.answers?.length ? answer.answers : [answer]) : [];
+  const metaValue = meta.state === "ready" ? meta.value : null;
 
   return (
     <div className="grid grid-cols-12 gap-x-3">
@@ -129,75 +129,17 @@ export default function AskPage() {
           {problem ? <Problem problem={problem} onRetry={last ? () => void run(last) : undefined} /> : null}
           {refusal ? <Refused reason={refusal.refusal} /> : null}
           {answer?.fallback ? <Fallback reason={answer.fallback_reason} onBuild={() => setMode("build")} /> : null}
-          {answer && !busy ? (
-            <article aria-label="Answer" className="mt-3">
-              <p className="micro">
-                {answer.metrics[0].title} · {period(answer.canonical_query.time)} · {PERSONA_LABEL[answer.role]}
-              </p>
-              {single !== null ? (
-                <p className="mt-1">
-                  <Numeral value={single} unit={unit} className="text-4xl font-light text-ore lg:text-5xl" />
-                </p>
-              ) : null}
-              {answer.narrative ? <p className="mt-2 max-w-measure text-base text-bone">{answer.narrative}</p> : null}
-              {dimension && metric ? (
-                <>
-                  <div className="mt-3">
-                    <Chart
-                      rows={answer.rows}
-                      dimension={dimension}
-                      metric={metric}
-                      unit={unit}
-                      title={`${answer.metrics[0].title} by ${dimension.replaceAll("_", " ")}`}
-                      marker={
-                        dimension === "period_month" && metric.startsWith("landed_cost")
-                          ? { at: "2026-08-01", label: "tariff step 24 Jul" }
-                          : undefined
-                      }
-                    />
-                  </div>
-                  <table className="mt-3 w-full font-mono text-sm">
-                    <caption className="sr-only">Rows returned</caption>
-                    <thead>
-                      <tr className="border-b border-hairline text-left">
-                        <th scope="col" className="micro pb-1 font-normal">
-                          {dimension.replaceAll("_", " ")}
-                        </th>
-                        {answer.canonical_query.metrics.map((m) => (
-                          <th key={m} scope="col" className="micro pb-1 text-right font-normal">
-                            {m}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {answer.rows.map((r, i) => (
-                        <tr key={i} className="border-b border-hairline">
-                          <td className="py-0.5">
-                            {dimension === "period_month" ? monthLabel(String(r[dimension])) : String(r[dimension])}
-                          </td>
-                          {answer.canonical_query.metrics.map((m) => (
-                            <td key={m} className="py-0.5 text-right tabular">
-                              {formatValue(
-                                r[m] === null ? null : Number(r[m]),
-                                answer.metrics.find((x) => x.name === m)?.unit ?? unit,
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </>
-              ) : null}
-            </article>
-          ) : null}
+          {answer && !busy
+            ? results.map((r, i) => (
+                <AnswerView key={r.semantic_query_hash} answer={r} meta={metaValue} reading={i === 0 ? answer.reading : null} />
+              ))
+            : null}
         </div>
       </div>
 
       <div className="col-span-12 hidden lg:col-span-4 lg:block">
         <div className="sticky top-2 w-full max-w-rail border-l border-hairline pl-3">
-          <Ledger answer={answer} />
+          {results.length ? results.map((r) => <Ledger key={r.semantic_query_hash} answer={r} />) : <Ledger answer={null} />}
         </div>
       </div>
       {answer ? (
@@ -212,7 +154,9 @@ export default function AskPage() {
           </button>
           {sheet ? (
             <div className="max-h-[70vh] overflow-y-auto px-3 pb-3">
-              <Ledger answer={answer} />
+              {results.map((r) => (
+                <Ledger key={r.semantic_query_hash} answer={r} />
+              ))}
             </div>
           ) : null}
         </div>

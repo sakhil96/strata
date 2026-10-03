@@ -82,6 +82,6 @@ export const api = {
   evalReport: (): Promise<Record<string, unknown>> => (DEMO ? recorded("eval-report") : call("/eval/report", null)),
   operations: (): Promise<Record<string, unknown>> => (DEMO ? recorded("operations") : call("/operations", null)),
   governance: (): Promise<Record<string, unknown>> => (DEMO ? recorded("governance") : call("/governance", null)),
-  personas: (): Promise<{ default: Persona; personas: Persona[] }> =>
-    DEMO ? Promise.resolve({ default: "EXECUTIVE_ROLE", personas: [] }) : call("/personas", null),
+  personas: (): Promise<{ default: Persona; pinned?: boolean; personas: Persona[] }> =>
+    DEMO ? Promise.resolve({ default: "EXECUTIVE_ROLE", pinned: false, personas: [] }) : call("/personas", null),
 };

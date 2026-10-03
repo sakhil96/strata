@@ -9,15 +9,16 @@ import type { SemanticQuery } from "@/lib/types";
 import { Loading, Problem } from "./states";
 
 const WINDOW_LABEL: Record<string, string> = {
-  fy2026: "FY2026, Oct 25 – Sep 26",
-  q1: "Q1, Oct – Dec 25",
-  q2: "Q2, Jan – Mar 26",
-  q3: "Q3, Apr – Jun 26",
-  q4: "Q4, Jul – Sep 26",
-  last_quarter: "Last quarter",
-  last_month: "Last month, Sep 26",
-  pre_tariff_step: "Before the tariff step, Apr – Jun 26",
-  post_tariff_step: "After the tariff step, Aug – Sep 26",
+  fy2026: "FY2026, Oct 2025 – Sep 2026",
+  q1: "Q1, Oct – Dec 2025",
+  q2: "Q2, Jan – Mar 2026",
+  q3: "Q3, Apr – Jun 2026",
+  q4: "Q4, Jul – Sep 2026",
+  last_quarter: "Last quarter, Jul – Sep 2026",
+  last_month: "Last month, Sep 2026",
+  across_tariff_step: "Across the tariff step, Apr – Sep 2026",
+  pre_tariff_step: "Before the tariff step, Apr – Jun 2026",
+  post_tariff_step: "After the tariff step, Aug – Sep 2026",
 };
 
 export function Builder({ onRun, busy, initial }: { onRun: (q: SemanticQuery) => void; busy: boolean; initial?: SemanticQuery }) {

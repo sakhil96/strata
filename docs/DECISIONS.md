@@ -227,3 +227,25 @@ The agent's reply is at most two plain sentences on how it read the question. Th
 written by the API from the persona's own result (api/narrate.py), and a reading that carries an
 amount, a rate or a hash is dropped. A signed-in user listed in SCM_USER_PERSONAS is pinned to that
 persona and the dial follows; other users choose with the dial.
+
+## Running in Snowpark Container Services: what the docs settle, and where we stopped (2026-10-03)
+
+From the SPCS docs: a service's session is opened with the OAuth token in /snowflake/session/token,
+with the service's owner role as the primary role. With `capabilities.securityContext.executeAsCaller:
+true` the ingress adds Sf-Context-Current-User-Token, and the service can open a session as the
+calling user on that user's default role; that is caller's rights, and it needs CALLER grants on the
+owner role. Either way the session is the one the token allows: the service cannot pick roles beyond
+it, so the SCM_SERVICE_PERSONAS key-pair impersonation used on DEV does not carry over. Persona
+execution in SPCS would be caller's rights, with each judge or persona user's default role set to
+their persona role.
+
+The agent is the blocker. Calling agent:run from inside the service needs a token Snowflake accepts
+on its REST surface. A community article on the managed MCP server reports that the SPCS session
+token is refused there ("Client is unauthorized to use Snowpark Container Services OAuth token"); we
+have not tried agent:run itself because there is no service to try it from. If it is refused too, the
+container needs a credential of its own: a key pair or a programmatic access token held as a Snowflake
+SECRET mounted into the service. That is a private key in the container, which the brief says to stop
+at. Options: (1) a PAT for SCM_SERVICE_USER, scoped to SCM_SERVICE_ROLE and the network policy, mounted
+as a SPCS secret, with a short expiry and a rotation drill; (2) keep the API outside SPCS and serve
+only the static web build from it; (3) use the resolver, which needs no agent, inside the service and
+leave the agent for the local and DEV runs, saying so on the About page. None is chosen yet.

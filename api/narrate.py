@@ -21,6 +21,8 @@ MARKDOWN = [
 # Amounts, rates and decimals; a year or a day of the month is part of a window, not an amount.
 AMOUNT = re.compile(r"\d[\d,]*\.\d|\d\s*(%|percent|points)|[$€£]\s*\d|\b\d{1,3}(,\d{3})+\b|\b(?!(19|20)\d{2}\b)\d{3,}\b", re.I)
 HASH = re.compile(r"\b[0-9a-f]{12,}\b")
+# A reading is about the question; one that talks about its own instructions or output format is not.
+OFF_TOPIC = re.compile(r"instruction|\bresponse\b|\bsql\b|<|>|\btables?\b|\bformat|\bmarkdown|\bprompt", re.I)
 
 
 def month(iso: Any) -> str:
@@ -65,7 +67,7 @@ def reading(narrative: str | None) -> str | None:
         return None
     sentences = re.split(r"(?<=[.!?])\s+", text)[:2]
     kept = " ".join(sentences).strip()
-    if AMOUNT.search(kept) or HASH.search(kept) or "SELECT" in kept.upper().split():
+    if AMOUNT.search(kept) or HASH.search(kept) or OFF_TOPIC.search(kept) or (not kept[:1].isalnum() and kept[:1] != '"'):
         return None
     return kept[:400] or None
 

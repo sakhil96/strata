@@ -91,3 +91,14 @@ def test_before_after_shows_three_legacy_numbers_that_disagree_with_the_governed
     assert len(legacy) == 3
     assert legacy["planning_requested_date"] < governed < legacy["logistics_carrier_eta"]
     assert legacy["executive_plant_average"] != governed
+
+
+def test_every_persona_the_backend_answers_as_is_accepted_by_the_request_schemas(client):
+    from typing import get_args
+
+    from api.backend import PERSONAS
+    from api.schemas import Persona
+
+    assert set(get_args(Persona)) == set(PERSONAS)
+    answer = client.post("/api/query", json=OTD_FY | {"persona": "EMEA_PLANNING_ROLE"}).json()
+    assert answer["role"] == "EMEA_PLANNING_ROLE" and answer["view"] == "PLANNING_SV_V1"

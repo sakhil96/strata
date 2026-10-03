@@ -3,11 +3,12 @@ const PERCENT = new Set(["ratio"]);
 export function formatValue(value: number | null | undefined, unit: string, digits?: number): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   if (PERCENT.has(unit)) return `${(value * 100).toFixed(digits ?? 1)}%`;
-  if (unit === "usd_per_unit") return `$${value.toFixed(digits ?? 2)}`;
-  if (unit === "days") return `${value.toFixed(digits ?? 1)} d`;
-  if (unit === "hours") return `${value.toFixed(digits ?? 1)} h`;
-  if (unit === "turns_per_year") return `${value.toFixed(digits ?? 1)}×`;
-  return value.toFixed(digits ?? 2);
+  const fixed = (d: number) => value.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  if (unit === "usd_per_unit") return `$${fixed(digits ?? 2)}`;
+  if (unit === "days") return `${fixed(digits ?? 1)} d`;
+  if (unit === "hours") return `${fixed(digits ?? 1)} h`;
+  if (unit === "turns_per_year") return `${fixed(digits ?? 1)}×`;
+  return fixed(digits ?? 2);
 }
 
 export function unitLabel(unit: string): string {
@@ -23,11 +24,41 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 export function monthLabel(iso: string): string {
   const [year, month] = iso.slice(0, 7).split("-");
-  return `${MONTHS[Number(month) - 1]} ${year.slice(2)}`;
+  return `${MONTHS[Number(month) - 1]} ${year}`;
+}
+
+// Axis ticks: the month name, with the year on the first tick and wherever the year turns.
+export function monthTick(iso: string, previous: string | null): string {
+  const [year, month] = iso.slice(0, 7).split("-");
+  const name = MONTHS[Number(month) - 1];
+  return previous && previous.slice(0, 4) === year ? name : `${name} ${year}`;
 }
 
 export function period(window: { start: string; end: string }): string {
-  return `${monthLabel(window.start)} – ${monthLabel(window.end)}`;
+  return window.start === window.end ? monthLabel(window.start) : `${monthLabel(window.start)} – ${monthLabel(window.end)}`;
+}
+
+export function unitSuffix(unit: string): string {
+  return { ratio: "%", usd_per_unit: "USD", days: "days", hours: "hours", turns_per_year: "turns a year" }[unit] ?? unit;
+}
+
+// Section labels and kickers: only the parts that have something in them.
+export function joined(...parts: (string | null | undefined | false)[]): string {
+  return parts.filter((p): p is string => Boolean(p && p.trim())).join(" · ");
+}
+
+// What the agent writes is shown as text, so nothing it might format survives as markup.
+export function plain(text: string | null | undefined): string {
+  return (text ?? "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/gm, " ")
+    .replace(/^\s*\|.*\|\s*$/gm, " ")
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/(^|\W)_{1,2}([^_\n]+)_{1,2}(?=\W|$)/g, "$1$2")
+    .replace(/[*`|>~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function shortHash(hash: string | null | undefined): string {
@@ -39,6 +70,7 @@ export const PERSONA_LABEL: Record<string, string> = {
   PROCUREMENT_ROLE: "Procurement",
   LOGISTICS_ROLE: "Logistics",
   EXECUTIVE_ROLE: "Executive",
+  EMEA_PLANNING_ROLE: "Planning, EMEA",
   JUDGE_ROLE: "Reviewer",
 };
 

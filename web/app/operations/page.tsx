@@ -23,7 +23,7 @@ interface Ops {
     last_run: string | null;
     last_fired: string | null;
   }[];
-  cost: { week: string; credits: number | null; note: string };
+  cost: { week: string; credits: number | null; parts?: Record<string, number | null>; note: string };
 }
 
 const SLO_COLOUR: Record<Slo["status"], string> = {
@@ -142,8 +142,15 @@ export default function OperationsPage() {
                 ))}
               </ul>
               <div className="col-span-12 lg:col-span-5">
-                <p className="micro">Credits this week</p>
+                <p className="micro">Warehouse, pool and Cortex function credits this week</p>
                 <p className="font-display text-3xl font-light tabular">{ops.value.cost.credits ?? "—"}</p>
+                {ops.value.cost.parts ? (
+                  <p className="font-mono text-sm tabular text-ash">
+                    {Object.entries(ops.value.cost.parts)
+                      .map(([name, v]) => `${name} ${v ?? "—"}`)
+                      .join(" · ")}
+                  </p>
+                ) : null}
                 <p className="text-sm text-ash">{ops.value.cost.note}</p>
               </div>
             </div>

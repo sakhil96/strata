@@ -377,13 +377,17 @@ class SnowflakeBackend:
             cur.execute(f"CALL {self.db}.OPS.ALERT_STATUS()")
             fields = ("name", "schedule", "state", "last_outcome", "last_run", "last_fired")
             alerts = [dict(zip(fields, r, strict=True)) for r in cur.fetchall()]
-            cur.execute(f"SELECT week, credits FROM {self.db}.OPS.WEEKLY_COST "
+            cur.execute(f"SELECT week, credits, warehouse_credits, container_credits, ai_credits FROM {self.db}.OPS.WEEKLY_COST "
                         "WHERE week = DATE_TRUNC(week, CURRENT_DATE())")
             week = cur.fetchone()
         return {"slo": slo, "alerts": alerts,
                 "cost": {"week": str(week[0]) if week else None,
                          "credits": round(float(week[1]), 2) if week and week[1] is not None else None,
-                         "note": "Week to date, from the daily cost task over ACCOUNT_USAGE (up to a few hours behind)."}}
+                         "parts": {name: round(float(week[i]), 2) if week and week[i] is not None else None
+                                   for i, name in ((2, "warehouse"), (3, "compute pool"), (4, "Cortex functions"))},
+                         "note": "Week to date, for this environment's warehouse, compute pool and Cortex functions, from "
+                                 "the daily cost task over ACCOUNT_USAGE (up to a few hours behind). Cortex Agents, "
+                                 "serverless features and Snowflake CoCo are not in this figure."}}
 
     def eval_report(self) -> dict[str, Any] | None:
         with self._connect() as conn, conn.cursor() as cur:

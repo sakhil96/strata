@@ -1,16 +1,15 @@
 "use client";
 
 import { AxisBottom, AxisLeft } from "@visx/axis";
-import { curveMonotoneX } from "@visx/curve";
 import { Group } from "@visx/group";
 import { scaleBand, scaleLinear, scalePoint } from "@visx/scale";
 import { Bar, LinePath } from "@visx/shape";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { formatValue, monthLabel } from "@/lib/format";
+import { formatValue, monthLabel, monthTick } from "@/lib/format";
 import type { Row } from "@/lib/types";
 
-const MARGIN = { top: 16, right: 96, bottom: 32, left: 56 };
+const MARGIN = { top: 16, right: 24, bottom: 32, left: 64 };
 const AXIS = {
   stroke: "rgb(var(--hairline))",
   tickStroke: "rgb(var(--hairline))",
@@ -37,6 +36,18 @@ export function Chart({
   title: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  // Drawn at the width it is shown, so labels stay at their set size on a phone.
+  const frame = useRef<HTMLElement>(null);
+  const [measured, setMeasured] = useState(width);
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setMeasured(Math.max(300, Math.round(entry.contentRect.width))));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  width = measured;
+  height = measured < 520 ? 240 : height;
   const points = rows.filter((r) => r[metric] !== null && r[dimension] !== null);
   if (!points.length) return null;
   const values = points.map((r) => Number(r[metric]));
@@ -45,6 +56,9 @@ export function Chart({
   const pad = (hi - lo || Math.abs(hi) || 1) * 0.15;
   const innerW = width - MARGIN.left - MARGIN.right;
   const innerH = height - MARGIN.top - MARGIN.bottom;
+  // Whole-number ticks repeat on a narrow range; give them one decimal there.
+  const span = (hi - lo) * (unit === "ratio" ? 100 : 1);
+  const tickDigits = span < 5 ? 1 : 0;
   const y = scaleLinear({ domain: [Math.max(0, lo - pad), hi + pad], range: [innerH, 0], nice: true });
   const keys = points.map((r) => String(r[dimension]));
   const temporal = dimension === "period_month";
@@ -53,22 +67,34 @@ export function Chart({
 
   const series = temporal
     ? (() => {
-        const x = scalePoint({ domain: keys, range: [0, innerW] });
+        const x = scalePoint({ domain: keys, range: [0, innerW], padding: 0.3 });
+        const every = Math.max(1, Math.ceil(52 / (innerW / keys.length)));
+        const shownTicks = keys.filter((_, i) => i % every === 0);
+        const ticks = new Map(shownTicks.map((k, i) => [k, monthTick(k, i ? shownTicks[i - 1] : null)]));
+        // A marker is drawn only for a month inside the domain, and inside the plot, never over the ticks.
+        const markAt = marker && keys.includes(marker.at) ? (x(marker.at) ?? null) : null;
+        const markRight = markAt !== null && markAt > innerW - 140;
+        // On a narrow plot the dashed line stays and its label moves to the caption, clear of the axes.
+        const markInPlot = innerW >= 480;
+        const at = (i: number) => x(keys[i]) ?? 0;
+        const labelRight = at(shown) > innerW - 120;
         return (
           <>
-            {marker ? (
+            {markAt !== null && marker ? (
               <g>
-                <line
-                  x1={x(marker.at) ?? 0}
-                  x2={x(marker.at) ?? 0}
-                  y1={0}
-                  y2={innerH}
-                  stroke="rgb(var(--ash))"
-                  strokeDasharray="2 4"
-                />
-                <text x={(x(marker.at) ?? 0) + 6} y={12} fill="rgb(var(--ash))" fontSize={11} fontFamily="JetBrains Mono">
-                  {marker.label}
-                </text>
+                <line x1={markAt} x2={markAt} y1={0} y2={innerH} stroke="rgb(var(--ash))" strokeDasharray="2 4" />
+                {markInPlot ? (
+                  <text
+                    x={markRight ? markAt - 6 : markAt + 6}
+                    y={12}
+                    textAnchor={markRight ? "end" : "start"}
+                    fill="rgb(var(--ash))"
+                    fontSize={11}
+                    fontFamily="JetBrains Mono"
+                  >
+                    {marker.label}
+                  </text>
+                ) : null}
               </g>
             ) : null}
             <LinePath
@@ -77,14 +103,13 @@ export function Chart({
               y={(r) => y(Number(r[metric]))}
               stroke="rgb(var(--ore))"
               strokeWidth={1.5}
-              curve={curveMonotoneX}
             />
             {points.map((r, i) => (
               <circle
                 key={i}
                 cx={x(String(r[dimension])) ?? 0}
                 cy={y(Number(r[metric]))}
-                r={i === shown ? 3.5 : 0}
+                r={i === shown ? 4 : 2.5}
                 fill="rgb(var(--ore))"
               />
             ))}
@@ -101,15 +126,16 @@ export function Chart({
               />
             ))}
             <text
-              x={(x(keys[shown]) ?? 0) + 8}
-              y={y(values[shown]) - 8}
+              x={labelRight ? at(shown) - 8 : at(shown) + 8}
+              y={Math.max(12, y(values[shown]) - 8)}
+              textAnchor={labelRight ? "end" : "start"}
               fill="rgb(var(--bone))"
               fontSize={12}
               fontFamily="JetBrains Mono"
             >
-              {`${tick(keys[shown])} ${formatValue(values[shown], unit)}`}
+              {`${monthLabel(keys[shown])} ${formatValue(values[shown], unit)}`}
             </text>
-            <AxisBottom top={innerH} scale={x} tickFormat={(k) => tick(String(k))} numTicks={6} {...AXIS} />
+            <AxisBottom top={innerH} scale={x} tickValues={shownTicks} tickFormat={(k) => ticks.get(String(k)) ?? ""} {...AXIS} />
           </>
         );
       })()
@@ -144,14 +170,23 @@ export function Chart({
       })();
 
   return (
-    <figure>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={title}>
+    <figure ref={frame} className="w-full overflow-hidden">
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} role="img" aria-label={title}>
         <title>{title}</title>
         <Group left={MARGIN.left} top={MARGIN.top}>
-          <AxisLeft scale={y} numTicks={4} tickFormat={(v) => formatValue(Number(v), unit, unit === "ratio" ? 0 : 0)} {...AXIS} />
+          <AxisLeft
+            scale={y}
+            numTicks={4}
+            tickFormat={(v) => formatValue(Number(v), unit, tickDigits)}
+            {...AXIS}
+            tickLabelProps={() => ({ ...AXIS.tickLabelProps(), textAnchor: "end", dx: -6, dy: "0.33em" })}
+          />
           {series}
         </Group>
       </svg>
+      {marker && temporal && keys.includes(marker.at) && width - MARGIN.left - MARGIN.right < 480 ? (
+        <figcaption className="mt-0.5 font-mono text-micro text-ash">Dashed line: {marker.label}</figcaption>
+      ) : null}
       <table className="sr-only">
         <caption>{title}</caption>
         <tbody>

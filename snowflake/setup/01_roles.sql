@@ -71,7 +71,9 @@ GRANT ROLE EMEA_PLANNING_ROLE TO ROLE SCM_SERVICE_PERSONAS;
 CREATE USER IF NOT EXISTS SCM_CI_USER
     TYPE = SERVICE
     DEFAULT_ROLE = SCM_DEPLOY
+    DEFAULT_SECONDARY_ROLES = ()
     COMMENT = 'Key-pair identity for loads, dbt and deploys';
+ALTER USER SCM_CI_USER SET DEFAULT_SECONDARY_ROLES = ();
 GRANT ROLE SCM_DEPLOY TO USER SCM_CI_USER;
 
 -- Reviewers get one read-only role: every persona view, the audit trail and the evaluation
