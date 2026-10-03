@@ -73,6 +73,9 @@ def main() -> int:
         r = clients["procurement"].get(path)
         check(r.status_code == 200 and len(r.content) > 2, f"{path} {r.status_code}")
     check(clients["procurement"].get("/").status_code == 200, "web shell /")
+    # The home panel: three legacy numbers on RAW against the governed one.
+    story = clients["procurement"].post("/api/before-after", json={"window": "fy2026"})
+    check(story.status_code == 200 and len(story.json().get("legacy", [])) == 3, f"/api/before-after {story.status_code}")
 
     for persona, client in clients.items():
         body = client.get("/api/personas").json()
