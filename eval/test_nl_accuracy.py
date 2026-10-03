@@ -58,16 +58,28 @@ def test_every_out_of_scope_question_is_refused(scored):
 
 @pytest.mark.skipif(os.getenv("SCM_AGENT") != "on", reason="needs account: agent:run against SCM_TEST")
 def test_agent_meets_the_same_floors_through_agent_run(registry):
+    import json
+    from pathlib import Path
+
     from api import agent
 
     resolved = exact = refused = 0
+    outcomes = []
     for item in ITEMS:
         reply = agent.run(item["question"], "EXECUTIVE_ROLE", "EVAL_RUNNER", None, None)
         if item["scope"] == "out_of_scope":
             refused += reply["answer"] is None
+            outcomes.append({"id": item["id"], "refused": reply["answer"] is None})
             continue
         canonical = (reply["answer"] or {}).get("canonical_query")
         expected = semantic.canonicalise(registry, item["query"])
         resolved += bool(canonical) and canonical["metrics"] == expected["metrics"]
         exact += canonical == expected
+        outcomes.append({"id": item["id"], "question": item["question"], "expected": expected,
+                         "got": canonical, "exact": canonical == expected})
+    report = Path(__file__).parent / "report"
+    report.mkdir(exist_ok=True)
+    (report / "agent_floor.json").write_text(json.dumps(
+        {"resolved": resolved, "exact": exact, "refused": refused, "governed": len(GOVERNED),
+         "refusals": len(REFUSALS), "outcomes": outcomes}, indent=2, default=str) + "\n")
     assert resolved / len(GOVERNED) >= 0.90 and exact / len(GOVERNED) >= 0.85 and refused == len(REFUSALS)

@@ -1,56 +1,57 @@
 # Status
 
-Last updated 2026-10-02. "Done" means proven by a command run on the local build; "needs account"
-means written and checked locally (compiles, renders, lints) but only provable on Snowflake.
+Last updated 2026-10-03, after the DEV deployment on account XZ02973 (Standard edition, GCP
+me-central2). Standard edition: controls realised as compiled secure views; `docs/governance.md`
+maps each control to what each edition provides.
 
-## Finish checks (all run on this commit's tree)
+## Evaluation on SCM_DEV (`make eval-account ENV=dev`)
+
+| Suite | Passed | Notes |
+|---|---|---|
+| 1 · Metric identity against truth | 25 / 25 | includes the five canonical metrics, FY2026 and every month, through PROCUREMENT_SV_V1 |
+| 2 · Words to governed query | 5 / 6 | agent floor failed: 44 of 50 governed questions resolved to the right metric through agent:run (88% against a 90% floor); the exact-match and refusal counts were not reported, because the assertion stopped at the first floor. Unqualified "fill rate" went to a variant in at least three questions |
+| 3 · One question, three roles, one hash | 24 / 24 | 20 cases × 3 roles identical with hashes equal to the local engine's (`eval/report/persona_account.md`); every numeric agent answer reconciled to an AUDIT.ANSWERS row |
+| 4 · Governance rules | 28 / 28 | each role's scope through its semantic view, EMEA_PLANNING_ROLE limited to EMEA; CONFORMED, RAW, SEMANTIC_BASE denied; 42 column rules evaluated per role; all SEMANTIC_BASE views secure |
+| 5 · Resilience and operations | 9 / 9 | Time Travel restore drill failed in the full run (the test named SCM_TEST and cloned a transient table as permanent); fixed and passed on re-run |
+| 6 · Front end | 7 / 7 | |
+| 7 · Software supply chain | 5 / 5 | |
+
+The full run reported 102 of 104; the restore drill was fixed and re-run green, so 103 of 104 hold
+on the current commit. The agent floor is the one failing check.
+
+## Deployed on SCM_DEV
+
+| Area | State |
+|---|---|
+| Roles, monitor (40 credits), XS warehouse, schemas, stages, network policy on the two service users | green |
+| RAW load: 22 files, row counts equal to the files | green |
+| dbt in Snowflake: 72 of 72; delivery-event dynamic table incremental | green |
+| Entitlement registry, 10 secure views in SEMANTIC_BASE, tags on 7 columns | green |
+| Five semantic views over SEMANTIC_BASE: round-trip, 19 identical metric expressions | green |
+| Cortex Search over 5,039 documents; AI_CLASSIFY agreement 96.6% | green |
+| GOVERNED_QUERY, DESCRIBE_METRIC, EXPLAIN_LINEAGE; audit row per answer and refusal | green |
+| SCM_AGENT (three procedures and Search), SCM_EXPLORE_AGENT (Analyst, SCM_DEPLOY), SCM_STEWARD | green |
+| Operational loop, weekly cost task, four alerts, nightly-eval automation (03:30 UTC) | green, resumed |
+| SPCS service | blocked: Docker |
+| Public mirror on Vercel | blocked: token |
+
+## Needs Enterprise edition, or a blocked step
+
+- Row access and masking policies on CONFORMED (compiled in `snowflake/policies/enterprise/`).
+- GET_LINEAGE parity for EXPLAIN_LINEAGE.
+- A per-database event table; Time Travel beyond one day.
+- The service, its rollback drill and the Sf-Context-Current-User check: blocked: Docker.
+- The public mirror and `/query` through the service user from it: blocked: token.
+- The account-level network policy: applied only to the service users; the account policy needs
+  the team's origins and a COMPUTE_POOL rule for the service.
+- `tasks/verify.md`: absent from the repository.
+
+## Local checks on this commit
 
 | Check | Result |
 |---|---|
-| `scripts/reproducible.sh` (`make data` and `make compile` twice) | 184 files byte-identical |
-| `dbt build --target local` | 78 of 78 pass |
-| `pytest ontology/tests api/tests eval` | 121 passed, 3 skipped (need account); coverage 83% |
-| `eval/report.py` | 85 of 85 runnable checks pass across 7 suites; 2 need the account |
-| `ruff check .` | clean |
-| `npm run build`, `npm run build:demo`, `npm run lint` | pass |
-| Playwright at 390, 1024, 1440 with axe and CSP checks | 78 of 78 pass |
-| `pip-audit` on requirements.lock, `npm audit --omit=dev` | no known vulnerabilities |
-| `cortex plugin validate .` | valid |
-
-## Spec sections
-
-| Section | Status | Evidence |
-|---|---|---|
-| Ontology (LinkML) and metric registry | done | `ontology/`, `ontology/tests` |
-| Compiler targets: semantic views, VQRs, policies, dbt, glossary, Ossie, Cube, Databricks, LinkML, ER | done | `make compile`, golden tests |
-| Synthetic sources, truth by month × plant × region × segment × family | done | `eval/test_metric_identity.py` |
-| dbt on DuckDB and Snowflake | done locally; Snowflake target needs account | `dbt/` |
-| Semantic views deployed, round-trip YAML | needs account | `snowflake/semantic/deploy.sql` |
-| Masking, row access, grants | written; needs account | `snowflake/setup/04_policies.sql` |
-| Procedures GOVERNED_QUERY, DESCRIBE_METRIC, EXPLAIN_LINEAGE | logic tested locally; deployment needs account | `snowflake/procs/` |
-| Agent with Analyst and Search, Steward agent, MCP server | written; needs account | `snowflake/agent/` |
-| Unstructured notes, AI_CLASSIFY, AI_FILTER, Cortex Search | generated and modelled; AI functions need account | `dbt/macros/portable.sql`, `snowflake/search/` |
-| Dynamic table, task loop, ops views, alerts | written; needs account | `snowflake/dynamic_tables/`, `snowflake/tasks/` |
-| API: query, ask, compare, before-after, meta, glossary, lineage, audit, status, operations | done | `api/tests` |
-| Front end: ten pages, design system, states, footer status | done | Playwright, `docs/design.md` QA checklist |
-| Public mirror (demo mode) | done; hosting not done | `make demo-mirror` |
-| Seven evaluation suites | done locally; account variants pending | `eval/report.md` |
-| CI: locks, pip-audit, npm audit, SBOM, image scan | written; runs on first push | `.github/workflows/ci.yml` |
-| SPCS service, smoke, release gate, rollback | written; needs account | `scripts/spcs.py`, `scripts/release_gate.py` |
-| Cortex Code plugin: skills, commands, subagents, hooks, MCP, tasks | done | `docs/built-with-coco.md` |
-| Documents and runbooks | done | `docs/`, root markdown |
-| Databricks metric views | compiled; not run on Databricks | `ontology/generated/databricks/` |
-| Marketplace join, CoWork publication | notes only | `docs/marketplace.md`, `docs/cowork.md` |
-| History of 40 to 80 commits | done: 80 | `git rev-list --count HEAD` |
-
-## Needs the account
-
-1. `make setup ENV=dev`: roles (including JUDGE_ROLE and the service user), schemas, policies, monitors, event table, alerts, ops views.
-2. `make load`, then `dbt build --target dev` on Snowflake, including the AI_CLASSIFY and AI_FILTER models and the delivery-event dynamic table.
-3. `make release ENV=dev`: semantic views, procedures, agents, Cortex Search; YAML round-trip check.
-4. `make smoke` and `make eval-account`: the agent:run accuracy floor and the Time Travel restore check (the two pending checks), GET_LINEAGE parity (Enterprise edition).
-5. SPCS image push, `scripts/spcs.py deploy`, rollback drill.
-6. snowflake-connector-python 4.x paths (moved from 3.x for the security fix) against a live connection.
-7. First CI run on GitHub: SBOM upload and the trivy image scan.
-8. Re-author the history with the team identity before pushing; no team identity is configured on this machine.
-9. Hosting the public mirror, Marketplace listing choice, CoWork publication.
+| `scripts/reproducible.sh` | 188 files byte-identical across two runs |
+| `pytest ontology/tests api/tests eval` | 125 passed, 15 skipped (account checks) |
+| `ruff check .`, authorship lint | clean |
+| `npm run build`, `npm run lint` | pass |
+| Playwright at 390, 1024, 1440 with axe and CSP | 78 of 78 |
