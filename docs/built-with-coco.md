@@ -16,3 +16,11 @@ Bundled skills used during the build: `cortex-ai-function-studio` for the AI_CLA
 note models, and `cortex-code-guide` for the plugin layout. Account-side checks those skills
 recommend (privilege checks, live validation) were deferred to the account run and are listed in
 docs/STATUS.md.
+
+## The deployment session (2026-10-03)
+
+Cortex Code ran the SPCS deployment, endpoint checks, evaluator access, history scrub and squash, CI
+repairs, the mirror and these documents in one session against SCM_DEV, with the session's Cortex Code
+credits read from METERING_HISTORY before and after each step. Two defects surfaced only on the
+account and were fixed in the repository rather than worked around: the procedures' missing database
+inside agent:run, and the endpoint service role missing from the persona roles.

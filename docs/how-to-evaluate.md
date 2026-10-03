@@ -33,7 +33,7 @@ Three other ways in, from least to most setup.
 
 ## 1. The public mirror (no install)
 
-A static build of the front end with answers recorded from the local build (`make demo-mirror`).
+https://strata-wine-one.vercel.app — a static build of the front end with answers recorded from the local build (`make demo-mirror`).
 Every page works; Ask and Compare replay the questions offered on screen. Typed questions that were
 not recorded say so instead of guessing. The Builder answers live only when the mirror is built with
 `STRATA_API` pointing at a service-user API.

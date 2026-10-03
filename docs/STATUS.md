@@ -37,21 +37,19 @@ re-run after the service-identity change: 39 of 39.
 | Operational loop; cost task daily with a week-to-date row (5.38 credits this week) | green, resumed |
 | Alert status for readers: OPS.ALERT_STATUS(), owner's rights | green |
 | Service identity: SCM_SERVICE_PERSONAS (four personas) on SCM_SERVICE_USER, no default secondary roles | green |
-| Team-origin network rule | re-pointed to the deploying workstation's current address, the workstation's /32 |
+| Team-origin network rule | re-pointed to the deploying workstation's current /32 |
 | Alerts: dbt test failure, evaluation regression, SLO breach | green, resumed |
 | Stale-source alert | suspended on DEV, which loads once (`stale_source_alert` in dev.yaml) |
 | Nightly-eval Cortex Code routine | suspended; the task loop runs dbt and evaluation at warehouse cost (DECISIONS.md) |
-| SPCS service | blocked: Docker (`docker` is not installed) |
-| Public mirror on Vercel | blocked: token (none in the secret store) |
-| History rewrite and push | not run: needs the team identity, the repository and a GitHub credential |
+| SPCS service | green: STRATA_SERVICE on SCM_POOL_DEV (CPU_X64_XS), READY; endpoint checks as three check users, rollback drill; see the 2026-10-03 service section below |
+| Public mirror on Vercel | green: https://strata-wine-one.vercel.app, recorded demo data, no sign-in |
+| History rewrite and push | green: scrubbed with filter-repo, gitleaks clean, 70 commits on main, github.com/sakhil96/strata; CI green |
 
 ## Needs Enterprise edition, or a blocked step
 
 - Row access and masking policies on CONFORMED (compiled in `snowflake/policies/enterprise/`).
 - GET_LINEAGE parity for EXPLAIN_LINEAGE.
 - A per-database event table; Time Travel beyond one day.
-- The service, its rollback drill and the Sf-Context-Current-User check: blocked: Docker.
-- The public mirror and `/query` through the service user from it: blocked: token.
 - The account-level network policy: applied only to the service users; the account policy needs
   the team's origins and a COMPUTE_POOL rule for the service.
 - `tasks/verify.md`: absent from the repository.
@@ -99,3 +97,23 @@ findings from the first preview are fixed in the repository:
 
 The cost row counts warehouse, compute-pool and Cortex function credits; Cortex Agents and Cortex
 Code credits are not in it, so it reads well below the account's spend.
+
+## Service, evaluator access and publication (2026-10-03)
+
+- Live app: https://mbloac-dzvlnoz-zv32033.snowflakecomputing.app, STRATA_SERVICE on image 4c3251f.
+  `scripts/endpoint_check.py` as the three check users: 9 page routes 200, each user pinned to its
+  persona, the EMEA user sees EMEA only, logistics reads no supplier unit cost, Ask resolves through
+  the agent (path `agent`) as LOGISTICS_ROLE on LOGISTICS_SV_V1 in about 27 s.
+- Fixed on the way: the governed procedures failed inside agent:run from SPCS (no current database);
+  persona roles lacked the endpoint service role. Both recorded in DECISIONS.md.
+- Rollback drill: acd23c5 → 21f4a17 → acd23c5, READY each time, checks green on the older image.
+- Cost: SCM_POOL_DEV meters about 0.05 credits per running hour. The service resumes on an endpoint
+  request; it cannot suspend itself (AUTO_SUSPEND_SECS is not supported with a public endpoint), so it
+  is suspended by hand after an evaluation. Resume to READY on a warm pool: 23 s.
+- Evaluators: HACK2SKILL_EVALUATOR_1 and _2, default role JUDGE_ROLE; JUDGE_ROLE reads the five views,
+  EVAL and AUDIT, uses the agent and the endpoint, and is denied RAW, STAGING, CONFORMED and
+  SEMANTIC_BASE. SCM_READER no longer holds USAGE on those schemas.
+- CI: green after four fixes (tests for the procedures and the agent parser, the browser checks'
+  Python, a stale date assertion, the image's unused wheel and setuptools).
+- Known: audit rows from the service record the service as the user (STRATA_SERVICE) and the persona
+  as the role; the signed-in user is in the service logs, not in AUDIT.ANSWERS.
