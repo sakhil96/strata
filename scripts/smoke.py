@@ -12,8 +12,8 @@ import sys
 
 CHECKS = [
     ("governed answer",
-     "CALL {db}.AGENT.GOVERNED_QUERY(PARSE_JSON('{q}'))",
-     lambda r: r.get("status") == "ok" and r.get("query_hash")),
+     "CALL {db}.AGENT.GOVERNED_QUERY('SCM_GOVERNED_V1', '{q}', 'smoke')",
+     lambda r: bool(r.get("semantic_query_hash"))),
     ("describe metric",
      "CALL {db}.AGENT.DESCRIBE_METRIC('on_time_delivery')",
      lambda r: r.get("name") == "on_time_delivery"),

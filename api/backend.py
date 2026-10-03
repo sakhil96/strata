@@ -305,8 +305,7 @@ class SnowflakeBackend:
 
     def query(self, caller: Caller, query: dict[str, Any], question: str | None = None) -> dict[str, Any]:
         canonical = semantic.canonicalise(self.registry, query)
-        answer = self._call(caller, "GOVERNED_QUERY", view_for(caller.role), canonical["metrics"],
-                            canonical["dimensions"], canonical["time"], canonical["filters"], question or "",
+        answer = self._call(caller, "GOVERNED_QUERY", view_for(caller.role), json.dumps(canonical), question or "",
                             path="builder" if question is None else "resolver")
         if "error" in answer:
             raise semantic.SemanticError(answer["error"], answer.get("message", answer["error"]),

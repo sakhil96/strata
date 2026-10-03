@@ -24,7 +24,8 @@ GROUPS = {
                 "snowflake/semantic/load_glossary.sql"],
     "views": ["snowflake/semantic/deploy.sql", "snowflake/semantic/policies.sql"],
     "promote": ["snowflake/semantic/versioning.sql"],
-    "agent": ["snowflake/agent/create_agent.sql", "snowflake/agent/create_steward_agent.sql"],
+    "agent": ["snowflake/agent/create_agent.sql", "snowflake/agent/create_steward_agent.sql",
+              "snowflake/agent/create_explore_agent.sql"],
     "loop": ["snowflake/tasks/operational_loop.sql"],
     "service": ["snowflake/spcs/compute_pool.sql", "snowflake/spcs/deploy.sql"],
 }

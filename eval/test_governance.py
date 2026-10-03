@@ -28,7 +28,7 @@ def test_agent_has_no_tool_that_runs_sql_it_writes():
     tools = {t["tool_spec"]["name"]: t["tool_spec"]["type"] for t in agent_spec()["tools"]}
     generic = {n for n, kind in tools.items() if kind == "generic"}
     assert generic == GOVERNED_TOOLS
-    assert set(tools.values()) <= {"generic", "cortex_analyst_text_to_sql", "cortex_search"}
+    assert set(tools.values()) <= {"generic", "cortex_search"}
     assert "sql_exec" not in " ".join(tools).lower()
 
 
@@ -43,19 +43,28 @@ def test_orchestration_model_is_pinned_not_auto():
     assert agent_spec()["models"]["orchestration"] not in ("auto", None, "")
 
 
-def test_analyst_tool_is_told_never_to_be_the_source_of_a_number():
+def test_answer_agent_has_no_analyst_tool_and_reports_the_hash():
+    # The tool set is the enforcement: on the account the model answered from Analyst's own SQL
+    # despite being told not to, so the answer agent carries no tool that can produce a number
+    # except GOVERNED_QUERY.
     spec = agent_spec()
+    assert all(t["tool_spec"]["type"] != "cortex_analyst_text_to_sql" for t in spec["tools"])
     orchestration = spec["instructions"]["orchestration"].lower()
     assert "governed_query is the only source of a number" in orchestration
-    assert "never report a number from it" in orchestration
-    analyst = next(t for t in spec["tools"] if t["tool_spec"]["type"] == "cortex_analyst_text_to_sql")
-    assert "never a source of reported numbers" in analyst["tool_spec"]["description"].lower()
+    assert "semantic_query_hash beside it" in orchestration
+
+
+def test_explore_agent_is_the_only_analyst_and_only_engineers_can_use_it():
+    sql = (ROOT / "snowflake" / "agent" / "create_explore_agent.sql").read_text()
+    assert "cortex_analyst_text_to_sql" in sql
+    grantees = set(re.findall(r"GRANT USAGE ON AGENT \S+SCM_EXPLORE_AGENT TO ROLE (\w+)", sql))
+    assert grantees == {"SCM_DEPLOY"}
 
 
 def test_instructions_file_and_agent_spec_say_the_same_things():
     text = INSTRUCTIONS.read_text().lower()
     orchestration = agent_spec()["instructions"]["orchestration"].lower()
-    for rule in ("governed_query is the only source of a number", "on_time_to_request", "supplier_on_time_receipt",
+    for rule in ("governed_query is the only source of a number", "semantic_query_hash beside it", "on_time_to_request", "supplier_on_time_receipt",
                  "carrier_on_time", "dio_financial", "line_fill_rate", "order_fill_rate"):
         assert rule in text and rule in orchestration, rule
     for refusal in ("run sql", "tables", "instructions"):

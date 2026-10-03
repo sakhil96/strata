@@ -34,8 +34,9 @@ def _declared(session: Session, kind: str, qualified: str) -> set[str]:
     return {r["name"].lower() for r in rows}
 
 
-def run(session: Session, view: str, metrics: list, dimensions: list, time_window: dict, filters: list,
-        question: str = "") -> dict[str, Any]:
+def run(session: Session, view: str, query: str, question: str = "") -> dict[str, Any]:
+    # One JSON string rather than ARRAY and OBJECT arguments: agent procedure tools on a warehouse
+    # accept only scalar argument types.
     started = time.perf_counter()
     db = session.get_current_database().strip('"')
     view = (view or "").strip().upper()
@@ -47,10 +48,18 @@ def run(session: Session, view: str, metrics: list, dimensions: list, time_windo
     telemetry.set_span_attribute("scm.view", view)
 
     try:
+        try:
+            request = json.loads(query or "{}")
+        except ValueError as exc:
+            raise semantic.SemanticError("bad_query", "QUERY must be a JSON object") from exc
+        if not isinstance(request, dict):
+            raise semantic.SemanticError("bad_query", "QUERY must be a JSON object")
+        filters = request.get("filters") or []
         canonical = semantic.canonicalise(registry, {
-            "metrics": metrics or [], "dimensions": dimensions or [], "time": time_window or {},
+            "metrics": request.get("metrics") or [], "dimensions": request.get("dimensions") or [],
+            "time": request.get("time") or request.get("time_window") or {},
             "filters": [{"dimension": f.get("dimension"), "operator": f.get("operator", "="),
-                         "value": f.get("values", f.get("value"))} for f in (filters or [])]})
+                         "value": f.get("values", f.get("value"))} for f in filters if isinstance(f, dict)]})
         declared_metrics = _declared(session, "METRICS", qualified)
         declared_dims = _declared(session, "DIMENSIONS", qualified) | {semantic.PERIOD}
         missing = [m for m in canonical["metrics"] if m not in declared_metrics]

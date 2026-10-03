@@ -75,21 +75,36 @@ def run(question: str, role: str, user: str, thread_id: int | None, parent_messa
     return parse(resp.json())
 
 
+def governed_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """GOVERNED_QUERY results in a reply. A procedure tool result arrives as
+    {"execution_type": "procedure", "result": "<json text>"}; anything that is not an answer
+    contract (an error string, a refusal object) is skipped."""
+    found = []
+    for item in payload.get("content", []):
+        if item.get("type") != "tool_result" or item.get("tool_result", {}).get("name") != "GOVERNED_QUERY":
+            continue
+        for part in item["tool_result"].get("content", []):
+            data = part.get("json")
+            if data is None and part.get("type") == "text":
+                data = part.get("text")
+            if isinstance(data, dict) and "result" in data and "semantic_query_hash" not in data:
+                data = data["result"]
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except ValueError:
+                    continue
+            if isinstance(data, dict) and data.get("semantic_query_hash"):
+                found.append(data)
+    return found
+
+
 def parse(payload: dict[str, Any]) -> dict[str, Any]:
     """The answer contract is whatever GOVERNED_QUERY returned; the agent's prose rides alongside."""
-    governed, prose, refusal = None, [], None
-    for item in payload.get("content", []):
-        if item.get("type") == "text":
-            prose.append(item.get("text", ""))
-        if item.get("type") == "tool_result":
-            result = item.get("tool_result", {})
-            if result.get("name") != "GOVERNED_QUERY":
-                continue
-            for part in result.get("content", []):
-                data = part.get("json") or (json.loads(part["text"]) if part.get("type") == "text" else None)
-                if isinstance(data, dict) and "semantic_query_hash" in data:
-                    governed = data
+    prose = [item.get("text", "") for item in payload.get("content", []) if item.get("type") == "text"]
+    results = governed_results(payload)
     text = "\n".join(prose).strip()
-    if governed is None and text.lower().startswith(("i can't", "i cannot", "refus")):
+    refusal = None
+    if not results and text.lower().startswith(("i can't", "i cannot", "refus", "that request cannot")):
         refusal = "agent_refused"
-    return {"answer": governed, "narrative": text, "refusal": refusal}
+    return {"answer": results[-1] if results else None, "answers": results, "narrative": text, "refusal": refusal}
