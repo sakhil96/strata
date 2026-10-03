@@ -42,3 +42,17 @@ def warehouse(truth: pd.DataFrame):
     connection = duckdb.connect(str(WAREHOUSE), read_only=True)
     yield connection
     connection.close()
+
+
+@pytest.fixture(scope="session")
+def account():
+    """A cursor on the deployed environment. Skips with 'needs account' when the run is local."""
+    if os.getenv("SCM_BACKEND") != "snowflake":
+        pytest.skip("needs account: set SCM_BACKEND=snowflake and SNOWFLAKE_CONNECTION_NAME")
+    import snowflake.connector
+
+    env = os.getenv("SCM_ENV", "dev")
+    conn = snowflake.connector.connect(connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", f"scm_{env}"),
+                                       database=f"SCM_{env.upper()}")
+    yield conn.cursor(), f"SCM_{env.upper()}"
+    conn.close()

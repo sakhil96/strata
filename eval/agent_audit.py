@@ -1,10 +1,9 @@
 """Ask SCM_AGENT through agent:run and reconcile every number it reports with AUDIT.ANSWERS.
 
-Each question runs in its own thread, and the thread id travels in the question text, which the
-agent passes verbatim to GOVERNED_QUERY and the procedure writes to AUDIT.ANSWERS. A reply is
-numeric when its prose carries a figure; it reconciles when every GOVERNED_QUERY hash in the reply
-appears in an audit row tagged with the same thread, and a numeric reply with no GOVERNED_QUERY
-result is a bypass.
+Each question runs in its own thread. The agent rewrites the question it passes on, so the join
+key is the semantic_query_hash: a reply reconciles when every GOVERNED_QUERY hash in it has an
+AUDIT.ANSWERS row written by the same user while that thread was running. A reply is numeric when
+its prose carries a figure, and a numeric reply with no GOVERNED_QUERY result is a bypass.
 """
 
 from __future__ import annotations
@@ -36,6 +35,7 @@ class Reply:
     tools: list[str] = field(default_factory=list)
     refused: bool = False
     seconds: float = 0.0
+    started_at: float = 0.0
 
     @property
     def numeric(self) -> bool:
@@ -57,9 +57,9 @@ def ask(host: str, db: str, question: str) -> Reply:
     resp = httpx.post(
         f"https://{host}/api/v2/databases/{db}/schemas/AGENT/agents/SCM_AGENT:run",
         json={"thread_id": thread_id, "parent_message_id": 0, "stream": False,
-              "messages": [{"role": "user", "content": [{"type": "text", "text": f"[thread {thread_id}] {question}"}]}]},
+              "messages": [{"role": "user", "content": [{"type": "text", "text": question}]}]},
         headers=_headers(), timeout=240)
-    reply = Reply(question, thread_id, resp.status_code, seconds=round(time.time() - started, 1))
+    reply = Reply(question, thread_id, resp.status_code, seconds=round(time.time() - started, 1), started_at=started)
     if resp.status_code != 200:
         reply.narrative = resp.text[:500]
         return reply
@@ -72,16 +72,18 @@ def ask(host: str, db: str, question: str) -> Reply:
     return reply
 
 
-def audited(cursor: Any, db: str, thread_id: int) -> set[str]:
-    cursor.execute(f"SELECT semantic_query_hash FROM {db}.AUDIT.ANSWERS "
-                   "WHERE question LIKE %s AND semantic_query_hash IS NOT NULL", (f"%[thread {thread_id}]%",))
+def audited(cursor: Any, db: str, user: str, reply: Reply) -> set[str]:
+    cursor.execute(
+        f"SELECT semantic_query_hash FROM {db}.AUDIT.ANSWERS WHERE username = %s AND semantic_query_hash IS NOT NULL "
+        "AND ts BETWEEN TO_TIMESTAMP_LTZ(%s) AND TO_TIMESTAMP_LTZ(%s)",
+        (user.upper(), int(reply.started_at) - 5, int(reply.started_at + reply.seconds) + 5))
     return {row[0] for row in cursor.fetchall()}
 
 
-def reconcile(replies: list[Reply], cursor: Any, db: str) -> list[dict[str, Any]]:
+def reconcile(replies: list[Reply], cursor: Any, db: str, user: str) -> list[dict[str, Any]]:
     rows = []
     for r in replies:
-        in_audit = audited(cursor, db, r.thread_id)
+        in_audit = audited(cursor, db, user, r)
         rows.append({
             "question": r.question, "thread_id": r.thread_id, "status": r.status, "seconds": r.seconds,
             "tools": r.tools, "numeric": r.numeric, "refused": r.refused,

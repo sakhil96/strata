@@ -127,3 +127,15 @@ The first agent:run on the DEV account was refused: claude-4-sonnet is not an al
 there. The orchestration model stays pinned rather than 'auto', per AGENTS.md, and moves to
 claude-sonnet-4-6, the nearest successor on the account's allowed list. Both agents changed;
 the accuracy floor is re-measured on the new model before anything is promoted.
+
+## The answer agent's tool set is the enforcement (2026-10-03)
+
+"Numbers only through GOVERNED_QUERY" is enforced by what SCM_AGENT can call, not by what it is
+told. Its tools are GOVERNED_QUERY, DESCRIBE_METRIC, EXPLAIN_LINEAGE and Cortex Search for
+citations; none of them returns a number except GOVERNED_QUERY, which writes AUDIT.ANSWERS with
+the hash it returns. Cortex Analyst writes and runs its own SQL, so it is an exploration tool for
+data engineers: it lives on SCM_EXPLORE_AGENT, usable by SCM_DEPLOY only, and nothing it says is a
+governed answer. Suite 3 reconciles every numeric agent answer with an audit row of the same hash.
+
+GOVERNED_QUERY takes the query as one JSON string because agent procedure tools on a warehouse
+accept only scalar arguments.
