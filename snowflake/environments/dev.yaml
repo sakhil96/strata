@@ -20,3 +20,4 @@ warehouse_size: XSMALL
 auto_suspend_secs: 60
 monitor_credit_quota: 40
 slo_alert_schedule: 60 MINUTE
+code_stage: '@SCM_DEV.OPS.ARTEFACTS/code'

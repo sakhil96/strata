@@ -16,9 +16,15 @@ def lineage_for(session: Session, registry: semantic.Registry, metric: str) -> d
     table = m["semantic"]["table"]
     db = session.get_current_database().strip('"')
     base = f"{db}.CONFORMED.{registry.tables[table]['base_table']}"
-    edges = session.sql(
-        "SELECT source_object_schema, source_object_name, target_object_schema, target_object_name, distance "
-        "FROM TABLE(SNOWFLAKE.CORE.GET_LINEAGE(?, 'TABLE', 'UPSTREAM', 5))", params=[base]).collect()
+    # GET_LINEAGE is Enterprise edition; on Standard the compiled path is the whole answer and the
+    # response says so rather than failing the governed answer it is attached to.
+    try:
+        edges = session.sql(
+            "SELECT source_object_schema, source_object_name, target_object_schema, target_object_name, distance "
+            "FROM TABLE(SNOWFLAKE.CORE.GET_LINEAGE(?, 'TABLE', 'UPSTREAM', 5))", params=[base]).collect()
+        unavailable = None
+    except Exception as exc:
+        edges, unavailable = [], exc.__class__.__name__
     layers: dict[str, set[str]] = {name: set() for _, name in LAYERS}
     layers["conformed"].add(registry.tables[table]["base_table"].lower())
     for e in edges:
@@ -28,7 +34,9 @@ def lineage_for(session: Session, registry: semantic.Registry, metric: str) -> d
                     layers[layer].add(name.lower())
     facts = sorted(f for f in registry.tables[table].get("facts", []) if f"{table}.{f}" in m["semantic"]["expr"])
     return {
-        "metric": metric, "source": "Snowflake lineage graph" if edges else "registry (lineage graph empty)",
+        "metric": metric,
+        "source": ("Snowflake lineage graph" if edges else
+                   f"registry (GET_LINEAGE unavailable: {unavailable})" if unavailable else "registry (lineage graph empty)"),
         "expression": m["semantic"]["expr"],
         "path": [{"layer": layer, "objects": sorted(objs)} for layer, objs in layers.items()]
         + [{"layer": "semantic", "objects": [f"{table}.{metric}"], "columns": facts}],

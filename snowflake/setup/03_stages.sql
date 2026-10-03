@@ -22,3 +22,6 @@ CREATE STAGE IF NOT EXISTS OPS.ARTEFACTS
 CREATE STAGE IF NOT EXISTS SEMANTIC.VIEW_YAML
     DIRECTORY = (ENABLE = TRUE)
     COMMENT = 'Semantic view YAML files for deployment';
+
+-- The glossary arrives as one JSON document and is flattened by semantic/load_glossary.sql.
+CREATE FILE FORMAT IF NOT EXISTS SEMANTIC.JSON_DOC TYPE = JSON;

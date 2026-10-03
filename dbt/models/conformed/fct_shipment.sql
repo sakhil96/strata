@@ -14,7 +14,7 @@ select
     case when s.actual_delivery is not null then 1 else 0 end as is_delivered,
     case when s.actual_delivery <= s.carrier_eta then 1 else 0 end as is_on_eta,
     case when s.actual_delivery is not null
-        then {{ minutes_between('m.picked_up_utc', 'm.delivered_utc') }} / 60.0 end as transit_hours,
+        then {{ minutes_between('m.picked_up_utc', 'm.delivered_utc') }} / 60.0 end as transit_hours_elapsed,
     {{ month_of('s.actual_delivery') }} as delivery_month
 from {{ ref('stg_shipments') }} s
 left join milestones m on m.shipment_id = s.shipment_id

@@ -10,6 +10,12 @@ CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.SENSITIVITY
 CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_OWNER COMMENT = 'Metric owner from the registry';
 CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_STEWARD COMMENT = 'Metric steward from the registry';
 CREATE TAG IF NOT EXISTS {{DB}}.CONFORMED.METRIC_VERSION COMMENT = 'Metric version from the registry';
+-- SCM_DEPLOY creates the semantic views, which carry the registry tags, and rebuilds the tables
+-- whose sensitivity tags policies.sql reapplies after every dbt build.
+GRANT APPLY ON TAG {{DB}}.CONFORMED.METRIC_OWNER TO ROLE SCM_DEPLOY;
+GRANT APPLY ON TAG {{DB}}.CONFORMED.METRIC_STEWARD TO ROLE SCM_DEPLOY;
+GRANT APPLY ON TAG {{DB}}.CONFORMED.METRIC_VERSION TO ROLE SCM_DEPLOY;
+GRANT APPLY ON TAG {{DB}}.CONFORMED.SENSITIVITY TO ROLE SCM_DEPLOY;
 
 -- @enterprise
 -- CONFIDENTIAL: contact names and emails, readable by admin and executive.

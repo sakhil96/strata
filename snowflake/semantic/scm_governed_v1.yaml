@@ -317,8 +317,8 @@ tables:
     expr: is_on_eta
     data_type: NUMBER(38,6)
     access_modifier: private_access
-  - name: transit_hours
-    expr: transit_hours
+  - name: transit_hours_elapsed
+    expr: transit_hours_elapsed
     data_type: NUMBER(18,4)
     access_modifier: private_access
   metrics:
@@ -353,7 +353,7 @@ tables:
     - shipping time
     description: Median hours a delivered shipment spent between pick-up and proof of delivery. Grain shipment;
       dated by actual_delivery; unit hours.
-    expr: MEDIAN(shipments.transit_hours)
+    expr: MEDIAN(shipments.transit_hours_elapsed)
     tags:
     - name:
         database: SCM_DEV

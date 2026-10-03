@@ -31,7 +31,7 @@ model:
       primary_key: [shipment_id]
       period: delivery_month
       keys: {customer_id: customers, plant_id: plants, carrier_id: carriers}
-      facts: [is_delivered, is_on_eta, transit_hours]
+      facts: [is_delivered, is_on_eta, transit_hours_elapsed]
     shipment_lines:
       base_table: FCT_SHIPMENT_LINE
       description: Shipment lines dated by departure, carrying allocated freight.
@@ -446,7 +446,7 @@ metrics:
     denominator: not applicable (median)
     definition: Median hours a delivered shipment spent between pick-up and proof of delivery.
     formula_text: MEDIAN(delivered_utc - picked_up_utc) in hours, dated by actual_delivery.
-    semantic: {table: shipments, expr: "MEDIAN(shipments.transit_hours)"}
+    semantic: {table: shipments, expr: "MEDIAN(shipments.transit_hours_elapsed)"}
     synonyms: [transit time, transit hours, shipping time]
     variants: {}
     owner: VP Logistics

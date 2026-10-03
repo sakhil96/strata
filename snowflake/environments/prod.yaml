@@ -20,3 +20,4 @@ warehouse_size: SMALL
 auto_suspend_secs: 120
 monitor_credit_quota: 200
 slo_alert_schedule: 15 MINUTE
+code_stage: '@SCM_PROD.OPS.SCM_REPO/branches/main'

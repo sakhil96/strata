@@ -46,7 +46,7 @@ PERSONA_FOCUS = {
     "LOGISTICS_ROLE": "Logistics thinks in carriers and lanes; offer carrier_name when it is reachable.",
     "EXECUTIVE_ROLE": "Executives want the headline for the fiscal year and the trend by month.",
 }
-FACT_TYPES = {"transit_hours": "NUMBER(18,4)", "cycle_days": "NUMBER(9,0)", "lead_days": "NUMBER(9,0)"}
+FACT_TYPES = {"transit_hours_elapsed": "NUMBER(18,4)", "cycle_days": "NUMBER(9,0)", "lead_days": "NUMBER(9,0)"}
 ROW_POLICY_MODELS = ("FCT_SALES_ORDER_LINE", "FCT_SHIPMENT", "FCT_SHIPMENT_LINE", "FCT_PO_LINE", "FCT_INVENTORY_MONTH")
 DBT_RELATIONSHIPS = (
     ("fct_sales_order_line", "customer_id", "dim_customer", "customer_id"),
@@ -100,6 +100,10 @@ def check_registry(registry: semantic.Registry, env: str) -> list[str]:
             problems.append(f"{name}: unknown logical table {table}")
         if f"{table}." not in metric["semantic"]["expr"]:
             problems.append(f"{name}: expression must reference {table}.<fact>")
+        # Snowflake resolves a column name to a same-named metric first, so a fact named like a
+        # metric on its table makes the semantic view cyclic.
+        if table in registry.tables and name in registry.tables[table].get("facts", []):
+            problems.append(f"{name}: a fact on {table} has the metric's name")
         if env == "prod" and metric["status"] != "approved":
             problems.append(f"{name}: status {metric['status']} cannot ship to SCM_PROD")
     return problems
@@ -266,9 +270,12 @@ def policies_sql(ontology: dict[str, Any], env: str) -> str:
                              f"SET TAG {db}.CONFORMED.SENSITIVITY = '{level}';")
     lines.append("")
     lines.append("-- Persona roles see the plants USER_PLANT_SCOPE grants them; admin and executive see all.")
+    lines.append("-- Row access is Enterprise edition; render_sql.py drops the block on Standard.")
+    lines.append("-- @enterprise")
     for model in ROW_POLICY_MODELS:
         lines.append(f"ALTER TABLE {db}.CONFORMED.{model} DROP ALL ROW ACCESS POLICIES;")
         lines.append(f"ALTER TABLE {db}.CONFORMED.{model} ADD ROW ACCESS POLICY {db}.CONFORMED.PLANT_ACCESS ON (plant_id);")
+    lines.append("-- @end")
     return "\n".join(lines) + "\n"
 
 
@@ -317,6 +324,7 @@ def glossary_load_sql(env: str) -> str:
     db = f"SCM_{env.upper()}"
     return "\n".join([
         f"-- {HEADER}",
+        f"USE SCHEMA {db}.SEMANTIC;",
         f"CREATE TABLE IF NOT EXISTS {db}.SEMANTIC.GLOSSARY (metric_name STRING, entry VARIANT, loaded_at TIMESTAMP_NTZ);",
         "CREATE OR REPLACE TEMPORARY TABLE glossary_incoming AS",
         "  SELECT value:metric_name::STRING AS metric_name, value AS entry",

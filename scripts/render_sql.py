@@ -45,6 +45,7 @@ def render(path: Path, env: str) -> str:
         "ALERT_EMAIL": os.environ.get("STRATA_ALERT_EMAIL", ""),
         "ORIGIN_CIDR": os.environ.get("STRATA_ORIGIN_CIDR", ""),
         "SLO_ALERT_SCHEDULE": settings.get("slo_alert_schedule", "15 MINUTE"),
+        "CODE_STAGE": settings.get("code_stage", f"@{settings['database']}.OPS.SCM_REPO/branches/main"),
     }
     for key, value in tokens.items():
         text = text.replace("{{" + key + "}}", value)

@@ -32,4 +32,4 @@ measures:
 - name: carrier_on_time
   expr: SUM(source.is_on_eta) / NULLIF(SUM(source.is_delivered), 0)
 - name: transit_hours
-  expr: MEDIAN(source.transit_hours)
+  expr: MEDIAN(source.transit_hours_elapsed)

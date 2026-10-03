@@ -11,10 +11,8 @@ LANGUAGE SQL
 EXECUTE AS CALLER
 AS
 $$
-DECLARE
-    evidence VARIANT;
 BEGIN
-    SELECT OBJECT_CONSTRUCT(
+    LET evidence VARIANT := (SELECT OBJECT_CONSTRUCT(
         'definition', (SELECT entry FROM SEMANTIC.GLOSSARY WHERE metric_name = :METRIC),
         'asked_last_30_days', (SELECT COUNT(*) FROM AUDIT.ANSWERS
                                WHERE metric_names ILIKE '%' || :METRIC || '%' AND ts > DATEADD(day, -30, CURRENT_TIMESTAMP())),
@@ -22,7 +20,7 @@ BEGIN
                                 WHERE refusal IS NOT NULL AND question ILIKE '%' || REPLACE(:METRIC, '_', ' ') || '%'),
         'last_eval', (SELECT OBJECT_CONSTRUCT('pass_rate', pass_rate, 'run_at', run_at)
                       FROM EVAL.EVAL_RUNS ORDER BY run_at DESC LIMIT 1)
-    ) INTO :evidence;
+    ));
     RETURN evidence;
 END;
 $$;
@@ -32,7 +30,7 @@ CREATE OR REPLACE AGENT {{DB}}.AGENT.SCM_STEWARD
   FROM SPECIFICATION
 $$
 models:
-  orchestration: claude-4-sonnet
+  orchestration: claude-sonnet-4-6
 instructions:
   orchestration: >-
     You help a metric steward prepare a change to ontology/metrics.yaml. Gather evidence with

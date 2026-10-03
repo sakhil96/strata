@@ -172,11 +172,11 @@ datasets:
       dialects:
       - dialect: ANSI_SQL
         expression: is_on_eta
-  - name: transit_hours
+  - name: transit_hours_elapsed
     expression:
       dialects:
       - dialect: ANSI_SQL
-        expression: transit_hours
+        expression: transit_hours_elapsed
 - name: shipment_lines
   source: SCM_DEV.CONFORMED.FCT_SHIPMENT_LINE
   primary_key:
@@ -903,7 +903,7 @@ metrics:
   expression:
     dialects:
     - dialect: ANSI_SQL
-      expression: MEDIAN(shipments.transit_hours)
+      expression: MEDIAN(shipments.transit_hours_elapsed)
   description: Median hours a delivered shipment spent between pick-up and proof of delivery.
   ai_context:
     synonyms:

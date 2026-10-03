@@ -1,4 +1,5 @@
 -- Generated from ontology/*.yaml by compile.py; edit the registry, not this file.
+USE SCHEMA SCM_DEV.SEMANTIC;
 CREATE TABLE IF NOT EXISTS SCM_DEV.SEMANTIC.GLOSSARY (metric_name STRING, entry VARIANT, loaded_at TIMESTAMP_NTZ);
 CREATE OR REPLACE TEMPORARY TABLE glossary_incoming AS
   SELECT value:metric_name::STRING AS metric_name, value AS entry

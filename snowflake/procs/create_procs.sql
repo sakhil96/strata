@@ -1,5 +1,6 @@
 -- Governed procedures for one environment. {{DB}} is SCM_DEV, SCM_TEST or SCM_PROD.
--- Code comes from the Git repository object, so what runs is what is committed.
+-- Code comes from {{CODE_STAGE}}: the Git repository object where one exists, otherwise the
+-- committed files PUT to OPS.ARTEFACTS/code by scripts/stage_code.py.
 -- semantic.py reads metrics.yaml from beside itself; both are imported from the same commit.
 
 USE ROLE SCM_DEPLOY;
@@ -15,14 +16,14 @@ LANGUAGE PYTHON
 RUNTIME_VERSION = '3.11'
 PACKAGES = ('snowflake-snowpark-python', 'snowflake-telemetry-python', 'pyyaml')
 IMPORTS = (
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/semantic.py',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/metrics.yaml',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/snowflake/procs/governed_query.py',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/snowflake/procs/explain_lineage.py'
+    '{{CODE_STAGE}}/ontology/semantic.py',
+    '{{CODE_STAGE}}/ontology/metrics.yaml',
+    '{{CODE_STAGE}}/snowflake/procs/governed_query.py',
+    '{{CODE_STAGE}}/snowflake/procs/explain_lineage.py'
 )
 HANDLER = 'governed_query.run'
-EXECUTE AS CALLER
-COMMENT = 'The only path from a question to a number; writes AUDIT.ANSWERS';
+COMMENT = 'The only path from a question to a number; writes AUDIT.ANSWERS'
+EXECUTE AS CALLER;
 
 CREATE OR REPLACE PROCEDURE {{DB}}.AGENT.DESCRIBE_METRIC(NAME STRING)
 RETURNS VARIANT
@@ -30,9 +31,9 @@ LANGUAGE PYTHON
 RUNTIME_VERSION = '3.11'
 PACKAGES = ('snowflake-snowpark-python', 'pyyaml')
 IMPORTS = (
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/semantic.py',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/metrics.yaml',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/snowflake/procs/describe_metric.py'
+    '{{CODE_STAGE}}/ontology/semantic.py',
+    '{{CODE_STAGE}}/ontology/metrics.yaml',
+    '{{CODE_STAGE}}/snowflake/procs/describe_metric.py'
 )
 HANDLER = 'describe_metric.run'
 EXECUTE AS CALLER;
@@ -43,9 +44,9 @@ LANGUAGE PYTHON
 RUNTIME_VERSION = '3.11'
 PACKAGES = ('snowflake-snowpark-python', 'pyyaml')
 IMPORTS = (
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/semantic.py',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/ontology/metrics.yaml',
-    '@{{DB}}.OPS.SCM_REPO/branches/main/snowflake/procs/explain_lineage.py'
+    '{{CODE_STAGE}}/ontology/semantic.py',
+    '{{CODE_STAGE}}/ontology/metrics.yaml',
+    '{{CODE_STAGE}}/snowflake/procs/explain_lineage.py'
 )
 HANDLER = 'explain_lineage.run'
 EXECUTE AS CALLER;

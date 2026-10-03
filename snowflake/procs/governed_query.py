@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import time
 from typing import Any
 
@@ -24,8 +25,12 @@ ROW_CAP = 10_000
 log = logging.getLogger("scm.governed_query")
 
 
-def _declared(session: Session, kind: str, view: str) -> set[str]:
-    rows = session.sql(f"SHOW SEMANTIC {kind} IN SEMANTIC VIEW IDENTIFIER(?)", params=[view]).collect()
+VIEW_NAME = re.compile(r"^(SCM_GOVERNED|PLANNING_SV|PROCUREMENT_SV|LOGISTICS_SV|EXECUTIVE_SV)_V[0-9]{1,3}$")
+
+
+def _declared(session: Session, kind: str, qualified: str) -> set[str]:
+    # SHOW takes no bind variables; the view name is checked against VIEW_NAME before it gets here.
+    rows = session.sql(f"SHOW SEMANTIC {kind} IN {qualified}").collect()
     return {r["name"].lower() for r in rows}
 
 
@@ -33,6 +38,10 @@ def run(session: Session, view: str, metrics: list, dimensions: list, time_windo
         question: str = "") -> dict[str, Any]:
     started = time.perf_counter()
     db = session.get_current_database().strip('"')
+    view = (view or "").strip().upper()
+    if not VIEW_NAME.match(view):
+        _audit(session, db, question, None, None, None, None, 0, started, refusal="unknown_view")
+        return {"error": "unknown_view", "message": "not a governed semantic view"}
     qualified = f"{db}.SEMANTIC.{view}"
     registry = semantic.load_registry(semantic.REGISTRY_PATH)
     telemetry.set_span_attribute("scm.view", view)
@@ -94,12 +103,21 @@ def run(session: Session, view: str, metrics: list, dimensions: list, time_windo
 
 def _audit(session, db, question, canonical, digest, sql, checksum, row_count, started, refusal=None) -> int:
     latency_ms = int((time.perf_counter() - started) * 1000)
+    # One JSON payload: a None bound on its own reaches PARSE_JSON as the text "None", and a
+    # refusal must never fail to be recorded.
+    payload = json.dumps({
+        "question": question or None, "metrics": ", ".join(canonical["metrics"]) if canonical else None,
+        "canonical": canonical, "hash": digest, "sql": sql, "checksum": checksum, "rows": row_count,
+        "latency_ms": latency_ms, "refusal": refusal,
+    })
     session.sql(
         f"INSERT INTO {db}.AUDIT.ANSWERS (ts, username, role_used, question, metric_names, canonical_query,"
         " semantic_query_hash, sql_executed, result_checksum, row_count, latency_ms, refusal, path)"
-        " SELECT CURRENT_TIMESTAMP(), CURRENT_USER(), CURRENT_ROLE(), ?, ?, PARSE_JSON(?), ?, ?, ?, ?, ?, ?,"
-        " COALESCE(TRY_PARSE_JSON(CURRENT_QUERY_TAG()):path::STRING, 'procedure')",
-        params=[question or None, ", ".join(canonical["metrics"]) if canonical else None,
-                json.dumps(canonical) if canonical else None, digest, sql, checksum, row_count, latency_ms, refusal],
+        " SELECT CURRENT_TIMESTAMP(), CURRENT_USER(), CURRENT_ROLE(), p:question::STRING, p:metrics::STRING,"
+        " NULLIF(p:canonical, PARSE_JSON('null')), p:hash::STRING, p:sql::STRING, p:checksum::STRING,"
+        " p:rows::NUMBER, p:latency_ms::NUMBER, p:refusal::STRING,"
+        " COALESCE(TRY_PARSE_JSON(CURRENT_QUERY_TAG()):path::STRING, 'procedure')"
+        " FROM (SELECT PARSE_JSON(?) AS p)",
+        params=[payload],
     ).collect()
     return latency_ms

@@ -20,13 +20,34 @@ def enabled() -> bool:
     return os.getenv("SCM_AGENT", "off") == "on"
 
 
+def _keypair_jwt(account: str, user: str, key_path: str) -> str:
+    import base64
+    import hashlib
+    import time
+
+    import jwt
+    from cryptography.hazmat.primitives import serialization
+
+    key = serialization.load_pem_private_key(Path(key_path).read_bytes(), password=None)
+    der = key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    fingerprint = "SHA256:" + base64.b64encode(hashlib.sha256(der).digest()).decode()
+    qualified = f"{account.upper()}.{user.upper()}"
+    now = int(time.time())
+    return jwt.encode({"iss": f"{qualified}.{fingerprint}", "sub": qualified, "iat": now, "exp": now + 3000},
+                      key, algorithm="RS256")
+
+
 def _token() -> tuple[str, str]:
     session = Path("/snowflake/session/token")
     if session.exists():
         return "OAUTH", session.read_text()
+    # Outside SPCS the service user signs its own JWT, so no long-lived token sits in the environment.
+    key_path = os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
+    if key_path and os.getenv("SNOWFLAKE_ACCOUNT") and os.getenv("SNOWFLAKE_USER"):
+        return "KEYPAIR_JWT", _keypair_jwt(os.environ["SNOWFLAKE_ACCOUNT"], os.environ["SNOWFLAKE_USER"], key_path)
     token = os.getenv("SNOWFLAKE_PAT")
     if not token:
-        raise AgentUnavailable("no service token or PAT available to call the agent")
+        raise AgentUnavailable("no service token, key pair or PAT available to call the agent")
     return "PROGRAMMATIC_ACCESS_TOKEN", token
 
 

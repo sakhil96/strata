@@ -113,7 +113,7 @@ cubes:
     type: number
     description: Share of delivered shipments that arrived on or before the carrier's own estimate.
   - name: transit_hours
-    sql: MEDIAN({CUBE}.transit_hours)
+    sql: MEDIAN({CUBE}.transit_hours_elapsed)
     type: number
     description: Median hours a delivered shipment spent between pick-up and proof of delivery.
   joins:

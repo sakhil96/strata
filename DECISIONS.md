@@ -113,3 +113,17 @@ The first dbt run on Snowflake failed in 11 models: INFER_SCHEMA kept Parquet's 
 as quoted identifiers, and microsecond timestamps arrived as NUMBER. The loader now infers with
 IGNORE_CASE and a USE_LOGICAL_TYPE file format, and replaces each RAW table on load. Replacing RAW
 tables means FCT_DELIVERY_EVENT must be recreated after a reload.
+
+## A fact may not share its metric's name (2026-10-03)
+
+Snowflake resolves a column reference inside a semantic view to a same-named metric before the
+physical column, so `shipments.transit_hours` (fact) beside `transit_hours` (metric) is cyclic and
+no expression spelling avoids it. The column is now `transit_hours_elapsed` in fct_shipment and the
+registry, and check_registry refuses a fact named like a metric on its table.
+
+## Agent model pinned to claude-sonnet-4-6 (2026-10-03)
+
+The first agent:run on the DEV account was refused: claude-4-sonnet is not an allowed agent model
+there. The orchestration model stays pinned rather than 'auto', per AGENTS.md, and moves to
+claude-sonnet-4-6, the nearest successor on the account's allowed list. Both agents changed;
+the accuracy floor is re-measured on the new model before anything is promoted.
