@@ -26,6 +26,26 @@
       "role": "JUDGE_ROLE"
     },
     {
+      "object": "SEMANTIC VIEW {{DB}}.SEMANTIC.EXECUTIVE_SV_V1",
+      "privilege": "SELECT",
+      "role": "JUDGE_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW {{DB}}.SEMANTIC.LOGISTICS_SV_V1",
+      "privilege": "SELECT",
+      "role": "JUDGE_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW {{DB}}.SEMANTIC.PLANNING_SV_V1",
+      "privilege": "SELECT",
+      "role": "JUDGE_ROLE"
+    },
+    {
+      "object": "SEMANTIC VIEW {{DB}}.SEMANTIC.PROCUREMENT_SV_V1",
+      "privilege": "SELECT",
+      "role": "JUDGE_ROLE"
+    },
+    {
       "object": "AGENT {{DB}}.AGENT.SCM_AGENT",
       "privilege": "USAGE",
       "role": "JUDGE_ROLE"
@@ -276,11 +296,6 @@
       "role": "SCM_READER"
     },
     {
-      "object": "ALL SCHEMAS IN DATABASE {{DB}}",
-      "privilege": "USAGE",
-      "role": "SCM_READER"
-    },
-    {
       "object": "CORTEX SEARCH SERVICE {{DB}}.SEMANTIC.SCM_NOTES_SEARCH",
       "privilege": "USAGE",
       "role": "SCM_READER"
@@ -312,6 +327,31 @@
     },
     {
       "object": "PROCEDURE {{DB}}.OPS.ALERT_STATUS()",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCHEMA {{DB}}.AGENT",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCHEMA {{DB}}.AUDIT",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCHEMA {{DB}}.EVAL",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCHEMA {{DB}}.OPS",
+      "privilege": "USAGE",
+      "role": "SCM_READER"
+    },
+    {
+      "object": "SCHEMA {{DB}}.SEMANTIC",
       "privilege": "USAGE",
       "role": "SCM_READER"
     },
