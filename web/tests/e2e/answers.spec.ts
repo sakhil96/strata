@@ -63,6 +63,7 @@ test("compare converges three role phrasings on one hash", async ({ page }) => {
 test("before-after strikes the three legacy numbers and reveals the governed one", async ({ page }) => {
   await page.goto("/before-after");
   await expect(page.getByText("Planning workbook")).toBeVisible();
-  await expect(page.getByText("Governed · on_time_delivery v1")).toBeVisible();
+  await expect(page.getByText("Governed · On-time delivery v1")).toBeVisible();
+  await expect(page.getByText("Formula", { exact: true })).toBeVisible();
   await expect(page.getByText("83.8%").first()).toBeVisible();
 });
