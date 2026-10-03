@@ -36,7 +36,7 @@ test("the builder answers without the model", async ({ page }) => {
   await page.getByLabel("Break down by").selectOption("period_month");
   await page.getByRole("button", { name: "Run governed query" }).click();
   await expect(page.getByRole("article", { name: "Answer" })).toContainText("Landed cost per unit");
-  await expect(page.getByRole("table", { name: "Rows returned" })).toContainText("Sep 26");
+  await expect(page.getByRole("table", { name: "Rows returned" })).toContainText("Sep 2026");
 });
 
 test("a raw SQL question is refused with copy that says why", async ({ page }) => {
