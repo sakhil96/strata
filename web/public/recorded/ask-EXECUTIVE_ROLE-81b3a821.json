@@ -16,7 +16,7 @@
       },
       "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
       "engine": "duckdb",
-      "latency_ms": 4,
+      "latency_ms": 3,
       "lead": "Days of inventory ranges from 17.5 days for PLT-SG01 to 19.6 days for PLT-DE01 across 5 plant values, Sep 2026.",
       "lineage": {
         "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
@@ -86,7 +86,7 @@
         }
       ],
       "notes": [],
-      "request_id": "bcfc6d5d5639",
+      "request_id": "8ba15912997a",
       "result_checksum": "3f8b24ddc762fb37",
       "role": "EXECUTIVE_ROLE",
       "row_count": 5,
@@ -114,7 +114,7 @@
       ],
       "semantic_query_hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
       "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-      "total_ms": 5,
+      "total_ms": 4,
       "user": "LOCAL_DEVELOPER",
       "view": "EXECUTIVE_SV_V1"
     }
@@ -136,7 +136,7 @@
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 4,
+  "latency_ms": 3,
   "lead": "Days of inventory ranges from 17.5 days for PLT-SG01 to 19.6 days for PLT-DE01 across 5 plant values, Sep 2026.",
   "lineage": {
     "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
@@ -209,7 +209,7 @@
     "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
   ],
   "path": "resolver",
-  "request_id": "bcfc6d5d5639",
+  "request_id": "8ba15912997a",
   "result_checksum": "3f8b24ddc762fb37",
   "role": "EXECUTIVE_ROLE",
   "row_count": 5,
@@ -237,7 +237,7 @@
   ],
   "semantic_query_hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
   "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-  "total_ms": 5,
+  "total_ms": 4,
   "user": "LOCAL_DEVELOPER",
   "view": "EXECUTIVE_SV_V1"
 }

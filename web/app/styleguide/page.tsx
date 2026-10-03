@@ -229,7 +229,10 @@ export default function Styleguide() {
           <Strata
             revealed={revealed}
             governed={0.8376}
-            basis="Delivered, non-cancelled lines against the committed date."
+            basis="SUM(is_on_time) / SUM(is_delivered)"
+            title="On-time delivery"
+            version={1}
+            definition="Share of delivered sales order lines that arrived on or before the date we committed to the customer."
             legacy={[
               {
                 key: "planning_requested_date",

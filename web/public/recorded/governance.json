@@ -263,6 +263,11 @@
       "role": "SCM_DEPLOY"
     },
     {
+      "object": "SCHEMA {{DB}}.RAW",
+      "privilege": "USAGE",
+      "role": "SCM_LEGACY_READER"
+    },
+    {
       "object": "TABLE {{DB}}.AUDIT.ANSWERS",
       "privilege": "INSERT",
       "role": "SCM_READER"
@@ -411,6 +416,11 @@
       "object": "PROCUREMENT_ROLE",
       "privilege": "ROLE",
       "role": "SCM_SERVICE_PERSONAS"
+    },
+    {
+      "object": "SCM_LEGACY_READER",
+      "privilege": "ROLE",
+      "role": "SCM_SERVICE_ROLE"
     },
     {
       "object": "SCM_READER",

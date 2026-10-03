@@ -86,9 +86,9 @@
         }
       ],
       "notes": [],
-      "request_id": "bf70876e94b5",
+      "request_id": "0463443cf1a1",
       "result_checksum": "3f8b24ddc762fb37",
-      "role": "PLANNING_ROLE",
+      "role": "EMEA_PLANNING_ROLE",
       "row_count": 5,
       "rows": [
         {
@@ -209,9 +209,9 @@
     "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
   ],
   "path": "resolver",
-  "request_id": "bf70876e94b5",
+  "request_id": "0463443cf1a1",
   "result_checksum": "3f8b24ddc762fb37",
-  "role": "PLANNING_ROLE",
+  "role": "EMEA_PLANNING_ROLE",
   "row_count": 5,
   "rows": [
     {

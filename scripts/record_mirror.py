@@ -16,13 +16,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.environ.setdefault("SCM_BACKEND", "local")
+# Fifty-odd calls in a second; the per-user limit is for people, not the recorder.
+os.environ.setdefault("SCM_RATE_PER_MINUTE", "100000")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
 from api.main import app  # noqa: E402
 
 OUT = ROOT / "web" / "public" / "recorded"
-PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE"]
+PERSONAS = ["PLANNING_ROLE", "PROCUREMENT_ROLE", "LOGISTICS_ROLE", "EXECUTIVE_ROLE", "EMEA_PLANNING_ROLE"]
+
+# Kept in step with web/app/before-after/page.tsx, key order included: the file name hashes the JSON.
+LANDED_ACROSS_TARIFF = {
+    "metrics": ["landed_cost_per_unit"],
+    "dimensions": ["period_month"],
+    "time": {"range": "fy2026"},
+    "filters": [{"dimension": "part_family", "operator": "=", "value": "Control electronics"}],
+}
 
 # Kept in step with web/app/ask/page.tsx and web/app/compare/page.tsx.
 ASK = [
@@ -71,7 +81,7 @@ def main() -> int:
 
     def save(name: str, response) -> None:
         nonlocal written
-        if response.status_code >= 500:
+        if response.status_code >= 500 or response.status_code == 429:
             raise SystemExit(f"{name}: {response.status_code} {response.text[:200]}")
         (OUT / f"{name}.json").write_text(json.dumps(response.json(), indent=2, sort_keys=True) + "\n")
         written += 1
@@ -87,6 +97,9 @@ def main() -> int:
     for phrasings in COMPARE:
         save(f"compare-{slug(js_json(phrasings))}", client.post("/api/compare", json={"phrasings": phrasings}))
     for persona in PERSONAS:
+        save(f"query-{persona}-{slug(js_json(LANDED_ACROSS_TARIFF))}",
+             client.post("/api/query", json={"query": LANDED_ACROSS_TARIFF, "persona": persona},
+                         headers={"X-Persona": persona}))
         for question in ASK:
             save(f"ask-{persona}-{slug(question)}",
                  client.post("/api/ask", json={"question": question, "persona": persona},

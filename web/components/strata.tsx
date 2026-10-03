@@ -9,11 +9,17 @@ export function Strata({
   legacy,
   governed,
   basis,
+  title,
+  version,
+  definition,
   revealed,
 }: {
   legacy: LegacyNumber[];
   governed: number;
   basis: string;
+  title: string;
+  version: number;
+  definition: string;
   revealed: boolean;
 }) {
   const still = useReducedMotion();
@@ -51,11 +57,17 @@ export function Strata({
         className="mt-6 grid grid-cols-12 gap-x-3"
         aria-hidden={!revealed}
       >
-        <p className="micro col-span-12 text-ore md:col-span-3">Governed · on_time_delivery v1</p>
+        <p className="micro col-span-12 text-ore md:col-span-3">
+          Governed · {title} v{version}
+        </p>
         <p className="col-span-12 font-display text-5xl font-light tabular text-ore md:col-span-5">
           {formatValue(governed, "ratio")}
         </p>
-        <p className="col-span-12 text-sm text-bone md:col-span-4">{basis}</p>
+        <div className="col-span-12 md:col-span-4">
+          <p className="font-sans text-base text-bone">{definition}</p>
+          <p className="mt-1 micro">Formula</p>
+          <p className="font-mono text-sm text-ash">{basis}</p>
+        </div>
       </motion.div>
     </div>
   );

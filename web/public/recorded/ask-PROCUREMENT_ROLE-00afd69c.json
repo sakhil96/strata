@@ -16,7 +16,7 @@
       },
       "definition": "Share of received purchase order lines that arrived on or before the supplier's promised date.",
       "engine": "duckdb",
-      "latency_ms": 5,
+      "latency_ms": 8,
       "lead": "Of 40 supplier values, Ensambles Electr\u00f3nicos de Monterrey SA de CV is lowest on supplier on-time receipt at 79.5% and Grupo Plastimex SA de CV highest at 94.1%, Oct 2025 to Sep 2026.",
       "lineage": {
         "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
@@ -86,7 +86,7 @@
         }
       ],
       "notes": [],
-      "request_id": "57483148ff29",
+      "request_id": "f4e74fdcfc3f",
       "result_checksum": "170fc45acc36a269",
       "role": "PROCUREMENT_ROLE",
       "row_count": 40,
@@ -254,7 +254,7 @@
       ],
       "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
       "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-      "total_ms": 6,
+      "total_ms": 9,
       "user": "LOCAL_DEVELOPER",
       "view": "PROCUREMENT_SV_V1"
     }
@@ -276,7 +276,7 @@
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 5,
+  "latency_ms": 8,
   "lead": "Of 40 supplier values, Ensambles Electr\u00f3nicos de Monterrey SA de CV is lowest on supplier on-time receipt at 79.5% and Grupo Plastimex SA de CV highest at 94.1%, Oct 2025 to Sep 2026.",
   "lineage": {
     "expression": "SUM(po_lines.is_on_time_receipt) / NULLIF(SUM(po_lines.is_received), 0)",
@@ -347,7 +347,7 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "57483148ff29",
+  "request_id": "f4e74fdcfc3f",
   "result_checksum": "170fc45acc36a269",
   "role": "PROCUREMENT_ROLE",
   "row_count": 40,
@@ -515,7 +515,7 @@
   ],
   "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
   "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-  "total_ms": 6,
+  "total_ms": 9,
   "user": "LOCAL_DEVELOPER",
   "view": "PROCUREMENT_SV_V1"
 }

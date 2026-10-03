@@ -16,7 +16,7 @@
       },
       "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
       "engine": "duckdb",
-      "latency_ms": 5,
+      "latency_ms": 3,
       "lead": "Landed cost per unit rose from $156.31 in Apr 2026 to $162.31 in Sep 2026, up $6.00, 3.8%. The low was $148.46 in Jul 2026 and the high $162.31 in Sep 2026.",
       "lineage": {
         "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
@@ -86,7 +86,7 @@
         }
       ],
       "notes": [],
-      "request_id": "d8e71768967a",
+      "request_id": "d6ae66a716c5",
       "result_checksum": "ad131f6024b99a2d",
       "role": "PLANNING_ROLE",
       "row_count": 6,
@@ -118,7 +118,7 @@
       ],
       "semantic_query_hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
       "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
-      "total_ms": 6,
+      "total_ms": 5,
       "user": "LOCAL_DEVELOPER",
       "view": "PLANNING_SV_V1"
     }
@@ -140,7 +140,7 @@
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 5,
+  "latency_ms": 3,
   "lead": "Landed cost per unit rose from $156.31 in Apr 2026 to $162.31 in Sep 2026, up $6.00, 3.8%. The low was $148.46 in Jul 2026 and the high $162.31 in Sep 2026.",
   "lineage": {
     "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
@@ -211,7 +211,7 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "d8e71768967a",
+  "request_id": "d6ae66a716c5",
   "result_checksum": "ad131f6024b99a2d",
   "role": "PLANNING_ROLE",
   "row_count": 6,
@@ -243,7 +243,7 @@
   ],
   "semantic_query_hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
   "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
-  "total_ms": 6,
+  "total_ms": 5,
   "user": "LOCAL_DEVELOPER",
   "view": "PLANNING_SV_V1"
 }

@@ -86,9 +86,9 @@
         }
       ],
       "notes": [],
-      "request_id": "ef6c0d2a3045",
+      "request_id": "484f54f253dc",
       "result_checksum": "170fc45acc36a269",
-      "role": "EXECUTIVE_ROLE",
+      "role": "EMEA_PLANNING_ROLE",
       "row_count": 40,
       "rows": [
         {
@@ -253,10 +253,10 @@
         }
       ],
       "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-      "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+      "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
       "total_ms": 6,
       "user": "LOCAL_DEVELOPER",
-      "view": "EXECUTIVE_SV_V1"
+      "view": "PLANNING_SV_V1"
     }
   ],
   "canonical_query": {
@@ -347,9 +347,9 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "ef6c0d2a3045",
+  "request_id": "484f54f253dc",
   "result_checksum": "170fc45acc36a269",
-  "role": "EXECUTIVE_ROLE",
+  "role": "EMEA_PLANNING_ROLE",
   "row_count": 40,
   "rows": [
     {
@@ -514,8 +514,8 @@
     }
   ],
   "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
   "total_ms": 6,
   "user": "LOCAL_DEVELOPER",
-  "view": "EXECUTIVE_SV_V1"
+  "view": "PLANNING_SV_V1"
 }

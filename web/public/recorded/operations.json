@@ -48,9 +48,9 @@
   },
   "slo": [
     {
-      "measured": "6 ms",
+      "measured": "8 ms",
       "name": "p95 answer latency through /query",
-      "source": "local audit trail, 101 answers",
+      "source": "local audit trail, 160 answers",
       "status": "met",
       "target": "\u2264 2500 ms"
     },

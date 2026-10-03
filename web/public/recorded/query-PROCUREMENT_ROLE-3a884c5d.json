@@ -1,0 +1,151 @@
+{
+  "canonical_query": {
+    "dimensions": [
+      "period_month"
+    ],
+    "filters": [
+      {
+        "dimension": "part_family",
+        "operator": "=",
+        "values": [
+          "Control electronics"
+        ]
+      }
+    ],
+    "metrics": [
+      "landed_cost_per_unit"
+    ],
+    "time": {
+      "end": "2026-09-01",
+      "start": "2025-10-01"
+    }
+  },
+  "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+  "engine": "duckdb",
+  "latency_ms": 5,
+  "lead": "Landed cost per unit rose from $160.54 in Nov 2025 to $166.13 in Sep 2026, up $5.59, 3.5%. The low was $146.78 in Jan 2026 and the high $171.24 in Feb 2026.",
+  "lineage": {
+    "expression": "SUM(po_lines.landed_usd) / NULLIF(SUM(po_lines.received_qty), 0)",
+    "metric": "landed_cost_per_unit",
+    "path": [
+      {
+        "layer": "source",
+        "objects": [
+          "erp/fx_rates",
+          "erp/goods_receipts",
+          "erp/material_master",
+          "erp/material_tariffs",
+          "erp/plants",
+          "erp/purchase_order_lines",
+          "erp/supplier_master",
+          "portal/supplier_profiles",
+          "tms/inbound_shipments"
+        ]
+      },
+      {
+        "layer": "staging",
+        "objects": [
+          "stg_goods_receipts",
+          "stg_parts",
+          "stg_purchase_order_lines",
+          "stg_supplier_crosswalk",
+          "stg_suppliers"
+        ]
+      },
+      {
+        "layer": "conformed",
+        "objects": [
+          "dim_tariff_code",
+          "fct_po_line"
+        ]
+      },
+      {
+        "columns": [
+          "landed_usd",
+          "received_qty"
+        ],
+        "layer": "semantic",
+        "objects": [
+          "po_lines.landed_cost_per_unit"
+        ]
+      }
+    ],
+    "source": "dbt manifest"
+  },
+  "metric_name": "landed_cost_per_unit",
+  "metrics": [
+    {
+      "date_basis": "receipt_date",
+      "definition": "Fully loaded USD cost of each received unit, weighted by received quantity.",
+      "denominator": "Units received in the period.",
+      "formula_text": "SUM(material + freight + duty + insurance + handling) / SUM(received_qty), dated by receipt_date.",
+      "grain": "purchase_order_line",
+      "name": "landed_cost_per_unit",
+      "owner": "VP Procurement",
+      "parent": null,
+      "status": "approved",
+      "steward": "Procurement Analytics Lead",
+      "title": "Landed cost per unit",
+      "unit": "usd_per_unit",
+      "version": 1,
+      "window": "period"
+    }
+  ],
+  "notes": [],
+  "path": "builder",
+  "request_id": "409fc1c52c1f",
+  "result_checksum": "fa65c8177093f80b",
+  "role": "PROCUREMENT_ROLE",
+  "row_count": 11,
+  "rows": [
+    {
+      "landed_cost_per_unit": 160.544041215,
+      "period_month": "2025-11-01"
+    },
+    {
+      "landed_cost_per_unit": 168.613475919,
+      "period_month": "2025-12-01"
+    },
+    {
+      "landed_cost_per_unit": 146.780262993,
+      "period_month": "2026-01-01"
+    },
+    {
+      "landed_cost_per_unit": 171.235606717,
+      "period_month": "2026-02-01"
+    },
+    {
+      "landed_cost_per_unit": 157.466838578,
+      "period_month": "2026-03-01"
+    },
+    {
+      "landed_cost_per_unit": 159.619328635,
+      "period_month": "2026-04-01"
+    },
+    {
+      "landed_cost_per_unit": 156.987585848,
+      "period_month": "2026-05-01"
+    },
+    {
+      "landed_cost_per_unit": 160.791131847,
+      "period_month": "2026-06-01"
+    },
+    {
+      "landed_cost_per_unit": 162.441546702,
+      "period_month": "2026-07-01"
+    },
+    {
+      "landed_cost_per_unit": 161.123300741,
+      "period_month": "2026-08-01"
+    },
+    {
+      "landed_cost_per_unit": 166.134877148,
+      "period_month": "2026-09-01"
+    }
+  ],
+  "semantic_query_hash": "40d6344d9ba38396d957f3ff17413986af9ce252f6a7321dcb08273f0bed95b0",
+  "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control electronics'\n)\nORDER BY period_month",
+  "total_ms": 5,
+  "user": "LOCAL_DEVELOPER",
+  "view": "PROCUREMENT_SV_V1"
+}

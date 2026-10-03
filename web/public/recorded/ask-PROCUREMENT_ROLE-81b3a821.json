@@ -16,7 +16,7 @@
       },
       "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
       "engine": "duckdb",
-      "latency_ms": 4,
+      "latency_ms": 5,
       "lead": "Days of inventory ranges from 17.5 days for PLT-SG01 to 19.6 days for PLT-DE01 across 5 plant values, Sep 2026.",
       "lineage": {
         "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
@@ -86,7 +86,7 @@
         }
       ],
       "notes": [],
-      "request_id": "6a3dd2d1c360",
+      "request_id": "113414c527d7",
       "result_checksum": "3f8b24ddc762fb37",
       "role": "PROCUREMENT_ROLE",
       "row_count": 5,
@@ -136,7 +136,7 @@
   "engine": "duckdb",
   "fallback": true,
   "fallback_reason": "the agent is switched off in this environment",
-  "latency_ms": 4,
+  "latency_ms": 5,
   "lead": "Days of inventory ranges from 17.5 days for PLT-SG01 to 19.6 days for PLT-DE01 across 5 plant values, Sep 2026.",
   "lineage": {
     "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
@@ -209,7 +209,7 @@
     "days_of_inventory resolved to the governed default; variants: dio_financial, doi_units"
   ],
   "path": "resolver",
-  "request_id": "6a3dd2d1c360",
+  "request_id": "113414c527d7",
   "result_checksum": "3f8b24ddc762fb37",
   "role": "PROCUREMENT_ROLE",
   "row_count": 5,

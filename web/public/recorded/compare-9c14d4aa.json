@@ -16,7 +16,7 @@
         },
         "definition": "How many days the month-end on-hand stock would last at the trailing 90-day rate of shipments.",
         "engine": "duckdb",
-        "latency_ms": 3,
+        "latency_ms": 1,
         "lineage": {
           "expression": "SUM(inventory.on_hand_value_end) / NULLIF(SUM(inventory.cogs_daily_90d), 0)",
           "metric": "days_of_inventory",
@@ -85,7 +85,7 @@
           }
         ],
         "notes": [],
-        "request_id": "eef7884ecd3f",
+        "request_id": "17ddbecfa1ba",
         "result_checksum": "60f359d2eb839233",
         "role": "PLANNING_ROLE",
         "row_count": 1,
@@ -195,7 +195,7 @@
           }
         ],
         "notes": [],
-        "request_id": "eef7884ecd3f",
+        "request_id": "17ddbecfa1ba",
         "result_checksum": "60f359d2eb839233",
         "role": "PROCUREMENT_ROLE",
         "row_count": 1,
@@ -305,7 +305,7 @@
           }
         ],
         "notes": [],
-        "request_id": "eef7884ecd3f",
+        "request_id": "17ddbecfa1ba",
         "result_checksum": "60f359d2eb839233",
         "role": "LOGISTICS_ROLE",
         "row_count": 1,

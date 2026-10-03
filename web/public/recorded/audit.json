@@ -2,6 +2,87 @@
   {
     "canonical_query": {
       "dimensions": [
+        "supplier_name"
+      ],
+      "filters": [],
+      "metrics": [
+        "supplier_on_time_receipt"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
+    "latency_ms": 5,
+    "metric": "supplier_on_time_receipt",
+    "question": "Which suppliers have the worst on-time receipt?",
+    "request_id": "ee42216ac246",
+    "result_checksum": "170fc45acc36a269",
+    "role": "EMEA_PLANNING_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+    "ts": "2026-10-03T16:18:48+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [],
+      "filters": [],
+      "metrics": [
+        "on_time_delivery"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+    "latency_ms": 2,
+    "metric": "on_time_delivery",
+    "question": "What is on-time delivery for FY2026?",
+    "request_id": "e64e92377fb5",
+    "result_checksum": "7f965a2209f6b749",
+    "role": "EMEA_PLANNING_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
+    "ts": "2026-10-03T16:18:48+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [
+        {
+          "dimension": "part_family",
+          "operator": "=",
+          "values": [
+            "Control electronics"
+          ]
+        }
+      ],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "40d6344d9ba38396d957f3ff17413986af9ce252f6a7321dcb08273f0bed95b0",
+    "latency_ms": 5,
+    "metric": "landed_cost_per_unit",
+    "question": null,
+    "request_id": "79b84e37db12",
+    "result_checksum": "fa65c8177093f80b",
+    "role": "EMEA_PLANNING_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control electronics'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:48+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
         "plant_id"
       ],
       "filters": [],
@@ -14,14 +95,14 @@
       }
     },
     "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
-    "latency_ms": 1,
+    "latency_ms": 3,
     "metric": "days_of_inventory",
     "question": "What is DOI by plant?",
-    "request_id": "6a6ef0763322",
+    "request_id": "42164c8a2cf1",
     "result_checksum": "3f8b24ddc762fb37",
     "role": "EXECUTIVE_ROLE",
     "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-    "ts": "2026-10-03T05:54:52+00:00",
+    "ts": "2026-10-03T16:18:47+00:00",
     "user": "LOCAL_DEVELOPER"
   },
   {
@@ -35,452 +116,411 @@
       ],
       "time": {
         "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
-    "latency_ms": 2,
-    "metric": "landed_cost_per_unit",
-    "question": "How did landed cost move by month across the July tariff step?",
-    "request_id": "07beb81629a3",
-    "result_checksum": "13bd163b713c2de8",
-    "role": "EXECUTIVE_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "supplier_name"
-      ],
-      "filters": [],
-      "metrics": [
-        "supplier_on_time_receipt"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-    "latency_ms": 3,
-    "metric": "supplier_on_time_receipt",
-    "question": "Which suppliers have the worst on-time receipt?",
-    "request_id": "3154ff0f3dfd",
-    "result_checksum": "170fc45acc36a269",
-    "role": "EXECUTIVE_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "on_time_delivery"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
-    "latency_ms": 1,
-    "metric": "on_time_delivery",
-    "question": "What is on-time delivery for FY2026?",
-    "request_id": "31e70ffa9a17",
-    "result_checksum": "7f965a2209f6b749",
-    "role": "EXECUTIVE_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "plant_id"
-      ],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
-    "latency_ms": 2,
-    "metric": "days_of_inventory",
-    "question": "What is DOI by plant?",
-    "request_id": "ab295d39d159",
-    "result_checksum": "3f8b24ddc762fb37",
-    "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "period_month"
-      ],
-      "filters": [],
-      "metrics": [
-        "landed_cost_per_unit"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
-    "latency_ms": 2,
-    "metric": "landed_cost_per_unit",
-    "question": "How did landed cost move by month across the July tariff step?",
-    "request_id": "bd9b25ce1ebd",
-    "result_checksum": "13bd163b713c2de8",
-    "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "supplier_name"
-      ],
-      "filters": [],
-      "metrics": [
-        "supplier_on_time_receipt"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-    "latency_ms": 4,
-    "metric": "supplier_on_time_receipt",
-    "question": "Which suppliers have the worst on-time receipt?",
-    "request_id": "3cdda764fbaf",
-    "result_checksum": "170fc45acc36a269",
-    "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "on_time_delivery"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
-    "latency_ms": 1,
-    "metric": "on_time_delivery",
-    "question": "What is on-time delivery for FY2026?",
-    "request_id": "48d0366a294e",
-    "result_checksum": "7f965a2209f6b749",
-    "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "plant_id"
-      ],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
-    "latency_ms": 2,
-    "metric": "days_of_inventory",
-    "question": "What is DOI by plant?",
-    "request_id": "ec860f2ad14f",
-    "result_checksum": "3f8b24ddc762fb37",
-    "role": "PROCUREMENT_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "period_month"
-      ],
-      "filters": [],
-      "metrics": [
-        "landed_cost_per_unit"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
-    "latency_ms": 2,
-    "metric": "landed_cost_per_unit",
-    "question": "How did landed cost move by month across the July tariff step?",
-    "request_id": "f3334a171963",
-    "result_checksum": "13bd163b713c2de8",
-    "role": "PROCUREMENT_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "supplier_name"
-      ],
-      "filters": [],
-      "metrics": [
-        "supplier_on_time_receipt"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-    "latency_ms": 3,
-    "metric": "supplier_on_time_receipt",
-    "question": "Which suppliers have the worst on-time receipt?",
-    "request_id": "6a17466be88d",
-    "result_checksum": "170fc45acc36a269",
-    "role": "PROCUREMENT_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "on_time_delivery"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
-    "latency_ms": 1,
-    "metric": "on_time_delivery",
-    "question": "What is on-time delivery for FY2026?",
-    "request_id": "dcc9ffc580d7",
-    "result_checksum": "7f965a2209f6b749",
-    "role": "PROCUREMENT_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "plant_id"
-      ],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
-    "latency_ms": 2,
-    "metric": "days_of_inventory",
-    "question": "What is DOI by plant?",
-    "request_id": "842a2f406d38",
-    "result_checksum": "3f8b24ddc762fb37",
-    "role": "PLANNING_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "period_month"
-      ],
-      "filters": [],
-      "metrics": [
-        "landed_cost_per_unit"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "40e81be56d429e47908ba36e68ef649fafb2b84a88d9f213d052148a1331e6ea",
-    "latency_ms": 2,
-    "metric": "landed_cost_per_unit",
-    "question": "How did landed cost move by month across the July tariff step?",
-    "request_id": "94506576e26d",
-    "result_checksum": "13bd163b713c2de8",
-    "role": "PLANNING_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY period_month",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [
-        "supplier_name"
-      ],
-      "filters": [],
-      "metrics": [
-        "supplier_on_time_receipt"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
-    "latency_ms": 4,
-    "metric": "supplier_on_time_receipt",
-    "question": "Which suppliers have the worst on-time receipt?",
-    "request_id": "5224a690ce86",
-    "result_checksum": "170fc45acc36a269",
-    "role": "PLANNING_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "on_time_delivery"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2025-10-01"
-      }
-    },
-    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
-    "latency_ms": 1,
-    "metric": "on_time_delivery",
-    "question": "What is on-time delivery for FY2026?",
-    "request_id": "30aa1ea65cc6",
-    "result_checksum": "7f965a2209f6b749",
-    "role": "PLANNING_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
-    "latency_ms": 1,
-    "metric": "days_of_inventory",
-    "question": "What is warehouse days cover?",
-    "request_id": "36566ee58b9e",
-    "result_checksum": "60f359d2eb839233",
-    "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
-    "latency_ms": 1,
-    "metric": "days_of_inventory",
-    "question": "How many stock days do we hold?",
-    "request_id": "36566ee58b9e",
-    "result_checksum": "60f359d2eb839233",
-    "role": "PROCUREMENT_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "days_of_inventory"
-      ],
-      "time": {
-        "end": "2026-09-01",
-        "start": "2026-09-01"
-      }
-    },
-    "hash": "645ed2c6b4a80c7f8487b39c8e19c637fa2c592b272eefa334ceb3ba363ce3b5",
-    "latency_ms": 1,
-    "metric": "days_of_inventory",
-    "question": "What are our days of supply?",
-    "request_id": "36566ee58b9e",
-    "result_checksum": "60f359d2eb839233",
-    "role": "PLANNING_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
-    "user": "LOCAL_DEVELOPER"
-  },
-  {
-    "canonical_query": {
-      "dimensions": [],
-      "filters": [],
-      "metrics": [
-        "unit_fill_rate"
-      ],
-      "time": {
-        "end": "2026-06-01",
         "start": "2026-04-01"
       }
     },
-    "hash": "8921be13a7006a22d9e30e36de0245b00eee00d580fdfb872b87e31167b21619",
-    "latency_ms": 1,
-    "metric": "unit_fill_rate",
-    "question": "What was shipment completeness in Q3?",
-    "request_id": "6c76e61e8762",
-    "result_checksum": "b416fec827aed623",
+    "hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+    "latency_ms": 3,
+    "metric": "landed_cost_per_unit",
+    "question": "How did landed cost move by month across the July tariff step?",
+    "request_id": "23f7e36fceec",
+    "result_checksum": "ad131f6024b99a2d",
+    "role": "EXECUTIVE_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "supplier_name"
+      ],
+      "filters": [],
+      "metrics": [
+        "supplier_on_time_receipt"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
+    "latency_ms": 5,
+    "metric": "supplier_on_time_receipt",
+    "question": "Which suppliers have the worst on-time receipt?",
+    "request_id": "2149d431bbe4",
+    "result_checksum": "170fc45acc36a269",
+    "role": "EXECUTIVE_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [],
+      "filters": [],
+      "metrics": [
+        "on_time_delivery"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+    "latency_ms": 2,
+    "metric": "on_time_delivery",
+    "question": "What is on-time delivery for FY2026?",
+    "request_id": "ea6d2005edb1",
+    "result_checksum": "7f965a2209f6b749",
+    "role": "EXECUTIVE_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [
+        {
+          "dimension": "part_family",
+          "operator": "=",
+          "values": [
+            "Control electronics"
+          ]
+        }
+      ],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "40d6344d9ba38396d957f3ff17413986af9ce252f6a7321dcb08273f0bed95b0",
+    "latency_ms": 5,
+    "metric": "landed_cost_per_unit",
+    "question": null,
+    "request_id": "9b2529c69a09",
+    "result_checksum": "fa65c8177093f80b",
+    "role": "EXECUTIVE_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    EXECUTIVE_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control electronics'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "plant_id"
+      ],
+      "filters": [],
+      "metrics": [
+        "days_of_inventory"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-09-01"
+      }
+    },
+    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
+    "latency_ms": 4,
+    "metric": "days_of_inventory",
+    "question": "What is DOI by plant?",
+    "request_id": "7d8fed4ee8e6",
+    "result_checksum": "3f8b24ddc762fb37",
     "role": "LOGISTICS_ROLE",
-    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS requested_lines.unit_fill_rate\n    WHERE requested_lines.period_month BETWEEN '2026-04-01' AND '2026-06-01'\n)",
-    "ts": "2026-10-03T05:54:52+00:00",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-04-01"
+      }
+    },
+    "hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+    "latency_ms": 3,
+    "metric": "landed_cost_per_unit",
+    "question": "How did landed cost move by month across the July tariff step?",
+    "request_id": "26c4db59a81e",
+    "result_checksum": "ad131f6024b99a2d",
+    "role": "LOGISTICS_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "supplier_name"
+      ],
+      "filters": [],
+      "metrics": [
+        "supplier_on_time_receipt"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
+    "latency_ms": 5,
+    "metric": "supplier_on_time_receipt",
+    "question": "Which suppliers have the worst on-time receipt?",
+    "request_id": "316fa039cb2a",
+    "result_checksum": "170fc45acc36a269",
+    "role": "LOGISTICS_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [],
+      "filters": [],
+      "metrics": [
+        "on_time_delivery"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+    "latency_ms": 2,
+    "metric": "on_time_delivery",
+    "question": "What is on-time delivery for FY2026?",
+    "request_id": "39f3916dae52",
+    "result_checksum": "7f965a2209f6b749",
+    "role": "LOGISTICS_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [
+        {
+          "dimension": "part_family",
+          "operator": "=",
+          "values": [
+            "Control electronics"
+          ]
+        }
+      ],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "40d6344d9ba38396d957f3ff17413986af9ce252f6a7321dcb08273f0bed95b0",
+    "latency_ms": 6,
+    "metric": "landed_cost_per_unit",
+    "question": null,
+    "request_id": "d7394fb70491",
+    "result_checksum": "fa65c8177093f80b",
+    "role": "LOGISTICS_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control electronics'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "plant_id"
+      ],
+      "filters": [],
+      "metrics": [
+        "days_of_inventory"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-09-01"
+      }
+    },
+    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
+    "latency_ms": 4,
+    "metric": "days_of_inventory",
+    "question": "What is DOI by plant?",
+    "request_id": "392c497f929c",
+    "result_checksum": "3f8b24ddc762fb37",
+    "role": "PROCUREMENT_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-04-01"
+      }
+    },
+    "hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+    "latency_ms": 3,
+    "metric": "landed_cost_per_unit",
+    "question": "How did landed cost move by month across the July tariff step?",
+    "request_id": "8fdf4fff3138",
+    "result_checksum": "ad131f6024b99a2d",
+    "role": "PROCUREMENT_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "supplier_name"
+      ],
+      "filters": [],
+      "metrics": [
+        "supplier_on_time_receipt"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
+    "latency_ms": 5,
+    "metric": "supplier_on_time_receipt",
+    "question": "Which suppliers have the worst on-time receipt?",
+    "request_id": "6f9d2b1924db",
+    "result_checksum": "170fc45acc36a269",
+    "role": "PROCUREMENT_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [],
+      "filters": [],
+      "metrics": [
+        "on_time_delivery"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "c0e0370d730e7be42076aaa6d1616d5a6991213d729919c32664121808eef9ab",
+    "latency_ms": 2,
+    "metric": "on_time_delivery",
+    "question": "What is on-time delivery for FY2026?",
+    "request_id": "ad35dc37c052",
+    "result_checksum": "7f965a2209f6b749",
+    "role": "PROCUREMENT_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    METRICS delivered_lines.on_time_delivery\n    WHERE delivered_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [
+        {
+          "dimension": "part_family",
+          "operator": "=",
+          "values": [
+            "Control electronics"
+          ]
+        }
+      ],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2025-10-01"
+      }
+    },
+    "hash": "40d6344d9ba38396d957f3ff17413986af9ce252f6a7321dcb08273f0bed95b0",
+    "latency_ms": 5,
+    "metric": "landed_cost_per_unit",
+    "question": null,
+    "request_id": "f311315c8b97",
+    "result_checksum": "fa65c8177093f80b",
+    "role": "PROCUREMENT_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PROCUREMENT_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n      AND parts.part_family = 'Control electronics'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "plant_id"
+      ],
+      "filters": [],
+      "metrics": [
+        "days_of_inventory"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-09-01"
+      }
+    },
+    "hash": "f7bf554e29d85827390bcb64c864345cdd49fd447644185f8e3549e34fe78dc6",
+    "latency_ms": 5,
+    "metric": "days_of_inventory",
+    "question": "What is DOI by plant?",
+    "request_id": "d471256a6b55",
+    "result_checksum": "3f8b24ddc762fb37",
+    "role": "PLANNING_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS plants.plant_id\n    METRICS inventory.days_of_inventory\n    WHERE inventory.period_month = '2026-09-01'\n)\nORDER BY plant_id",
+    "ts": "2026-10-03T16:18:47+00:00",
+    "user": "LOCAL_DEVELOPER"
+  },
+  {
+    "canonical_query": {
+      "dimensions": [
+        "period_month"
+      ],
+      "filters": [],
+      "metrics": [
+        "landed_cost_per_unit"
+      ],
+      "time": {
+        "end": "2026-09-01",
+        "start": "2026-04-01"
+      }
+    },
+    "hash": "12b54789f20d7c58ba076155e48e6604118fd48761755ae3770b4f8a7da85cb2",
+    "latency_ms": 4,
+    "metric": "landed_cost_per_unit",
+    "question": "How did landed cost move by month across the July tariff step?",
+    "request_id": "563480406128",
+    "result_checksum": "ad131f6024b99a2d",
+    "role": "PLANNING_ROLE",
+    "sql": "SELECT * FROM SEMANTIC_VIEW(\n    PLANNING_SV_V1\n    DIMENSIONS po_lines.period_month\n    METRICS po_lines.landed_cost_per_unit\n    WHERE po_lines.period_month BETWEEN '2026-04-01' AND '2026-09-01'\n)\nORDER BY period_month",
+    "ts": "2026-10-03T16:18:47+00:00",
     "user": "LOCAL_DEVELOPER"
   }
 ]

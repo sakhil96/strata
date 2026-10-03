@@ -56,6 +56,9 @@ export default function BeforeAfterPage() {
                 legacy={story.value.legacy}
                 governed={story.value.governed.value}
                 basis={story.value.governed.basis}
+                title={story.value.governed.ledger.metrics[0]?.title ?? "On-time delivery"}
+                version={story.value.governed.ledger.metrics[0]?.version ?? 1}
+                definition={story.value.governed.ledger.metrics[0]?.definition ?? story.value.governed.ledger.definition}
                 revealed={revealed}
               />
               <button type="button" className="quiet-action mt-4" onClick={() => setRevealed((v) => !v)}>

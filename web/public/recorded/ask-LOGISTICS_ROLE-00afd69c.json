@@ -86,7 +86,7 @@
         }
       ],
       "notes": [],
-      "request_id": "0794fe5db9dd",
+      "request_id": "08842602c05c",
       "result_checksum": "170fc45acc36a269",
       "role": "LOGISTICS_ROLE",
       "row_count": 40,
@@ -254,7 +254,7 @@
       ],
       "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
       "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-      "total_ms": 9,
+      "total_ms": 10,
       "user": "LOCAL_DEVELOPER",
       "view": "LOGISTICS_SV_V1"
     }
@@ -347,7 +347,7 @@
   ],
   "notes": [],
   "path": "resolver",
-  "request_id": "0794fe5db9dd",
+  "request_id": "08842602c05c",
   "result_checksum": "170fc45acc36a269",
   "role": "LOGISTICS_ROLE",
   "row_count": 40,
@@ -515,7 +515,7 @@
   ],
   "semantic_query_hash": "0ac347ed4345c5eac9269cb54aded387ec0fb7598d782dde36aad2539a65f7aa",
   "sql": "SELECT * FROM SEMANTIC_VIEW(\n    LOGISTICS_SV_V1\n    DIMENSIONS suppliers.supplier_name\n    METRICS po_lines.supplier_on_time_receipt\n    WHERE po_lines.period_month BETWEEN '2025-10-01' AND '2026-09-01'\n)\nORDER BY supplier_name",
-  "total_ms": 9,
+  "total_ms": 10,
   "user": "LOCAL_DEVELOPER",
   "view": "LOGISTICS_SV_V1"
 }

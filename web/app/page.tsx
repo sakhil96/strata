@@ -18,6 +18,7 @@ export default function Landing() {
   const glossary = useResource(() => api.glossary(), []);
   const still = useReducedMotion();
   const [merged, setMerged] = useState(false);
+  const governedMetric = story.state === "ready" ? story.value.governed.ledger.metrics?.[0] : undefined;
 
   useEffect(() => {
     if (story.state !== "ready") return;
@@ -56,7 +57,7 @@ export default function Landing() {
           {story.state === "loading" ? <Loading what="Reading the three reports" /> : null}
           {story.state === "failed" ? <Problem problem={story.problem} /> : null}
           {story.state === "ready" ? (
-            <div className="relative h-[360px]">
+            <div className="relative h-[480px]">
               {story.value.legacy.map((l, i) => (
                 <motion.div
                   key={l.key}
@@ -78,11 +79,17 @@ export default function Landing() {
                 className="absolute left-0 right-0"
                 aria-hidden={!merged}
               >
-                <p className="micro text-ore">Governed · on_time_delivery v1 · every role</p>
+                <p className="micro text-ore">
+                  Governed · {governedMetric?.title ?? "On-time delivery"} v{governedMetric?.version ?? 1} · every role
+                </p>
                 <p className="font-display text-5xl font-light tabular text-ore">
                   {formatValue(story.value.governed.value, "ratio")}
                 </p>
-                <p className="mt-1 max-w-[44ch] text-sm text-ash">{story.value.governed.basis}</p>
+                {governedMetric?.definition ? (
+                  <p className="mt-1 max-w-[44ch] font-sans text-lg text-ash">{governedMetric.definition}</p>
+                ) : null}
+                <p className="mt-2 micro">Formula</p>
+                <p className="max-w-[60ch] font-mono text-sm text-ash">{story.value.governed.basis}</p>
               </motion.div>
             </div>
           ) : null}
