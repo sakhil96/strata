@@ -76,8 +76,10 @@ rollback:         ## grants back to VERSION; the newer views stay for diagnosis
 smoke:
 	$(PY) scripts/smoke.py --env $(ENV) --connection $(CONN)
 
-eval-account:
-	SCM_BACKEND=snowflake SCM_AGENT=on SNOWFLAKE_CONNECTION_NAME=$(CONN) $(PY) eval/report.py
+eval-account:  ## every suite with the account checks; the service key signs agent:run
+	SCM_BACKEND=snowflake SCM_AGENT=on SCM_AGENT_TIMEOUT_S=240 SCM_ENV=$(ENV) SNOWFLAKE_CONNECTION_NAME=$(CONN) \
+	SNOWFLAKE_HOST=$(SNOWFLAKE_HOST) SNOWFLAKE_ACCOUNT=$(SNOWFLAKE_ACCOUNT) SNOWFLAKE_USER=SCM_SERVICE_USER \
+	SNOWFLAKE_PRIVATE_KEY_PATH=$(SERVICE_KEY) $(PY) eval/report.py
 
 loop:
 	$(PY) scripts/render_sql.py loop --env $(ENV) --connection $(CONN)

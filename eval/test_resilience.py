@@ -115,11 +115,17 @@ def test_a_stale_source_is_flagged_the_way_the_alert_fires(client):
 def test_restore_from_a_time_travel_clone_matches_the_original():
     import snowflake.connector
 
-    with snowflake.connector.connect(connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", "scm_test")) as conn:
+    env = os.getenv("SCM_ENV", "test")
+    db = f"SCM_{env.upper()}"
+    with snowflake.connector.connect(connection_name=os.getenv("SNOWFLAKE_CONNECTION_NAME", f"scm_{env}")) as conn:
         cur = conn.cursor()
-        cur.execute("CREATE OR REPLACE TABLE SCM_TEST.CONFORMED.FCT_PO_LINE_RESTORED CLONE SCM_TEST.CONFORMED.FCT_PO_LINE "
+        # dbt builds transient tables, which clone only to transient tables; the drill mirrors the source.
+        cur.execute(f"SHOW TABLES LIKE 'FCT_PO_LINE' IN SCHEMA {db}.CONFORMED")
+        kind = "TRANSIENT TABLE" if cur.fetchone()[cur.description.index(next(d for d in cur.description
+                                                                              if d[0] == "kind"))] == "TRANSIENT" else "TABLE"
+        cur.execute(f"CREATE OR REPLACE {kind} {db}.CONFORMED.FCT_PO_LINE_RESTORED CLONE {db}.CONFORMED.FCT_PO_LINE "
                     "AT (OFFSET => -60)")
-        cur.execute("SELECT (SELECT HASH_AGG(*) FROM SCM_TEST.CONFORMED.FCT_PO_LINE) = "
-                    "(SELECT HASH_AGG(*) FROM SCM_TEST.CONFORMED.FCT_PO_LINE_RESTORED)")
+        cur.execute(f"SELECT (SELECT HASH_AGG(*) FROM {db}.CONFORMED.FCT_PO_LINE) = "
+                    f"(SELECT HASH_AGG(*) FROM {db}.CONFORMED.FCT_PO_LINE_RESTORED)")
         assert cur.fetchone()[0]
-        cur.execute("DROP TABLE SCM_TEST.CONFORMED.FCT_PO_LINE_RESTORED")
+        cur.execute(f"DROP TABLE {db}.CONFORMED.FCT_PO_LINE_RESTORED")

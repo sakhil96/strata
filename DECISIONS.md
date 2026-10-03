@@ -148,3 +148,19 @@ earliest month instead (FY2026 days_of_inventory 65.42, October's value, against
 September). render_semantic_sql now pins such a query to the window's closing month, and the
 local engine uses the same rule; the canonical query and its hash are unchanged. Suite 1 checks
 the five canonical metrics against truth through a persona view on the account.
+
+## The service's identity inside SPCS (2026-10-03)
+
+Network policies do apply to connections a service makes from inside Snowpark Container Services:
+if the account or the user the service connects as has a network policy, it needs a network rule
+of type COMPUTE_POOL that allows the service's compute pool
+(https://docs.snowflake.com/en/developer-guide/snowpark-container-services/spcs-execute-sql).
+The service therefore uses its own SPCS session token, not SCM_SERVICE_USER's key, and the account
+policy, when applied, carries a COMPUTE_POOL rule for SCM_POOL_<ENV>. SCM_SERVICE_USER, whose
+policy allows only the team and GitHub Actions, stays for agent:run from outside the pool.
+
+## Blocked on the DEV run (2026-10-03)
+
+Step 8, the service: blocked: Docker (`docker version` fails on the deploying machine). No image
+repository or compute pool was created, so nothing idles at cost. Step 9, the public mirror:
+blocked: token (no Vercel token in the secret store).

@@ -1,35 +1,33 @@
 {
-  "generated_at": "2026-10-02T22:29:41+00:00",
+  "generated_at": "2026-10-03T05:51:02+00:00",
   "environment": "local DuckDB build",
-  "pass_rate": 1.0,
-  "summary": "85 of 85 checks passed across 7 suites; 2 checks need the account.",
+  "pass_rate": 0.9808,
+  "summary": "102 of 104 checks passed across 7 suites; 0 checks need the account.",
   "suites": [
     {
       "name": "metric_identity",
       "title": "1 \u00b7 Metric identity against truth",
       "status": "passed",
-      "passed": 20,
-      "total": 20,
+      "passed": 25,
+      "total": 25,
       "needs_account": [],
       "detail": "all checks ran"
     },
     {
       "name": "nl_accuracy",
       "title": "2 \u00b7 Words to governed query",
-      "status": "passed",
+      "status": "failed",
       "passed": 5,
-      "total": 5,
-      "needs_account": [
-        "test_agent_meets_the_same_floors_through_agent_run"
-      ],
-      "detail": "1 check(s) need the account"
+      "total": 6,
+      "needs_account": [],
+      "detail": "failing: test_agent_meets_the_same_floors_through_agent_run"
     },
     {
       "name": "persona_consistency",
       "title": "3 \u00b7 One question, three roles, one hash",
       "status": "passed",
-      "passed": 22,
-      "total": 22,
+      "passed": 24,
+      "total": 24,
       "needs_account": [],
       "detail": "all checks ran"
     },
@@ -37,21 +35,19 @@
       "name": "governance",
       "title": "4 \u00b7 Governance rules",
       "status": "passed",
-      "passed": 19,
-      "total": 19,
+      "passed": 28,
+      "total": 28,
       "needs_account": [],
       "detail": "all checks ran"
     },
     {
       "name": "resilience",
       "title": "5 \u00b7 Resilience and operations",
-      "status": "passed",
+      "status": "failed",
       "passed": 8,
-      "total": 8,
-      "needs_account": [
-        "test_restore_from_a_time_travel_clone_matches_the_original"
-      ],
-      "detail": "1 check(s) need the account"
+      "total": 9,
+      "needs_account": [],
+      "detail": "failing: test_restore_from_a_time_travel_clone_matches_the_original"
     },
     {
       "name": "frontend",
@@ -66,10 +62,10 @@
       "name": "supply_chain",
       "title": "7 \u00b7 Software supply chain",
       "status": "passed",
-      "passed": 4,
-      "total": 4,
+      "passed": 5,
+      "total": 5,
       "needs_account": [],
-      "detail": "1 skipped locally"
+      "detail": "all checks ran"
     }
   ]
 }
